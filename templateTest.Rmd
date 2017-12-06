@@ -1,11 +1,8 @@
 ---
-title: "State Demography Office Community Profile"
+title: "State Demography Office Community Profile Test File"
 author: "State Demography Office"
 output: pdf_document
-params:
-     fipslist: NA
-     unit: NA
-     outChk: NA
+
 ---
 
 ```{r setup, include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
@@ -27,9 +24,10 @@ library(robR)
 #Start Functions
 #1) Utility Functions and conversions
 
-#converting params$fipslist to numeric
-fipsN <- as.numeric(substr(params$fipslist,3,5))
-fips3 <- substr(params$fipslist,3,5)
+#converting params values to local
+fipsN <- 1
+fips3 <- "001"
+Unit = "Adams County"
 
 #' setYrRange Calculates a range of year values, typically in 5-year increments with adjustments
 #'   accounting for StartYr and EndYr values that are not multiples of 5....
@@ -217,14 +215,14 @@ popTable <- function(cty,ctyname,sYr,eYr) {
  names(tblHead) <- c(" ", ctyname,state)
  
   return(m.OutTab %>%
-    kable(format='latex', booktabs=T,
+    kable(format='latex', 
           caption = "Population Trend",
           digits=1, 
           row.names=FALSE, 
           align='lccccc', 
           col.names = names_spaced,
           escape = FALSE) %>%
-    kable_styling() %>%
+    kable_styling(bootstrap_options = "condensed") %>%
     column_spec(1, bold = T) %>%
     column_spec(2, width = "13em") %>%
     column_spec(3, width ="18em") %>%
@@ -531,6 +529,7 @@ county_timeseries=function(fips, beginyear=1990,endYear, base=12){
 #' 
 
 cocPlot <- function(fips, cName,lYr) {
+
   f.coccty <- components_d(fips=fips, name=cName, lYr = lYr)
   f.cocLong <- gather(f.coccty, key = TypeChange, value=Pop, Births, Deaths, NetMigration)
   f.cocLong$TypeChange <- ifelse(f.cocLong$TypeChange =="NetMigration","Net Migration", f.cocLong$TypeChange)
@@ -570,37 +569,38 @@ return(cocPlt)
    
     # params$outChk  At this point, repeat the generation code using params$outChk as the trigger
     #tags$h1(params$unit)
-    params$unit
+    unit
     
      
     #stats; Basic Statistics
-    if("stats" %in% params$outChk) {
+    #if("stats" %in% params$outChk) {
 
       "Basic Statistics"
       #statsTable1(params$fipslist,2010,2016)
       cp_countymap(fips3) 
-    }
+   # }
 ```    
 
 
 ```{r  message=FALSE, echo=FALSE}     
     #pop: Population, Migration and Natural Increase
-    if("pop" %in% params$outChk){
+   # if("pop" %in% params$outChk){
      
       "Population, Migration and Natural Increase Trends"
      
-      popTable(fips3,params$unit,1990,2016)
+      #srcFix(popTable(substr(params$fipslist,3,5),params$unit,1990,2016))
       county_timeseries(fips=fipsN,endYear=2016,base=10)
       ms_popage(fips=fipsN,base=10)
-      cocPlot(fips=fipsN,cName=params$unit,2016)  
-    }
+      cocPlot(fips=fipsN,cName=unit,2016)
+      #cocPlot(fips=fipsN,cName=params$unit,2016)  
+   # }
 
 ```
 
 
 ```{r  message=FALSE, echo=FALSE}
     # Population Chatacteristics 
-     if("popc" %in% params$outChk){
+    # if("popc" %in% params$outChk){
 
        #Generate tables, plots and text...
        "Population Characteristics: Income, Education and Race"
@@ -608,7 +608,7 @@ return(cocPlt)
        ms_ed(fips=fips3,base=10)
        #raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
        #srcFix(raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115"))
-     }
+     #}
 
 
 ```
