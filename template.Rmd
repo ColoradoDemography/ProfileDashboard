@@ -8,7 +8,7 @@ params:
      outChk: NA
 ---
 
-```{r setup, include=FALSE, warning=FALSE}
+```{r setup, include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
 #Replicating the library, function and data setup from the dashboard
@@ -610,7 +610,7 @@ return(cocPlt)
 
 ```
 
-```{r echo=FALSE}
+```{r include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
    
     # params$outChk  At this point, repeat the generation code using params$outChk as the trigger
     tags$h1(params$unit)
@@ -626,7 +626,7 @@ return(cocPlt)
 ```    
 
 
-```{r echo=FALSE}     
+```{r include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}     
     #pop: Population, Migration and Natural Increase
     if("pop" %in% params$outChk){
      
@@ -641,7 +641,7 @@ return(cocPlt)
 ```
 
 
-```{r echo=FALSE}
+```{r include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
     # Population Chatacteristics 
      if("popc" %in% params$outChk){
 
