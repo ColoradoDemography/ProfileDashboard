@@ -854,7 +854,7 @@ server <- function(session,input, output) {
         # For PDF output, change this to "report.pdf"
         filename = "Output.pdf",
         content = function(file) {
-          browser()
+          # This is the code for using pandoc
           # Copy the report file to a temporary directory before processing it, in
           # case we don't have write permissions to the current working dir (which
           # can happen when deployed).
