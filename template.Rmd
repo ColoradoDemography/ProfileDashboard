@@ -17,9 +17,6 @@ library(plyr, quietly=TRUE)
 library(tidyverse, quietly=TRUE)
 library(readxl, quietly=TRUE)
 library(scales, quietly=TRUE)
-library(shiny, quietly=TRUE)
-library(shinydashboard, quietly=TRUE)
-library(shinyjs, quietly=TRUE)
 library(codemogAPI, quietly=TRUE)
 library(codemogProfile, quietly=TRUE)
 library(knitr, quietly=TRUE)
@@ -28,52 +25,11 @@ library(rmarkdown)
 library(robR)
 
 #Start Functions
-#1) Utility Functions
+#1) Utility Functions and conversions
 
-#'  listTofips : Produces a vector of FIPS codes from an inoout list of Census County and Plance Name Codes.
-#'  @return If the input is a single place,the function will return a single 5 or 7 digit FIPS code. 
-#'  @return If the input is multiple places, the function will return a vector of FIPS codes
-#' 
-#'  @param  df The census place look upt file, currently uses a combined file with county and place information.
-#'    will be able to use a county or place specific look up file.
-#'  @param level identifies the level to be used (State, Plannign Regions, Counties, Municipalities/Places)
-#'    taken from the input$level parameter from the dashboard
-#'  @param inList1 The list of place names,  Comes from input$unit or input$comp2.
-
-listTofips <- function(df, level, inList1){
-  # Function to produce a vector of FIPS codes from an input list of names and codes
-  
-  fipsl <- vector()
-  switch(level,
-         "State" = {fipsl = "300"},
-         "Planning Regions" = {
-           fipsl <- df[which((df$REGION == as.numeric(inList1)) & (df$LEVEL == "COUNTY")),2]
-         }, #Planning Regions
-         "Counties" = {
-           if(length(inList1) == 1) {  #Only one entry
-             fipsl <- df[which(df$NAME == inList1),2]
-           } else {
-             fipsl <- df[which(df$NAME == inList1),2]
-             for(i in 2:length(inList1)){
-               fipsl <- rbind(fipsl, df[which(df$NAME == inList1[i]),2])
-             }
-           } #if
-         }, #County
-         "Municipalities/Places" = {
-           if(length(inList1) == 1) {  #only one entry
-             fipsl <- df[which(df$NAME == inList1),2]
-           } else {
-             fipsl <- df[which(df$NAME == inList1),2]
-             for(i in 1:length(inList1)){
-               fipsl <- rbind(fipsl, df[which(df$NAME == inList1[i]),2])
-             }
-           } #if
-         } #Municipalities/Places
-         
-         ) #switch
-  
-  return(fipsl)
-} #end listTofips
+#converting params$fipslist to numeric
+fipsN <- as.numeric(substr(params$fipslist,3,5))
+fips3 <- substr(params$fipslist,3,5)
 
 #' setYrRange Calculates a range of year values, typically in 5-year increments with adjustments
 #'   accounting for StartYr and EndYr values that are not multiples of 5....
@@ -610,18 +566,19 @@ return(cocPlt)
 
 ```
 
-```{r message=FALSE, echo=FALSE}
+```{r warning=FALSE, message=FALSE, echo=FALSE}
    
     # params$outChk  At this point, repeat the generation code using params$outChk as the trigger
     #tags$h1(params$unit)
     params$unit
+    
      
     #stats; Basic Statistics
     if("stats" %in% params$outChk) {
 
-      tags$h2("Basic Statistics")
+      "Basic Statistics"
       #statsTable1(params$fipslist,2010,2016)
-      cp_countymap(substr(params$fipslist,3,5)) 
+      cp_countymap(fips3) 
     }
 ```    
 
@@ -630,12 +587,12 @@ return(cocPlt)
     #pop: Population, Migration and Natural Increase
     if("pop" %in% params$outChk){
      
-      tags$h2("Population, Migration and Natural Increase Trends")
+      "Population, Migration and Natural Increase Trends"
      
       #srcFix(popTable(substr(params$fipslist,3,5),params$unit,1990,2016))
-      county_timeseries(fips=as.numeric(substr(params$fipslist,3,5)),endYear=2016,base=10)
-      ms_popage(fips=as.numeric(substr(params$fipslist,3,5)),base=10)
-      cocPlot(fips=as.numeric(substr(params$fipslist,3,5)),cName=params$unit,2016)  
+      county_timeseries(fips=fipsN,endYear=2016,base=10)
+      ms_popage(fips=fipsN,base=10)
+      cocPlot(fips=fipsN,cName=params$unit,2016)  
     }
 
 ```
@@ -646,9 +603,9 @@ return(cocPlt)
      if("popc" %in% params$outChk){
 
        #Generate tables, plots and text...
-       tags$h2("Population Characteristics: Income, Education and Race")
-       ms_income(fips=substr(params$fipslist,3,5),base=7.5)
-       ms_ed(fips=substr(params$fipslist,3,5),base=10)
+       "Population Characteristics: Income, Education and Race"
+       ms_income(fips=fips3,base=7.5)
+       ms_ed(fips=fips3,base=10)
        #raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
        #srcFix(raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115"))
      }
