@@ -852,7 +852,9 @@ server <- function(session,input, output) {
   #Event to output PDF documents
    output$singlePDF <- downloadHandler(
         # For PDF output, change this to "report.pdf"
-        filename = "Output.pdf",
+        filename = function() {
+             paste0(input$unit," Community Profile ",format(Sys.Date(),"%Y%m%d"), ".pdf")
+        },
         content = function(file) {
           # This is the code for using pandoc
           # Copy the report file to a temporary directory before processing it, in
@@ -862,7 +864,7 @@ server <- function(session,input, output) {
           file.copy("template.Rmd", tempReport, overwrite = TRUE)
           
           # Set up parameters to pass to Rmd document
-          params <- list(outChk = input$outChk)
+          params <- list(fipslist = listTofips(f.cross,input$level,input$unit), unit = input$unit, outChk = input$outChk)
           
           # Knit the document, passing in the `params` list, and eval it in a
           # child of the global environment (this isolates the code in the document

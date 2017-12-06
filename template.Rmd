@@ -2,7 +2,9 @@
 title: "State Demography Office Community Profile"
 author: "State Demography Office"
 output: pdf_document
-params:  
+params:
+     fipslist: NA
+     unit: NA
      outChk: NA
 ---
 
@@ -259,7 +261,7 @@ popTable <- function(cty,ctyname,sYr,eYr) {
  names(tblHead) <- c(" ", ctyname,state)
  
   return(m.OutTab %>%
-    kable(format='html', table.attr='class="myTable"',
+    kable(format='latex', 
           caption = "Population Trend",
           digits=1, 
           row.names=FALSE, 
@@ -396,7 +398,7 @@ raceTab1 <- function(fips,ctyname,ACS) {
   names(tblHead) <- c(" ", ctyname)
   
   return(m.race %>%
-           kable(format='html', table.attr='class="cleanTable"', 
+           kable(format='latex', 
                  digits=1, 
                  row.names=FALSE, 
                  align='lrrr', 
@@ -512,7 +514,7 @@ raceTab2 <- function(fips,ctyname,ACS) {
   
   
   return(m.race %>%
-           kable(format='html', table.attr='class="cleanTable"', 
+           kable(format='latex', 
                  digits=1, 
                  row.names=FALSE, 
                  align='lrrr', 
@@ -608,6 +610,48 @@ return(cocPlt)
 
 ```
 
-```{r}
-params$outChk  # At this point, repeat the generation code using params$outChk as the trigger
+```{r echo=FALSE}
+   
+    # params$outChk  At this point, repeat the generation code using params$outChk as the trigger
+    tags$h1(params$unit)
+
+     
+    #stats; Basic Statistics
+    if("stats" %in% params$outChk) {
+
+      tags$h2("Basic Statistics")
+      statsTable1(params$fipslist,2010,2016)
+      cp_countymap(substr(params$fipslist,3,5)) 
+    }
+```    
+
+
+```{r echo=FALSE}     
+    #pop: Population, Migration and Natural Increase
+    if("pop" %in% params$outChk){
+     
+      tags$h2("Population, Migration and Natural Increase Trends")
+     
+      srcFix(popTable(substr(params$fipslist,3,5),params$unit,1990,2016))
+      county_timeseries(fips=as.numeric(substr(params$fipslist,3,5)),endYear=2016,base=10)
+      ms_popage(fips=as.numeric(substr(params$fipslist,3,5)),base=10)
+      cocPlot(fips=as.numeric(substr(params$fipslist,3,5)),cName=params$unit,2016)  
+    }
+
+```
+
+
+```{r echo=FALSE}
+    # Population Chatacteristics 
+     if("popc" %in% params$outChk){
+
+       #Generate tables, plots and text...
+       tags$h2("Population Characteristics: Income, Education and Race")
+       ms_income(fips=substr(params$fipslist,3,5),base=7.5)
+       ms_ed(fips=substr(params$fipslist,3,5),base=10)
+       raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
+       srcFix(raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115"))
+     }
+
+
 ```
