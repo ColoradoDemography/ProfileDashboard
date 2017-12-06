@@ -610,29 +610,29 @@ return(cocPlt)
 
 ```
 
-```{r include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
+```{r message=FALSE, echo=FALSE}
    
     # params$outChk  At this point, repeat the generation code using params$outChk as the trigger
-    tags$h1(params$unit)
-
+    #tags$h1(params$unit)
+    params$unit
      
     #stats; Basic Statistics
     if("stats" %in% params$outChk) {
 
       tags$h2("Basic Statistics")
-      statsTable1(params$fipslist,2010,2016)
+      #statsTable1(params$fipslist,2010,2016)
       cp_countymap(substr(params$fipslist,3,5)) 
     }
 ```    
 
 
-```{r include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}     
+```{r  message=FALSE, echo=FALSE}     
     #pop: Population, Migration and Natural Increase
     if("pop" %in% params$outChk){
      
       tags$h2("Population, Migration and Natural Increase Trends")
      
-      srcFix(popTable(substr(params$fipslist,3,5),params$unit,1990,2016))
+      #srcFix(popTable(substr(params$fipslist,3,5),params$unit,1990,2016))
       county_timeseries(fips=as.numeric(substr(params$fipslist,3,5)),endYear=2016,base=10)
       ms_popage(fips=as.numeric(substr(params$fipslist,3,5)),base=10)
       cocPlot(fips=as.numeric(substr(params$fipslist,3,5)),cName=params$unit,2016)  
@@ -641,7 +641,7 @@ return(cocPlt)
 ```
 
 
-```{r include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
+```{r  message=FALSE, echo=FALSE}
     # Population Chatacteristics 
      if("popc" %in% params$outChk){
 
@@ -649,8 +649,8 @@ return(cocPlt)
        tags$h2("Population Characteristics: Income, Education and Race")
        ms_income(fips=substr(params$fipslist,3,5),base=7.5)
        ms_ed(fips=substr(params$fipslist,3,5),base=10)
-       raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
-       srcFix(raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115"))
+       #raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
+       #srcFix(raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115"))
      }
 
 
