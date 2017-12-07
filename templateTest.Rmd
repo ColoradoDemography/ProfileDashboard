@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = FALSE)
 # load libraries
 library(plyr, quietly=TRUE)
 library(tidyverse, quietly=TRUE)
-library(readxl, quietly=TRUE)
 library(scales, quietly=TRUE)
 library(codemogAPI, quietly=TRUE)
 library(codemogProfile, quietly=TRUE)
@@ -89,14 +88,15 @@ roundUpNice <- function(x, Unit) {
 #' 
 ## Generates the data download
 components_d=function(fips, name,lYr){
-  yrLst <- seq(1985,lYr,1)
-  x=county_profile(fips, 1985:lYr, vars="births,deaths,netmigration")%>%
+  x=county_profile(fips, 1985:lYr, vars="births,deaths,netmigration")   %>%
     mutate(births=as.numeric(births),
            deaths=as.numeric(deaths),
            netmigration=as.numeric(netmigration),
            naturalIncrease=births-deaths)%>%
-    bind_cols(data.frame(County=rep(name, length(yrLst))))%>%
-    select(County, year, Births=births, Deaths=deaths, NetMigration=netmigration)
+           select(county, year, Births=births, Deaths=deaths, NetMigration=netmigration)
+  
+  names(x)[1] <- "County"
+  x$County <- name
   return(x)
 }
 
@@ -179,6 +179,7 @@ statsTable1 <- function(cty,sYr,eYr){
 #'  
 popTable <- function(cty,ctyname,sYr,eYr) { 
   #outputs the population trend table in the population section...
+  browser()
   state <- "Colorado"
   cntynum <- as.numeric(cty)
   yrs <- as.character(setYrRange(sYr,eYr))
@@ -215,14 +216,14 @@ popTable <- function(cty,ctyname,sYr,eYr) {
  names(tblHead) <- c(" ", ctyname,state)
  
   return(m.OutTab %>%
-    kable(format='latex', 
+    kable(format='latex',  booktabs=T,
           caption = "Population Trend",
           digits=1, 
           row.names=FALSE, 
           align='lccccc', 
           col.names = names_spaced,
           escape = FALSE) %>%
-    kable_styling(bootstrap_options = "condensed") %>%
+    kable_styling() %>%
     column_spec(1, bold = T) %>%
     column_spec(2, width = "13em") %>%
     column_spec(3, width ="18em") %>%
@@ -502,6 +503,7 @@ raceTab2 <- function(fips,ctyname,ACS) {
 
 
 county_timeseries=function(fips, beginyear=1990,endYear, base=12){
+  browser()
   require(grid, quietly=TRUE)
   fips=as.numeric(fips)
   
@@ -586,12 +588,12 @@ return(cocPlt)
     #pop: Population, Migration and Natural Increase
    # if("pop" %in% params$outChk){
      
-      "Population, Migration and Natural Increase Trends"
+     # "Population, Migration and Natural Increase Trends"
      
-      #srcFix(popTable(substr(params$fipslist,3,5),params$unit,1990,2016))
+      popTable(fips3,unit,1990,2016)
       county_timeseries(fips=fipsN,endYear=2016,base=10)
-      ms_popage(fips=fipsN,base=10)
-      cocPlot(fips=fipsN,cName=unit,2016)
+     # ms_popage(fips=fipsN,base=10)
+     # cocPlot(fips=fipsN,cName=unit,lYr = 2016)
       #cocPlot(fips=fipsN,cName=params$unit,2016)  
    # }
 

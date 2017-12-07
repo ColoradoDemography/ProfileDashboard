@@ -91,14 +91,15 @@ roundUpNice <- function(x, Unit) {
 #' 
 ## Generates the data download
 components_d=function(fips, name,lYr){
-  yrLst <- seq(1985,lYr,1)
-  x=county_profile(fips, 1985:lYr, vars="births,deaths,netmigration")%>%
+  x=county_profile(fips, 1985:lYr, vars="births,deaths,netmigration")   %>%
     mutate(births=as.numeric(births),
            deaths=as.numeric(deaths),
            netmigration=as.numeric(netmigration),
            naturalIncrease=births-deaths)%>%
-    bind_cols(data.frame(County=rep(name, length(yrLst))))%>%
-    select(County, year, Births=births, Deaths=deaths, NetMigration=netmigration)
+           select(county, year, Births=births, Deaths=deaths, NetMigration=netmigration)
+  
+  names(x)[1] <- "County"
+  x$County <- name
   return(x)
 }
 
@@ -230,7 +231,7 @@ popTable <- function(cty,ctyname,sYr,eYr) {
     column_spec(3, width ="18em") %>%
     column_spec(4, width = "13em") %>%
     column_spec(5, width = "18em") %>%
-    add_header_above(header=tblHead)  %>%
+    add_header_above(tblHead)  %>%
     add_footnote(c("Source: State Demography Office"))
   )
   
