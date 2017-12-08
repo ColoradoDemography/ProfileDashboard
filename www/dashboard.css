@@ -91,6 +91,11 @@ p{
         padding: 0px;
 	
 }
+/*button text color */
+.button {
+  background-color: white;
+  color: black;
+}
 
 
 

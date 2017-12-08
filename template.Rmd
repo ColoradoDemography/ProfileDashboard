@@ -11,6 +11,49 @@ params:
 ```{r setup, include=FALSE, warning=FALSE, message=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
+# Creating the conditional display vars
+if("stats" %in% params$outChk) {
+  outStats <- TRUE
+} else {
+  outStats <- FALSE
+}
+
+if("pop" %in% params$outChk) {
+  outPop <- TRUE
+} else {
+  outPop <- FALSE
+}
+
+if("popc" %in% params$outChk) {
+  outPopC <- TRUE
+} else {
+  outPopC <- FALSE
+}
+
+if("housing" %in% params$outChk) {
+  outHouse <- TRUE
+} else {
+  outHouse <- FALSE
+}
+
+if("emply" %in% params$outChk) {
+  outEmply <- TRUE
+} else {
+  outEmply <- FALSE
+}
+
+if("comm" %in% params$outChk) {
+  outComm <- TRUE
+} else {
+  outComm <- FALSE
+}
+
+if("emplind" %in% params$outChk) {
+  outEmplind <- TRUE
+} else {
+  outEmplind <- FALSE
+}
+
 #Replicating the library, function and data setup from the dashboard
 # load libraries
 library(plyr, quietly=TRUE)
@@ -30,6 +73,7 @@ library(robR)
 #converting params$fipslist to numeric
 fipsN <- as.numeric(substr(params$fipslist,3,5))
 fips3 <- substr(params$fipslist,3,5)
+
 
 #' setYrRange Calculates a range of year values, typically in 5-year increments with adjustments
 #'   accounting for StartYr and EndYr values that are not multiples of 5....
@@ -103,13 +147,6 @@ components_d=function(fips, name,lYr){
   return(x)
 }
 
-#'srcFix Removes the <sup>a</sup> Source Notation in selected tables
-#'  @param inTab input table
-#'  
-srcFix <- function(inTab) {
-  outTab <- gsub("<sup>a</sup>","",inTab)
-  return(outTab)
-}
 
 
 # 2) Table Production Functions
@@ -166,12 +203,15 @@ statsTable1 <- function(cty,sYr,eYr){
   outTab[6,1] <- paste0("Median Income (Colorado: ","$",format(as.numeric(hhinc_state$b19013001),nsmall=0, big.mark=","),")+")
   
   outTab[5,2] <- paste0("$",format(as.numeric(MedHHValue_county$b25077001),nsmall=0, big.mark=","))
-  outTab[6,2] <- paste0("Median House Value (Colorado: ","$",format(as.numeric(MedHHValue_state$b25077001),nsmall=0, big.mark=","),")+")
+  outTab[6,2] <- paste0("Median House Value (Colorado: ","$",format(as.numeric(MedHHValue_state$b25077001),nsmall=0,
+                                              big.mark=","),")+")
   
   outTab[7,1] <- "Sources: *State Demography Office"
   outTab[7,2] <- "+ U.S. Census Bureau, 2011-2015 American Community Survey"
   
-  return(outTab)
+  return(kable(outTab, caption="Basic Statistics",align="c",
+               format ="latex", booktabs=FALSE) %>%
+           kable_styling(latex_options = "hold_position"))
 }
 
 #' popTable The population table showing the annual growth rate in the Population Section
@@ -209,7 +249,7 @@ popTable <- function(cty,ctyname,sYr,eYr) {
   f.Out <- merge(f.County,f.CO,by="year")
   m.OutTab <- as.matrix(f.Out[,c(1,4,3,7,6)])
   m.OutTab <- gsub("NA%","",m.OutTab)
-  names_spaced <- c("Year","Population","Annual Growth<br/>Rate","Population","Annual Growth<br/>Rate") 
+  names_spaced <- c("Year","Population","Annual Growth Rate","Population","Annual Growth Rate") 
 
  # create vector with colspan
  tblHead <- c(" " = 1, ctyname = 2, state = 2)
@@ -217,22 +257,12 @@ popTable <- function(cty,ctyname,sYr,eYr) {
  # set vector names 
  names(tblHead) <- c(" ", ctyname,state)
  
-  return(m.OutTab %>%
-    kable(format='latex', booktabs=T,
-          caption = "Population Trend",
-          digits=1, 
-          row.names=FALSE, 
-          align='lccccc', 
-          col.names = names_spaced,
-          escape = FALSE) %>%
-    kable_styling() %>%
-    column_spec(1, bold = T) %>%
-    column_spec(2, width = "13em") %>%
-    column_spec(3, width ="18em") %>%
-    column_spec(4, width = "13em") %>%
-    column_spec(5, width = "18em") %>%
-    add_header_above(tblHead)  %>%
-    add_footnote(c("Source: State Demography Office"))
+  return(kable(m.OutTab, col.names = names_spaced ,
+      caption="Population Trend",row.names = FALSE,align="c",
+      format ="latex", booktabs=FALSE)  %>%
+      add_header_above(header=tblHead) %>%
+      kable_styling(latex_options = "hold_position") %>%
+      add_footnote(c("Source: State Demography Office"))
   )
   
 }
@@ -354,26 +384,17 @@ raceTab1 <- function(fips,ctyname,ACS) {
   # set vector names 
   names(tblHead) <- c(" ", ctyname)
   
-  return(m.race %>%
-           kable(format='latex', 
-                 digits=1, 
-                 row.names=FALSE, 
-                 align='lrrr', 
-                 caption="Race Trend",
-                 col.names = names_spaced, 
-                 escape = FALSE)  %>%
-           kable_styling(bootstrap_options = "condensed", full_width = F) %>%
-           column_spec(1, width = "45em",bold = T) %>%
-           column_spec(2, width = "5em") %>%
-           column_spec(3, width ="5em") %>%
-           column_spec(4, width ="5em") %>%
+  return(kable(m.race, col.names = names_spaced,
+            caption="Race Trend", row.names=FALSE, #align='lrrr',
+           format="latex", booktabs=FALSE)  %>%
+           kable_styling(latex_options="hold_position") %>%
            add_header_above(header=tblHead) %>%
            add_footnote(c("Source; 2000 Census",
                           "Source: 2010 Census",
                           "Source: ACS 2015 5-Year File"), 
-                           notation = "symbol")
-  )
+                           notation = "symbol"))
 }
+
 
 #' raceTab2 Table showing the percentage values by ethnic/race categories
 #'    pulls data from API This table compares Colorado % to selected geographt
@@ -470,21 +491,14 @@ raceTab2 <- function(fips,ctyname,ACS) {
   names_spaced <- c("Race",ctyname,"Colorado") 
   
   
-  return(m.race %>%
-           kable(format='latex', 
-                 digits=1, 
-                 row.names=FALSE, 
-                 align='lrrr', 
-                 caption="Race Comparison",
-                 col.names = names_spaced, 
-                 escape = FALSE)  %>%
-           kable_styling(bootstrap_options = "condensed",full_width = F) %>%
-           column_spec(1, width = "45em",bold = T) %>%
-           column_spec(2, width = "5em") %>%
-           column_spec(3, width ="5em") %>%
-           add_footnote(c("Source: ACS 5-Year File"))
+  return(kable(m.race, col.names = names_spaced,
+            caption="Race Trend", row.names=FALSE, #align='lrr',
+            format="latex", booktabs=FALSE)  %>%
+           kable_styling(latex_options = "hold_position") %>%
+           add_footnote(c("Source: ACS 2015 5-Year File"))
   )
 }
+
 
 #3) Plotting Functions
 
@@ -567,49 +581,36 @@ return(cocPlt)
 
 ```
 
-```{r warning=FALSE, message=FALSE, echo=FALSE}
-   
-    # params$outChk  At this point, repeat the generation code using params$outChk as the trigger
-    #tags$h1(params$unit)
-    params$unit
-    
-     
-    #stats; Basic Statistics
-    if("stats" %in% params$outChk) {
 
-      "Basic Statistics"
-      #statsTable1(params$fipslist,2010,2016)
-      cp_countymap(fips3) 
-    }
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+    params$unit
 ```    
 
 
-```{r  message=FALSE, echo=FALSE}     
+```{r warning=FALSE, message=FALSE, echo=FALSE, results="asis", eval=outStats}     
+    #stats; Basic Statistics
+      "Basic Statistics"
+      statsTable1(params$fipslist,2010,2016)
+      cp_countymap(fips3) 
+```    
+
+
+```{r  message=FALSE, echo=FALSE, result="asis", eval=outPop}     
     #pop: Population, Migration and Natural Increase
-    if("pop" %in% params$outChk){
-     
+    
       "Population, Migration and Natural Increase Trends"
-     
       popTable(fips3,params$unit,1990,2016)
       county_timeseries(fips=fipsN,endYear=2016,base=10)
       ms_popage(fips=fipsN,base=10)
       cocPlot(fips=fipsN,cName=params$unit,2016)  
-    }
-
 ```
 
 
-```{r  message=FALSE, echo=FALSE}
+```{r  message=FALSE, echo=FALSE, results="asis", eval=outPopC}
     # Population Chatacteristics 
-     if("popc" %in% params$outChk){
-
-       #Generate tables, plots and text...
        "Population Characteristics: Income, Education and Race"
        ms_income(fips=fips3,base=7.5)
        ms_ed(fips=fips3,base=10)
-       #raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
-       #srcFix(raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115"))
-     }
-
-
+       raceTab1(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115") 
+       raceTab2(fips=substr(params$fipslist,3,5),ctyname=params$unit,"acs1115")
 ```

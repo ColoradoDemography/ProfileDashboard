@@ -659,9 +659,8 @@ ui <- dashboardPage( skin="green",
     #Action Button
     actionButton("profile","View Profile"),
     actionButton("comparison","View Comparison"),
-    downloadButton("singlePDF", label="Output Profile to PDF", class = "butt"),
-    tags$head(tags$style(" .butt{color: #000000;}")),
-    actionButton("contact","Contact SDO")
+    actionButton("contact","Contact SDO"),
+    downloadLink("singlePDF", label="Output Profile to PDF")
 
   ), #dashboardSidebar
   dashboardBody(  tags$head( #Link to CSS...
