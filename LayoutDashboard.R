@@ -18,6 +18,8 @@
 #' #' V0.6 December 21, 2017
 #' Add function to output data and charts
 #' Format PDF to read objects produced by the dashboard 
+#' V.07 January 1, 2018
+#' Restructured UI and output 
 
 #setwd("J:/Community Profiles/Shiny Demos")
 #setwd("C:/Users/Adam/Documents/Colorado State Demography/Shiny Demos")
@@ -55,6 +57,8 @@ library(robR)
 #'  
 #'  @param level identifies the level to be used (State, Plannign Regions, Counties, Municipalities/Places)
 #'    taken from the input$level parameter from the dashboard
+#'    @return List of fipscodes, place anames and population counts
+#'    @export
 
 
 popPlace <- function(level) {
@@ -124,6 +128,8 @@ return(f.pLookupFin)
 
 #' simpleCap convers strings to proper case, stolen from Stackoverflow.
 #'   @param x input string
+#'   @return String formatted in Proper Case
+#'   @export
 simpleCap <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), tolower(substring(s, 2)),
@@ -138,6 +144,8 @@ simpleCap <- function(x) {
 #'  @param level identifies the level to be used (State, Plannign Regions, Counties, Municipalities/Places)
 #'    taken from the input$level parameter from the dashboard
 #'  @param inList1 The list of place names,  Comes from input$unit or input$comp2.
+#'  @returns the fipscode(s) for a selected data level
+#'  @export
 
 listTofips <- function(df, level, inList1){
   # Function to produce a vector of FIPS codes from an input list of names and codes
@@ -194,7 +202,7 @@ listTofips <- function(df, level, inList1){
 #'   @param StartYr a numberic variable for the start of the series
 #'   @param EndYr a numeric variable for the end of the series
 #'   @return a numeric vector of the years between StartYr and EndYr accounting for odd years
-#'   
+#'   @export
 setYrRange <- function(StartYr,EndYr) {
   
   sRem <- StartYr %% 5
@@ -221,6 +229,8 @@ setYrRange <- function(StartYr,EndYr) {
 #'   @param x is the input numeric value.  The percentage value (y/total *100) is claculated outside of the function
 #'   @param digits the number of digits to output
 #'   @param format input format
+#'   @return a numeric string formatted as a percentage
+#'   @export
 #'   
 percent <- function(x, digits = 2, format = "f", ...) {  
   paste0(formatC( x, format = format, digits = digits, ...), "%")
@@ -231,7 +241,8 @@ percent <- function(x, digits = 2, format = "f", ...) {
 #'   Taken from StackOverFlow 20171122...
 #'   @param x is the input numeric value.  
 #'   @param Unit the base value to round around
-#'  
+#'   @return numeric value rounded up to the specific number of digits
+#'   @export
 roundUpNice <- function(x, Unit) {
   if(x < 0){
     z <- Unit*floor(x/Unit)
@@ -246,7 +257,9 @@ roundUpNice <- function(x, Unit) {
 #' This is only for counties
 #'   @param fips a numeric fips county code, 300 calls all counties, 0 calls the state  
 #'   @name the county/place name
-#' 
+#'   @return a data frame for the components of change chart
+#'  @export
+#'  
 ## Generates the data download
 components_d=function(fips, name,lYr){
   yrLst <- seq(1985,lYr,1)
@@ -260,14 +273,44 @@ components_d=function(fips, name,lYr){
   return(x)
 }
 
-#'srcFix Removes the <sup>a</sup> Source Notation in selected tables
-#'  @param inTab input table
-#'  
-srcFix <- function(inTab) {
-  outTab <- gsub("<sup>a</sup>","",inTab)
-  return(outTab)
+
+
+#' tabTitle manages the output of descriptive tabs in the interface
+#' @param item the item name in input$outChk
+#' @return  Descriptinve string provided in the tabs of the main interface
+#' @export
+#' 
+tabTitle <-function(item) {
+  outTitle <- switch(item,
+                     "stats" = "Basic Statistics",
+                     "pop" ="Population, Migration and Natural Increase",
+                     "popc"= "Population Characteristics",
+                     "housing" = "Housing and Households",
+                     "emply" = "Employment Forecast",
+                     "comm" = "Commuting",
+                     "emplind" = "Employment by Industry")
+  return(outTitle)
 }
 
+#' tabList returns the list items from the outputList  based on the value of input$outChk
+#' @param item the item name in input$outChk
+#' @returns the content of each panel, drawn form the output lists defined in the GLOBAL section of the code
+#' @export
+
+tabList <- function(item){
+  
+  outList <- list("Section Not Defined")
+  if(item == "stats") {
+    outList <- stats.list
+  }
+  if(item == "pop") {
+    outList <- pop.list
+  }
+  if(item == "popc") {
+    outList <- popc.list
+  }
+ return(outList)
+}
 
 # 2) Table Production Functions
 
@@ -276,11 +319,12 @@ srcFix <- function(inTab) {
 #' @param place the Place FIPS Code, including the state value.  
 #' @param sYr Start Year
 #' @param eYr End year
+#' @return kable formatted HTML table
+#' @export
 #' 
-statsTable1 <- function(cty,place,sYr,eYr){
+statsTable1 <- function(cty,place,sYr,eYr,ACS){
   #outputs the top table in the dashboard
   #Need to restructure this to support muni_est...
-
   state <- substr(cty,1,2)
   ctyfips <- substr(cty,3,5)
   if(nchar(place) > 0) {
@@ -292,8 +336,14 @@ statsTable1 <- function(cty,place,sYr,eYr){
      tPopyr1 <- county_profile(as.numeric(ctyfips), sYr,"totalpopulation")
      tPopyr2 <- county_profile(as.numeric(ctyfips), eYr,"totalpopulation")
      tJobs <-  county_jobs(fips=as.numeric(ctyfips), year = eYr) #County
-     hhinc <- codemog_api(data="b19013",db="acs1115", geonum=paste("1", state, ctyfips, sep=""), meta="no")
-     MedHHValue <- codemog_api(data="b25077",db="acs1115", geonum=paste("1", state, ctyfips, sep=""), meta="no")
+     hhinc <- codemog_api(data="b19013",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+     MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+     # Poverty Value
+     Poverty <- codemog_api(data="b17001",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+     pctPoverty <- percent((as.numeric(Poverty$b17001002)/as.numeric(Poverty$b17001001))*100)
+     # Percent native
+     Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+     pctNative <- percent((as.numeric(Native$b05002003)/as.numeric(Native$b05002001))*100)
      #Cost of Living Index
      coli=county_coli%>%
        filter(countyfips==as.numeric(ctyfips))%>%
@@ -304,9 +354,18 @@ statsTable1 <- function(cty,place,sYr,eYr){
     tPopyr1 <- muni_est(as.numeric(placefips), sYr,as.numeric(ctyfips),"totalpopulation")
     tPopyr2 <- muni_est(as.numeric(placefips), eYr,as.numeric(ctyfips),"totalpopulation")
     tJobs <-  county_jobs(fips=as.numeric(ctyfips), year = eYr)#County
-    hhinc <- codemog_api(data="b19013",db="acs1115", geonum=paste("1", state, placefips, sep=""), meta="no")
-    MedHHValue <- codemog_api(data="b25077",db="acs1115", geonum=paste("1", state, placefips, sep=""), meta="no")
+    hhinc <- codemog_api(data="b19013",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
+    MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
     #muni Coli
+    
+    # Poverty Value
+    Poverty <- codemog_api(data="b17001",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+    pctPoverty <- percent((Poverty$b17001002/Poverty$b17001001))
+    
+    # Percent native
+    Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+    pctNative <- percent((native$b05002003/native$b05002001))
+    
     #Cost of Living Index
     coli=county_coli%>%
       filter(countyfips==as.numeric(ctyfips))%>%
@@ -320,13 +379,13 @@ statsTable1 <- function(cty,place,sYr,eYr){
 
   #state Values
   #Median Household Income  B18140 is the total median earnings...  from the 2012-2016 ACS API
-  hhinc_state=codemog_api(data="b19013",db="acs1115", geonum=paste("1", state,  sep=""), meta="no")
+  hhinc_state=codemog_api(data="b19013",db=ACS, geonum=paste("1", state,  sep=""), meta="no")
   
   #median Househld Value 
-  MedHHValue_state=codemog_api(data="b25077",db="acs1115", geonum=paste("1", state,  sep=""), meta="no")
+  MedHHValue_state=codemog_api(data="b25077",db=ACS, geonum=paste("1", state,  sep=""), meta="no")
   
  #Preparing table
-  outTab <- matrix("",nrow=7,ncol=2)
+  outTab <- matrix("",nrow=9,ncol=2)
   outTab[1,1] <- format(as.numeric(tPopyr2$totalpopulation),nsmall=0, big.mark=",")
   outTab[2,1] <- paste0("Population (",eYr,")*")
   
@@ -347,9 +406,15 @@ statsTable1 <- function(cty,place,sYr,eYr){
   
   outTab[5,2] <- paste0("$",format(as.numeric(MedHHValue$b25077001),nsmall=0, big.mark=","))
   outTab[6,2] <- paste0("Median House Value (Colorado: ","$",format(as.numeric(MedHHValue_state$b25077001),nsmall=0, big.mark=","),")+")
+ 
+  outTab[7,1] <- pctPoverty
+  outTab[7,2] <- pctNative
+
+  outTab[8,1] <- "Percentage of Population with Incomes lower than the Poverty Line+"
+  outTab[8,2] <- "Percentage of Population Born in Colorado+"
   
-  outTab[7,1] <- "Sources: *State Demography Office"
-  outTab[7,2] <- "+ U.S. Census Bureau, 2011-2015 American Community Survey"
+  outTab[9,1] <- "Sources: *State Demography Office"
+  outTab[9,2] <- "+U.S. Census Bureau, 2011-2015 American Community Survey"
   
 
   return(outTab)
@@ -360,7 +425,9 @@ statsTable1 <- function(cty,place,sYr,eYr){
 #' @param ctyname the place name
 #' @param sYr Start Year
 #' @param eYr End year
-#'  
+#' @return kable formatted HTML table
+#' @export
+#'   
 popTable <- function(cty,ctyname,sYr,eYr) { 
   #outputs the population trend table in the population section..
  
@@ -435,16 +502,21 @@ popTable <- function(cty,ctyname,sYr,eYr) {
 #' raceTab1 Table showing the percentage values by ethnic/race categories
 #'    pulls data from API This table shows a set of histoical comparisons between
 #'    the 2000 Census, the 2010 Census and the latest ACS API
+#'    
+#'    This table does not report MOEs for ACS series, because of the lack of cunsus MOEs...
+#'    
 #' @param the short FIPS code
 #' @param ctyname Place Name
 #' @param ACS data depository from the American Community Survey API
-#' 
+#' @return kable formatted HTML table
+#' @export
+#'  
 raceTab1 <- function(fips,ctyname,ACS) {
   state="08"
   #output race tab using pull from API
   
   #call to ACS Race variables 
- 
+  
   ACSRace=codemog_api(data="b03002", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
   #Converting values to numeric
   ACSRace[,7:ncol(ACSRace)]=as.numeric(as.character(ACSRace[,7:ncol(ACSRace)]))
@@ -474,7 +546,10 @@ raceTab1 <- function(fips,ctyname,ACS) {
   
   f.ACSRace <- gather(ACSRace2[, c(1,30:38)], key = "race", value=ACS, HispanicP:NHTwoP)
   f.ACSRace$geoname <- ctyname
-  
+  ACSRow <- data.frame(geoname = ctyname,
+                       race = "TotalP",
+                       ACS = "100.00%")
+  f.ACSRace <- rbind(f.ACSRace,ACSRow)
   
   #call to Census 2010 API Race variables
   p9_10=codemog_api(data="p9", geonum=paste("1", state, fips, sep=""),meta="no")
@@ -493,11 +568,16 @@ raceTab1 <- function(fips,ctyname,ACS) {
            NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100, digits=2),
            NHOtherP=percent(round(NHOther/TotalPop,3)*100, digits=2),
            NHTwoP=percent(round(NHTwo/TotalPop,3)*100, digits=2)) %>%
-     select(-p9001:-p9011)%>%
+    select(-p9001:-p9011)%>%
     gather(race, Census.2010, HispanicP:NHTwoP, -geoname:-geonum)
   
   p9_10 <- p9_10[,c(1,18,19)]
   p9_10$geoname <- ctyname
+  
+  CensRow <- data.frame(geoname = ctyname,
+                        race = "TotalP",
+                        Census.2010 = "100.00%")
+  p9_10 <- rbind(p9_10,CensRow)
   
   #Call to Census 2000 API
   p4_00=codemog_api(data="p4", db="c2000",geonum=paste("1", state, fips, sep=""),meta="no")
@@ -521,23 +601,27 @@ raceTab1 <- function(fips,ctyname,ACS) {
   p4_00 <- p4_00[,c(1,18,19)]
   p4_00$geoname <- ctyname
   
+  names(CensRow)[3] <- "Census.2000"
+  p4_00 <- rbind(p4_00,CensRow)
+  
   # Producing Joined File
   raceTmp <- inner_join(p4_00, p9_10)
   
   f.raceFin <- inner_join(raceTmp, f.ACSRace)                                    
   
-
   
-  f.raceFin$Race2 <-   ifelse(f.raceFin$race == "HispanicP","Hispanic",
-                         ifelse(f.raceFin$race == "NonHispanicP", "Non-Hispanic",
-                         ifelse(f.raceFin$race == "NHWhiteP","Non-Hispanic White",
-                         ifelse(f.raceFin$race == "NHBlackP","Non-Hispanic Black",
-                         ifelse(f.raceFin$race == "NHAIANP","Non-Hispanic Native American/Alaska Native",
-                         ifelse(f.raceFin$race == "NHAsianP","Non-Hispanic Asian",
-                         ifelse(f.raceFin$race == "NHNHOPIP","Non-Hispanic Native Hawaiian/Pacific Islander",
-                         ifelse(f.raceFin$race == "NHOtherP","Non-Hispanic Other","Non-Hispanic, Two Races"))))))))
- 
-  m.race <- as.matrix(f.raceFin[c(3:9,1), c(6,3, 4,5)]) #This is the matrix table 
+  
+  f.raceFin$Race2 <-ifelse(f.raceFin$race == "TotalP","Total Population", 
+                           ifelse(f.raceFin$race == "HispanicP","Hispanic",
+                                  ifelse(f.raceFin$race == "NonHispanicP", "Non-Hispanic",
+                                         ifelse(f.raceFin$race == "NHWhiteP","Non-Hispanic White",
+                                                ifelse(f.raceFin$race == "NHBlackP","Non-Hispanic Black",
+                                                       ifelse(f.raceFin$race == "NHAIANP","Non-Hispanic Native American/Alaska Native",
+                                                              ifelse(f.raceFin$race == "NHAsianP","Non-Hispanic Asian",
+                                                                     ifelse(f.raceFin$race == "NHNHOPIP","Non-Hispanic Native Hawaiian/Pacific Islander",
+                                                                            ifelse(f.raceFin$race == "NHOtherP","Non-Hispanic Other","Non-Hispanic, Two Races")))))))))
+  
+  m.race <- as.matrix(f.raceFin[c(1:4,6,5,7:10), c(6,3,4,5)]) #This is the matrix table 
   
   
   #Column Names
@@ -561,7 +645,7 @@ raceTab1 <- function(fips,ctyname,ACS) {
           caption="Race Trend",
           col.names = names_spaced, 
           escape = FALSE)  %>%
-    kable_styling(bootstrap_options = "condensed", full_width = F) %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
     column_spec(1, width = "45em",bold = T) %>%
     column_spec(2, width = "5em") %>%
     column_spec(3, width ="5em") %>%
@@ -572,21 +656,27 @@ raceTab1 <- function(fips,ctyname,ACS) {
                    ACSSrc), 
                  notation = "symbol")
   
-  race_data <- f.raceFin[,c(1,6,3,4,5)]
-  race_data$geoname <- simpleCap(race_data$geoname)
-  names(race_data)[2] <- "Race_Cat"
-  names(race_data)[5] <- toupper(ACS)
+  race_data <- data.frame(m.race)
+  race_data$geoname <- simpleCap(ctyname)
+  race_data <- race_data[,c(5,1:4)]
+  names(race_data) <- c("Geography","Race Category","Census 2000", "Census 2010",toupper(ACS))
   
   outList <- list("table" = race_tab, "data" = race_data)
   return(outList)
 }
 
 #' raceTab2 Table showing the percentage values by ethnic/race categories
-#'    pulls data from API This table compares Colorado % to selected geographt
+#'    pulls data from API This table compares Colorado % to selected geography
+#'    
+#'    This table reports the MOEs and a significance test for each series
+#'    comparing the percentages from each table...
+#'    
 #' @param the short FIPS code
 #' @param ctyname Place Name
 #' @param ACS data depository from the American Community Survey API
-#' 
+#' @return kable formatted HTML table
+#' @export
+
 raceTab2 <- function(fips,ctyname,ACS) {
   state="08"
   #output race tab using pull from API
@@ -607,20 +697,30 @@ raceTab2 <- function(fips,ctyname,ACS) {
            NHAsian=b03002006, 
            NHNHOPI=b03002007, 
            NHOther=b03002008, 
-           NHTwo=b03002009,
-           HispanicP=(Hispanic/TotalPop),
-           NonHispanicP=(NonHispanic/TotalPop),
-           NHWhiteP=(NHWhite/TotalPop),
-           NHBlackP=(NHBlack/TotalPop),
-           NHAIANP=(NHAIAN/TotalPop),
-           NHAsianP=(NHAsian/TotalPop),
-           NHNHOPIP=(NHNHOPI/TotalPop),
-           NHOtherP=(NHOther/TotalPop),
-           NHTwoP=(NHTwo/TotalPop))
+           NHTwo=b03002009)
   
   
-  f.ACSRace <- gather(ACSRace2[, c(30:38)], key = "race", value=ACS, HispanicP:NHTwoP)
+  f.ACSRace <- gather(ACSRace2[, c(20:29)], key = "race", value=ACS, TotalPop:NHTwo)
   
+  
+  ACSRaceMOE=codemog_api(data="b03002_moe", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  
+  ACSRaceMOE[,7:ncol(ACSRaceMOE)]=as.numeric(as.character(ACSRaceMOE[,7:ncol(ACSRaceMOE)]))
+  
+  ACSRaceMOE2 <- ACSRaceMOE %>%
+    select(geoname:b03002_moe012) %>%
+    mutate(TotalPop=b03002_moe001, 
+           Hispanic=b03002_moe012, 
+           NonHispanic=b03002_moe002, 
+           NHWhite=b03002_moe003, 
+           NHBlack=b03002_moe004,
+           NHAIAN=b03002_moe005, 
+           NHAsian=b03002_moe006, 
+           NHNHOPI=b03002_moe007, 
+           NHOther=b03002_moe008, 
+           NHTwo=b03002_moe009)
+  
+  f.ACSRaceMOE_Fin <- gather(ACSRaceMOE2[, c(20:29)], key = "race", value=ACS, TotalPop:NHTwo)  
   
   
   #call to ACS, State Table
@@ -639,63 +739,119 @@ raceTab2 <- function(fips,ctyname,ACS) {
            NHAsian=b03002006, 
            NHNHOPI=b03002007, 
            NHOther=b03002008, 
-           NHTwo=b03002009,
-           HispanicP=(Hispanic/TotalPop),
-           NonHispanicP=(NonHispanic/TotalPop),
-           NHWhiteP=(NHWhite/TotalPop),
-           NHBlackP=(NHBlack/TotalPop),
-           NHAIANP=(NHAIAN/TotalPop),
-           NHAsianP=(NHAsian/TotalPop),
-           NHNHOPIP=(NHNHOPI/TotalPop),
-           NHOtherP=(NHOther/TotalPop),
-           NHTwoP=(NHTwo/TotalPop))
+           NHTwo=b03002009)
   
-  f.ACSRaces <- gather(ACSRaceS2[, c(30:38)], key = "race", value=ACS, HispanicP:NHTwoP)
+  f.ACSRaceS <- gather(ACSRaceS2[, c(20:29)], key = "race", value=ACS, TotalPop:NHTwo)
+  
+  # State level MOEs
+  
+  ACSRaceMOES=codemog_api(data="b03002_moe", db=ACS, geonum=paste("1", state, sep=""),meta="no")
+  
+  ACSRaceMOES[,7:ncol(ACSRaceMOES)]=as.numeric(as.character(ACSRaceMOES[,7:ncol(ACSRaceMOES)]))
+  
+  ACSRaceMOES2 <- ACSRaceMOES %>%
+    select(geoname:b03002_moe012) %>%
+    mutate(TotalPop=b03002_moe001, 
+           Hispanic=b03002_moe012, 
+           NonHispanic=b03002_moe002, 
+           NHWhite=b03002_moe003, 
+           NHBlack=b03002_moe004,
+           NHAIAN=b03002_moe005, 
+           NHAsian=b03002_moe006, 
+           NHNHOPI=b03002_moe007, 
+           NHOther=b03002_moe008, 
+           NHTwo=b03002_moe009)
+  
+  f.ACSRaceMOES_Fin <- gather(ACSRaceMOES2[, c(20:29)], key = "race", value=ACS, TotalPop:NHTwo)  
+  
   
   
   # Producing Joined File
+  # the place file
+  f.place <- merge(f.ACSRace,f.ACSRaceMOE_Fin,by="race")
+  names(f.place) <- c("Race","Count_Place","MOE_Place")
   
-  f.raceFin <- inner_join(f.ACSRace, f.ACSRaces, by="race")                                    
+  total_Place <- as.numeric(f.place[which(f.place$Race == "TotalPop"),2])
+  f.place$CountPCT_Place <- f.place$Count_Place/total_Place
+  f.place$MOEPCT_Place <- f.place$MOE_Place/total_Place    
   
-  f.raceFin[,1] <-   ifelse(f.raceFin[,1] == "HispanicP","Hispanic",
-                            ifelse(f.raceFin[,1] == "NonHispanicP", "Non-Hispanic",
-                                   ifelse(f.raceFin[,1] == "NHWhiteP","Non-Hispanic White",
-                                          ifelse(f.raceFin[,1] == "NHBlackP","Non-Hispanic Black",
-                                                 ifelse(f.raceFin[,1] == "NHAIANP","Non-Hispanic Native American/Alaska Native",
-                                                        ifelse(f.raceFin[,1] == "NHAsianP","Non-Hispanic Asian",
-                                                               ifelse(f.raceFin[,1] == "NHNHOPIP","Non-Hispanic Native Hawaiian/Pacific Islander",
-                                                                      ifelse(f.raceFin[,1] == "NHOtherP","Non-Hispanic Other","Non-Hispanic, Two Races"))))))))
+  # the state file
+  f.state <- merge(f.ACSRaceS,f.ACSRaceMOES_Fin,by="race")
+  names(f.state) <- c("Race","Count_State","MOE_State")
   
-  # reformatting RaceFin
-  f.raceFin[,2] <- percent(f.raceFin[,2]*100)
-  f.raceFin[,3] <- percent(f.raceFin[,3]*100)
+  total_State <- as.numeric(f.state[which(f.state$Race == "TotalPop"),2])
+  f.state$CountPCT_State <- f.state$Count_State/total_State
+  f.state$MOEPCT_State <- f.state$MOE_State/total_State   
   
-  m.race <- as.matrix(f.raceFin) #This is the matrix table 
+  f.raceFin <- merge(f.place,f.state, by="Race")
+  
+  #Revising the Levels
+  f.raceFin[,1] <-   ifelse(f.raceFin[,1] == "TotalPop", "Total Population",
+                            ifelse(f.raceFin[,1] == "Hispanic","Hispanic",
+                                   ifelse(f.raceFin[,1] == "NonHispanic", "Non-Hispanic",
+                                          ifelse(f.raceFin[,1] == "NHWhite","Non-Hispanic White",
+                                                 ifelse(f.raceFin[,1] == "NHBlack","Non-Hispanic Black",
+                                                        ifelse(f.raceFin[,1] == "NHAIAN","Non-Hispanic Native American/Alaska Native",
+                                                               ifelse(f.raceFin[,1] == "NHAsian","Non-Hispanic Asian",
+                                                                      ifelse(f.raceFin[,1] == "NHNHOPI","Non-Hispanic Native Hawaiian/Pacific Islander",
+                                                                             ifelse(f.raceFin[,1] == "NHOther","Non-Hispanic Other","Non-Hispanic, Two Races")))))))))
+  
+  
+  #Calculating the statistical test
+  f.raceFin$ZScore <- (abs(f.raceFin$CountPCT_Place - f.raceFin$CountPCT_State)/
+                         sqrt((f.raceFin$MOEPCT_Place^2) + (f.raceFin$MOEPCT_State^2)))
+  f.raceFin$Sig_Diff <- ifelse(f.raceFin$ZScore < 1,"No","Yes")
+  f.raceFin$Sig_Diff <- ifelse(is.na(f.raceFin$Sig_Diff)," ",f.raceFin$Sig_Diff)
+  
+  #Formatting Percentage Values
+  f.raceFin$CountPCT_Place <- percent(f.raceFin$CountPCT_Place*100)
+  f.raceFin$MOEPCT_Place <- percent(f.raceFin$MOEPCT_Place*100)   
+  f.raceFin$CountPCT_State <- percent(f.raceFin$CountPCT_State*100)
+  f.raceFin$MOEPCT_State <- percent(f.raceFin$MOEPCT_State*100)   
+  
+  
+  m.race <- as.matrix(f.raceFin[c(1,9,8,4,3,2,5,6,7,10),c(1,4,5,8,9,11)]) #This is the matrix table 
   
   #Column Names
-
+  
   ACSSrc <- paste0("Source: ACS 20",substr(ACS,6,7)," 5-Year Dataset") 
-  names_spaced <- c("Race",simpleCap(ctyname),"Colorado") 
+  names_spaced <- c("Race","Percentage","Margin of Error","Percentage","Margin of Error","Signficant<br/>Difference?") 
+  
+  #Span Header
+  
+  # create vector with colspan
+  tblHead <- c(" " = 1, ctyname = 2, "Colorado"  = 2, " " = 1)
+  
+  # set vector names 
+  names(tblHead) <- c(" ", simpleCap(ctyname),"Colorado"," ") 
   
   race_t <- m.race %>%
     kable(format='html', table.attr='class="cleanTable"', 
           digits=1, 
           row.names=FALSE, 
-          align='lrrr', 
+          align='lrrrrr', 
           caption="Race Comparison",
           col.names = names_spaced, 
           escape = FALSE)  %>%
-    kable_styling(bootstrap_options = "condensed",full_width = F) %>%
-    column_spec(1, width = "45em",bold = T) %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
+    row_spec(0, align = "c") %>%
+    column_spec(1, width = "30em",bold = T) %>%
     column_spec(2, width = "5em") %>%
     column_spec(3, width ="5em") %>%
+    column_spec(4, width ="5em") %>%
+    column_spec(5, width ="5em") %>%
+    column_spec(6, width ="5em") %>%
+    add_header_above(header=tblHead) %>%
     add_footnote(c(ACSSrc))
   
   
-  race_data <- data.frame(f.raceFin)
-  names(race_data)[1] <- "Race_Cat"
-  names(race_data)[2] <- simpleCap(ctyname)
-  names(race_data)[3] <- "Colorado"
+  race_data <- data.frame(m.race)
+  names(race_data)[1] <- "Race Category"
+  names(race_data)[2] <- paste0(simpleCap(ctyname),": ","Percentage")
+  names(race_data)[3] <- paste0(simpleCap(ctyname),": ","Margin of Error")
+  names(race_data)[4] <- "Colorado: Percentage"
+  names(race_data)[5] <- "Colorado: Margin of Error"
+  names(race_data)[6] <- "Signficant Difference?"
   
   
   
@@ -704,6 +860,301 @@ raceTab2 <- function(fips,ctyname,ACS) {
   return(outListR)
 }
 
+#' housePRO  Produces the housing table
+#' calls ms_housing  AB 12/2017
+#'  CO Housing Unit Table
+#'
+#'  This function pulls data on housing types by vacancy, vacancy type, and
+#'  tenure from the 2000 and 2010 Census data.
+#'
+#'  @param fips The FIPS of the Place or County to use for the graph
+#'  @param ACS  The American Community Survey Vintage
+#'  @param state  The State FIPS to use.  Defaults to CO.
+#' @return kable formatted HTML table
+#' @export
+#' 
+ms_housing=function(fips, state="08"){
+  
+  h3_10=codemog_api(data="h3", geonum=paste("1", state, fips, sep=""),meta="no")
+  h3_10[,7:ncol(h3_10)]=as.numeric(as.character(h3_10[,7:ncol(h3_10)]))
+  h3_10=h3_10%>%rename(Total=h3001, Occupied=h3002, Vacant=h3003)%>%
+    mutate(OccPercent=percent(round((Occupied/Total)*100,3)),
+           VacPercent=percent(round((Vacant/Total)*100,3)),
+           Occupied=comma(Occupied),
+           Vacant=comma(Vacant),
+           Total=comma(Total))
+  
+  h4_10=codemog_api(data="h4", geonum=paste("1", state, fips, sep=""),meta="no")
+  h4_10[,7:ncol(h4_10)]=as.numeric(as.character(h4_10[,7:ncol(h4_10)]))
+  h4_10=h4_10%>%  mutate(Owner=h4002+h4003,
+                         Renter=h4004)%>%
+    select(-h4001:-h4004)%>%
+    mutate(ownPercent=percent(round((Owner/(Owner+Renter))*100,3)),
+           rentPercent=percent(round((Renter/(Owner+Renter))*100,3)),
+           Owner=comma(Owner),
+           Renter=comma(Renter))
+  h5_10=codemog_api(data="h5", geonum=paste("1", state, fips, sep=""),meta="no")
+  h5_10[,7:ncol(h5_10)]=as.numeric(as.character(h5_10[,7:ncol(h5_10)]))
+  h5_10=h5_10%>%
+    mutate(Seasonal=h5006,
+           Other=h5002+h5003+h5004+h5005+h5007+h5008)%>%
+    select(-h5001:-h5008)%>%
+    mutate(seasPercent=percent(round((Seasonal/(Other+Seasonal))*100,3)),
+           otherPercent=percent(round((Other/(Other+Seasonal))*100,3)),
+           Other=comma(Other),
+           Seasonal=comma(Seasonal))
+  housing_10=inner_join(h3_10,h5_10)%>%inner_join(h4_10)%>%
+    gather(var, Census.2010, Total:rentPercent, -geoname, -state, -county, -place,-tract,-bg,-geonum)
+  h3_00=codemog_api(data="h3",db="c2000", geonum=paste("1", state, fips, sep=""),meta="no")
+  h3_00[,7:ncol(h3_00)]=as.numeric(as.character(h3_00[,7:ncol(h3_00)]))
+  h3_00=h3_00%>%rename(Total=h3001, Occupied=h3002, Vacant=h3003)%>%
+    mutate(OccPercent=percent(round((Occupied/Total)*100,3)),
+           VacPercent=percent(round((Vacant/Total)*100,3)),
+           Total=comma(Total),
+           Occupied=comma(Occupied),
+           Vacant=comma(Vacant))
+  
+  h4_00=codemog_api(data="h4",db="c2000", geonum=paste("1", state, fips, sep=""),meta="no")
+  h4_00[,7:ncol(h4_00)]=as.numeric(as.character(h4_00[,7:ncol(h4_00)]))
+  h4_00=h4_00%>%  rename(Owner=h4002,
+                         Renter=h4003)%>%
+    select(-h4001)%>%
+    mutate(ownPercent=percent(round((Owner/(Owner+Renter))*100,3)),
+           rentPercent=percent(round((Renter/(Owner+Renter))*100,3)),
+           Owner=comma(Owner),
+           Renter=comma(Renter))
+  h5_00=codemog_api(data="h5",db="c2000", geonum=paste("1", state, fips, sep=""),meta="no")
+  h5_00[,7:ncol(h5_00)]=as.numeric(as.character(h5_00[,7:ncol(h5_00)]))
+  h5_00=h5_00%>%
+    mutate(Seasonal=h5005,
+           Other=h5002+h5003+h5004+h5006+h5007)%>%
+    select(-h5001:-h5007)%>%
+    mutate(seasPercent=percent(round((Seasonal/(Other+Seasonal))*100,3)),
+           otherPercent=percent(round((Other/(Other+Seasonal))*100,3)),
+           Other=comma(Other),
+           Seasonal=comma(Seasonal))
+  
+  housing_00=inner_join(h3_00,h5_00)%>%inner_join(h4_00)%>%
+    gather(var, Census.2000, Total:rentPercent, -geoname, -state, -county, -place,-tract,-bg,-geonum)
+  
+  housing=inner_join(housing_00,housing_10)
+  return(housing)
+}
+
+housePRO=function(fips, ctyname, ACS){
+  state="08"
+  
+  # Building ACS Table...
+  f.b25001 <- codemog_api(data="b25001", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  f.b25003 <- codemog_api(data="b25003", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  f.b25004 <- codemog_api(data="b25004", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  
+  f.acshousing <- cbind(f.b25001[,c(1,8)], f.b25003[,8:10],f.b25004[,8:15])
+  
+  f.acshousing[,2:13]=as.numeric(as.character(f.acshousing[,2:13]))
+  
+  f.acshousing <- f.acshousing %>% rename(Total=b25001001, Occupied=b25003001, Vacant=b25004001,
+                                          Owner = b25003002, Renter = b25003003, Seasonal = b25004006)%>%
+    mutate(Other = sum(b25004002, b25004003, b25004004, b25004005, b25004007,b25004008), 
+           OccPercent=percent(round((Occupied/Total)*100,3)),
+           ownPercent = percent(round((Owner/Occupied)*100,3)),
+           rentPercent = percent(round((Renter/Occupied)*100,3)),
+           VacPercent = percent(round((Vacant/Total)*100,3)),
+           seasPercent =  percent(round((Seasonal/Vacant)*100,3)),
+           otherPercent = percent(round((Other/Vacant)*100,3)),
+           Occupied=comma(Occupied),
+           Vacant=comma(Vacant),
+           Owner = comma(Owner),
+           Renter = comma(Renter),
+           Seasonal = comma(Seasonal),
+           Other = comma(Other),
+           Total=comma(Total))
+  f.acsH <- f.acshousing[,c(1:6,11,14:20)] %>%
+    gather(var, ACS, Total:otherPercent, -geoname)
+  
+  # Geneerating Census Tab using ms_housing...
+  f.CensTab <- ms_housing(fips)
+  
+  #reorder f.CensTab  to match
+  f.CensTab <- f.CensTab[c(1,2,10,11,3,6,7,4,12,13,5,8,9),c(1,8:10)]
+  
+  # Assembling Combined Tab: f.longtab
+  
+  f.longTab <- merge(f.CensTab,f.acsH, by="var")
+  f.longTab <- f.longTab[c(11,2,5,7,12,9,3,1,6,8,13,10,4),c(1,3,4,6)]
+  f.count <- f.longTab[1:7,]
+  f.pct <- f.longTab[8:13,]
+  f.pct$var <- ifelse(f.pct$var == "OccPercent","Occupied",
+                      ifelse(f.pct$var == "ownPercent","Owner",
+                             ifelse(f.pct$var == "rentPercent","Renter",
+                                    ifelse(f.pct$var == "VacPercent","Vacant",
+                                           ifelse(f.pct$var == "seasPercent","Seasonal","Other")))))
+  f.HouseTab <- merge(f.count,f.pct,by="var",all.x=TRUE)
+  
+  #Reordering Table and prepating output
+  
+  f.HouseTab <- f.HouseTab[c(6,1,3,4,7,5,2),c(1,2,5,3,6,4,7)]
+  
+  f.HouseTab[is.na(f.HouseTab)] <- ""
+  
+  f.HouseTab$var <- ifelse(f.HouseTab$var == "Total","Total Housing Units",
+                           ifelse(f.HouseTab$var == "Occupied","Occupied Housing Units",
+                                  ifelse(f.HouseTab$var == "Owner", "Owner-Occupied Units",
+                                         ifelse(f.HouseTab$var == "Renter", "Renter-Occupied Units",
+                                                ifelse(f.HouseTab$var == "Vacant", "Vacant Housing Units",
+                                                       ifelse(f.HouseTab$var == "Seasonal","Seasonal Units","All Other Units"))))))
+  
+  names(f.HouseTab) <- c("Housing Type","Census 2000 Count", "Census 2000 Percent",
+                         "Census 2010 Count", "Census 2010 Percent", 
+                         paste0(toupper(ACS)," Count"), paste0(toupper(ACS)," Percent"))
+  
+  
+  
+  
+  m.House <- as.matrix(f.HouseTab)
+  
+  # Setting up table
+  
+  #Column Names
+  ACSSrc <- paste0("Source: ACS 20",substr(ACS,6,7)," 5-Year Dataset") 
+  ACSName <- paste0("20",substr(ACS,6,7),"[note]")
+  names_spaced <- c("Housing Type","Count","Percent","Count","Percent","Count","Percent")
+  
+  #Span Header
+  
+  # create vector with colspan
+  tblHead1 <- c(" " = 1, ctyname = (ncol(m.House)-1))
+  
+  # set vector names 
+  names(tblHead1) <- c(" ", simpleCap(ctyname))
+  
+  tblHead2 <- c(" " = 1,"2000[note]" = 2,"2010[note]" = 2,ACSName = 2) 
+  names(tblHead2) <- c(" ", "2000[note]", "2010[note] ",ACSName)
+  
+  
+  Housing_tab <- m.House %>%
+    kable(format='html', table.attr='class="cleanTable"', 
+          digits=1, 
+          row.names=FALSE, 
+          align='lrrrrrr', 
+          caption="Housing Trend",
+          col.names = names_spaced, 
+          escape = FALSE)  %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
+    column_spec(1, width = "45em",bold = T) %>%
+    column_spec(2, width = "5em") %>%
+    column_spec(3, width ="5em") %>%
+    column_spec(4, width ="5em") %>%
+    column_spec(5, width ="5em") %>%
+    column_spec(6, width ="5em") %>%
+    column_spec(7, width ="5em") %>%
+    add_header_above(header= tblHead2) %>%
+    add_header_above(header=tblHead1) %>%
+    add_footnote(c("Source; 2000 Census",
+                   "Source: 2010 Census",
+                   ACSSrc), 
+                 notation = "symbol")
+  
+  outList <- list("table" = Housing_tab, "data" = f.HouseTab)
+  return(outList)
+}
+
+#' medianAgeTab Creates table showing the Median Age by Gender
+#' for a selecte lplace and for the state
+#' @param fips The County FIPS number (without leading Zeros)
+#' @param state the State FIPS code, defaluts to "08" for Colorado.
+#' @param ACS a string identifying the input dataset eg: "acs1115"
+#' @param ctyname a string identiying the place name
+#' @return a kable table and dataset
+#' @export
+
+medianAgeTab <- function(fips, state="08", ACS, ctyname){
+  
+  #Local place Age
+  medAge <- codemog_api(data="b01002",db=ACS, geonum=paste("1", state, fips, sep=""), meta="no")
+  medAgeMOE <- codemog_api(data="b01002_moe",db=ACS, geonum=paste("1", state, fips, sep=""), meta="no")
+  
+  medAge2 <- gather(medAge[1,8:10])
+  medAge2$key <- c("Total","Male","Female")
+  names(medAge2)[2] <- "MedAge_p"
+  
+  medAge2MOE <- gather(medAgeMOE[1,8:10])
+  medAge2MOE$key <- c("Total","Male","Female")
+  names(medAge2MOE)[2] <- "MOE_p"
+  
+  f.localAge <- merge(medAge2, medAge2MOE, by = "key")
+  
+  #State Age
+  medAgeST  <- codemog_api(data="b01002",db=ACS, geonum=paste("1", state,  sep=""), meta="no")
+  medAgeSTMOE  <- codemog_api(data="b01002_moe",db=ACS, geonum=paste("1", state,  sep=""), meta="no")
+  
+  medAgeST2 <- gather(medAgeST[1,8:10])
+  medAgeST2$key <- c("Total","Male","Female")
+  names(medAgeST2)[2] <- "MedAge_s"
+  
+  medAgeST2MOE <- gather(medAgeSTMOE[1,8:10])
+  medAgeST2MOE$key <- c("Total","Male","Female")
+  names(medAgeST2MOE)[2] <- "MOE_s"
+  
+  f.stateAge <- merge(medAgeST2, medAgeST2MOE, by = "key")
+  
+  #Creating Copmbined table
+  
+  f.ageTab <- merge(f.localAge, f.stateAge, by = "key")
+  
+  
+  
+  #Calculating signicant differences
+  f.ageTab$MedAge_p <- as.numeric(f.ageTab$MedAge_p)
+  f.ageTab$MOE_p <- as.numeric(f.ageTab$MOE_p)
+  f.ageTab$MedAge_s <- as.numeric(f.ageTab$MedAge_s)
+  f.ageTab$MOE_s <- as.numeric(f.ageTab$MOE_s)
+  
+  f.ageTab$ZScore <- (abs(f.ageTab$MedAge_p - f.ageTab$MedAge_s)/
+                        sqrt((f.ageTab$MOE_p^2) + (f.ageTab$MOE_p^2)))
+  f.ageTab$Sig_Diff <- ifelse(f.ageTab$ZScore < 1,"No","Yes")
+  
+  m.ageTab <- as.matrix(f.ageTab[,c(1:5,7)])
+  #Column Names
+  
+  ACSSrc <- paste0("Source: ACS 20",substr(ACS,6,7)," 5-Year Dataset") 
+  names_spaced <- c("Gender","Median Age","Margin of Error","Median Age","Margin of Error","Signficant<br/>Difference?") 
+  
+  #Span Header
+
+  # create vector with colspan
+  tblHead <- c(" " = 1, ctyname = 2, "Colorado"  = 2, " " = 1)
+  
+  # set vector names 
+  names(tblHead) <- c(" ", simpleCap(ctyname),"Colorado"," ") 
+  
+  age_t <- m.ageTab %>%
+    kable(format='html', table.attr='class="cleanTable"', 
+          digits=1, 
+          row.names=FALSE, 
+          align='lrrrrr', 
+          caption="Median Age by Gender  Comparison",
+          col.names = names_spaced, 
+          escape = FALSE)  %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
+    row_spec(0, align = "c") %>%
+    column_spec(1, width = "30em",bold = T) %>%
+    column_spec(2, width = "5em") %>%
+    column_spec(3, width ="5em") %>%
+    column_spec(4, width ="5em") %>%
+    column_spec(5, width ="5em") %>%
+    column_spec(6, width ="5em") %>%
+    add_header_above(header=tblHead) %>%
+    add_footnote(c(ACSSrc)) 
+  
+  #preparint Output data
+  f.ageTab2 <- f.ageTab[,c(1:5,7)]
+  names(f.ageTab2) <- c("Gender", paste0("Median Age: ",ctyname), paste0("Margin of Error: ",ctyname), 
+                        "Median Age: Colorado", "Margin of Error: Colorado", "Sig. Difference")
+  
+  outList <- list("table" = age_t, "data" = f.ageTab2)
+  return(outList) 
+}
 #3) Plotting Functions
 
 #' county_timeseries Creates a \code{ggplot2} chart of the population for a CO county
@@ -719,6 +1170,8 @@ raceTab2 <- function(fips,ctyname,ACS) {
 #' @param beginyear The first year in the timeseries Defaults to 1990.
 #' @param endYear The first year in the timeseries Defaults to 2013.
 #' @param base Base font size.
+#' @return ggplot2 graphic
+#' @export
 
 
 
@@ -734,7 +1187,8 @@ county_timeseries=function(fips, beginyear=1990,endYear, base=12){
     ggplot(aes(x=as.factor(year), y=as.integer(totalPopulation), group=countyfips))+
     geom_line(color="#00953A", size=1.75)+
     labs(x="Year", y="Population", title=paste("Population,", beginyear, "to", max(d$year), sep=" "),
-         subtitle = d$county)+
+         subtitle = d$county,
+         caption = "Source: State Demography Office")+
     scale_y_continuous(label=comma)+
     theme_codemog(base_size=base)+
     theme(axis.text.x=element_text(angle=90,size=8))
@@ -752,7 +1206,8 @@ county_timeseries=function(fips, beginyear=1990,endYear, base=12){
 #' @param  fips numeric, county-level FIPS code  ** will need to extract county level FIPS code in all calls
 #' @param  cName County Name string, from input$unit
 #' @param  lYr the last year of the output date range
-#' 
+#' @return ggplot2 graphic
+#' @export 
 
 cocPlot <- function(fips, cName,lYr,base=12) {
   f.coccty <- components_d(fips=fips, name=cName, lYr = lYr)
@@ -797,17 +1252,19 @@ return(outList)
 #'
 #' Uses the data from the State Demography Office package codemog to
 #' create a graph showing projected population  changes by Age for each Colorado county from
-#' 2015 to 2025.
-#' The chart is modified from the original.  Now, we show two bars, one for each series.
+#' 2010 to 2025.
+#' The chart is modified from the original.  Now, we show three bars, one for each series.
 #'
 #' @param fips is the fips code for the county being examined
 #' @param base is the base text size for the ggplot2 object and codemog_theme()
-#'
-ageForecastPRO=function(fips, stYr, eYr, base=12, agegroup="ten"){
+#' @return ggplot2 graphic
+#' @export
+
+ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
  
   fips=as.numeric(fips)
   
-  yrs=c(stYr, eYr)
+  yrs=c(stYr, mYr, eYr)
   
   d=county_sya(fips, yrs)%>%
     mutate(agecat=age_cat(., "age", groups=agegroup))%>%
@@ -818,13 +1275,14 @@ ageForecastPRO=function(fips, stYr, eYr, base=12, agegroup="ten"){
     arrange(countyfips, year)
   
  
-  barCol <- c("#00953A","#6EC4E8")
+  barCol <- c("#82BC00", "#009ADD", "#5C666F")  
   pltTitle <- paste0("Age Forecast")
   subTitle <- paste0(as.character(d[1,2]), " County: Change in Population by Age: ",stYr," to ",eYr )
-  d$year <- as.factor(d$year)
-  
+  names(d)[3] <- "Year"
+  d$Year <- as.factor(d$Year)
+  d$Year <- factor(d$Year, levels=yrs)
   p <- d %>%
-    ggplot(aes(x=agecat, y=totalpopulation, fill=year))+
+    ggplot(aes(x=agecat, y=totalpopulation, fill=Year))+
     geom_bar(stat="identity",color="black", position = position_dodge(width=0.8)) +
     scale_y_continuous(label=comma)+
     scale_fill_manual(values=barCol) +
@@ -838,13 +1296,19 @@ ageForecastPRO=function(fips, stYr, eYr, base=12, agegroup="ten"){
     theme(plot.title = element_text(hjust = 0.5),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
-          legend.position= "bottom")
+          legend.position= "bottom") 
   
   #Regrouping Data
- 
-  dWide <- spread(d, year, totalpopulation)
+
+  dWide <- spread(d, Year, totalpopulation)
   names(dWide)[4] <- paste0("totalPop_",stYr)
-  names(dWide)[5] <- paste0("totalPop_",eYr)
+  names(dWide)[5] <- paste0("totalPop_",mYr) 
+  names(dWide)[6] <- paste0("totalPop_",eYr)
+  
+  dWide[4] <- round(dWide[4], digits = 0)
+  dWide[5] <- round(dWide[5], digits = 0)
+  dWide[6] <- round(dWide[6], digits = 0)
+  
   dWide$county <- paste0(dWide$county," County")
   
   #binding List
@@ -864,8 +1328,10 @@ ageForecastPRO=function(fips, stYr, eYr, base=12, agegroup="ten"){
 #'  @param fips2 The FIPS of the Place or County to use for comparison
 #'  @param state2 The State FIPS to use as comparison.  Defaults to CO.
 #'  @param dbid  Data set id, eg: for 2015 Acs: "acd1115"
-
-incomePRO=function(fips, fips2="", state="08", state2="08", dbid= "acs1115", base=12){
+#'  @return ggplot2 graphic
+#'  @export
+#' 
+incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", dbid= "acs1115", base=12){
  
   hhinc1=codemog_api(data="b19001",db=dbid, geonum=paste("1", state, fips, sep=""), meta="no")%>%
     select(-b19001001)%>%
@@ -904,7 +1370,7 @@ incomePRO=function(fips, fips2="", state="08", state2="08", dbid= "acs1115", bas
     mutate(p=as.numeric(value)/sum(as.numeric(value)))
   
   hhinc=bind_rows(hhinc1, hhinc2)
-  
+  hhinc$geoname <- factor( hhinc$geoname, levels=c(ctyname, "Colorado"))
   pltTitle <- "Household Income Distribution"
   subTitle <- as.character(hhinc[1,1])
   srcTitle <- paste0("Source: 20", substr(dbid,6,8)," American Community Survey 5-Year Dataset")
@@ -957,8 +1423,10 @@ incomePRO=function(fips, fips2="", state="08", state2="08", dbid= "acs1115", bas
 #' @param state2 is the state of the second place to be compared, is set to call up CO since fips2 is blank Defaults to 08
 #' @param dbid Specifies the ACS data set to be used, defaults to 2011-2015 5-year file
 #' @param base is the abse text size for the ggplot2 object and codemog_theme()
-#' 
-educPRO <- function(fips, state="08", fips2="", state2="08", dbid="acs1115", base=12){
+#' @return ggplot2 graphic
+#' @export
+ 
+educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", dbid="acs1115", base=12){
  
   d13p <- codemog_api(data="b15003",db=dbid,geonum=paste("1",state , fips,sep=""),meta="no")
   d13p[,7:32]=as.numeric(as.character(d13p[,7:32]))
@@ -1003,18 +1471,19 @@ educPRO <- function(fips, state="08", fips2="", state2="08", dbid="acs1115", bas
     mutate(p=value/sum(value))
   
   # Preparing Plot
+  d$geoname <- factor(d$geoname, levels=c(ctyname, "Colorado"))
   pltTitle <- "Educational Attaiment,\nPersons Age 25 and Older "
   subTitle <- as.character(d13pm[1,1])  #The is the county Name...
   srcTitle <- paste0("Source: 20", substr(dbid,6,8)," American Community Survey 5-Year Dataset")
   xTitle <- "Educational Attainment"
   
   p=ggplot(d, aes(x=educcat, y=p, fill=geoname))+
-    geom_bar(stat="identity", position="dodge")+#, fill=rgb(31,74,126, max=255))+
+    geom_bar(stat="identity", position="dodge")+
     scale_y_continuous(label=percent)+
     scale_fill_manual(values=c("#6EC4E8","#00953A"),
                       name="Geography")+
     theme_codemog(base_size=base)+
-    theme(axis.text.x=element_text(angle=0))+ coord_flip() +
+    theme(axis.text.x=element_text(angle=0))+  #coord_flip() +
     labs(title = pltTitle,
          subtitle = subTitle,
          caption = srcTitle, 
@@ -1055,13 +1524,90 @@ educPRO <- function(fips, state="08", fips2="", state2="08", dbid="acs1115", bas
   
   return(outList)
 }
+
+
+#' AgePlotPro Creates a Chart comparing The age distribution of a selected place to the state for a simgle year
+#'
+#' @param fips is the numeric fips code for the main area to be compared
+#' @param ctyname is the cplace name from input$unit
+#' @param state is the numeric state code , it defaults to 0 in the county_sya call
+#' @param yrs is the single year value to be extracted by county_sya
+#' @param base is the abse text size for the ggplot2 object and codemog_theme()
+#' @return ggplot2 graphic
+#' @export
+
+AgePlotPro  <- function(fips, ctyname, state=0, yrs, base=10) {
+  #Creating Place data File
+  f.place =county_sya(fips, yrs)%>%
+    mutate(agecat=age_cat(., "age", groups=agegroup))%>%
+    group_by(countyfips,county, year, agecat)%>%
+    summarise(totalpopulation=sum(as.numeric(totalpopulation)))  %>%
+    ungroup()%>%
+    arrange(countyfips, year) %>% 
+    mutate(popTot = sum(totalpopulation)) %>%
+    group_by(agecat, add=TRUE) %>%
+    mutate(age_Pct = percent((totalpopulation/sum(popTot))*100)) %>%
+    mutate(age_Prop = (totalpopulation/sum(popTot))*100)
+  
+  f.place$county <- simpleCap(ctyname)
+  
+  #Creating State Data file
+  f.state =county_sya(state, yrs)%>%
+    mutate(agecat=age_cat(., "age", groups=agegroup))%>%
+    group_by(countyfips,county, year, agecat)%>%
+    summarise(totalpopulation=sum(as.numeric(totalpopulation)))  %>%
+    ungroup()%>%
+    arrange(countyfips, year) %>%
+    mutate(popTot = sum(totalpopulation)) %>%
+    group_by(agecat, add=TRUE) %>%
+    mutate(age_Pct = percent((totalpopulation/sum(popTot))*100)) %>%
+    mutate(age_Prop = (totalpopulation/sum(popTot))*100)
+  
+  # Creating Plot data file
+  f.AgePlot <- rbind(f.place, f.state)
+  
+  #Preparint Plot
+  barCol <- c("#6EC4E8","#00953A")  
+  pltTitle <- paste0("Population Distribution by Age for ",yrs)
+  subTitle <- paste0(ctyname, " vs. Colorado" )
+  f.AgePlot$county <- factor(f.AgePlot$county, levels=c(ctyname, "Colorado"))
+  
+  AgePlot <- f.AgePlot %>%
+    ggplot(aes(x=agecat, y=age_Prop, fill=county))+
+    geom_bar(stat="identity",color="black", position = position_dodge(width=0.8)) +
+    scale_y_continuous(label=percent)+
+    scale_fill_manual(values=barCol) +
+    theme_codemog(base_size=base)+
+    theme(axis.text.x=element_text(angle=45, hjust=1))+
+    labs(title = pltTitle,
+         subtitle = subTitle,
+         caption = "Source: State Demography Office", 
+         x = "Age Group",
+         y= "Percentage of Total Population") +
+    theme(plot.title = element_text(hjust = 0.5),
+          panel.background = element_rect(fill = "white", colour = "gray50"),
+          panel.grid.major = element_line(colour = "gray80"),
+          legend.position= "bottom") 
+  
+  
+  
+  f.AgePlot2 <- f.AgePlot[ ,c(2:5,7)]
+  f.AgePlot2$totalpopulation <- round(f.AgePlot2$totalpopulation,digits = 0)
+  
+  outList <- list("plot" = AgePlot, "data" = f.AgePlot2)
+  return(outList)
+}
  
 #End Functions
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
+# Current ACS database
+curACS = "acs1115"
+curYr <- 2016
 
 #Basic Statistics
 stats.obj <<-list()
+stats.list <<- list()
 
 
 # Population Change
@@ -1069,17 +1615,20 @@ pop.tab1 <<- list()
 pop.plot2 <<- list()
 pop.plot3 <<- list()
 pop.plot4 <<- list()
+pop.list <<- list()
 
 #Population Characteristics
 popc.plot1 <<- list()
 popc.plot2 <<- list()
 popc.tab1 <<- list()
 popc.tab2 <<- list()
+popc.list <<- list()
 
 
 # Structure of user Interface
-ui <- dashboardPage( skin="green",
-  dashboardHeader(title = span(img(src="ShieldOnly_LRG.png", height = 70, align = "top"),"State Demography Office Community Profile Application"), titleWidth=600),  #dashboardHeader
+ui <- 
+  dashboardPage( skin="green", title= "State Demography Office Community Profile",
+  dashboardHeader(title = span(img(src="ShieldOnly_LRG.png", height = 70, align = "top"),"State Demography Office Community Profile"), titleWidth=550),  #dashboardHeader
   dashboardSidebar( width = 300,  useShinyjs(),
     # data level Drop down
     selectInput("level", "Select Data Level" , 
@@ -1095,30 +1644,28 @@ ui <- dashboardPage( skin="green",
     #Output Content Checkboxes
     checkboxGroupInput("outChk", "Select the data elements to display:",
                        choices = c("Basic Statistics" = "stats", 
-                         "Population, Migration and Natural Increase" = "pop",
+                         "Population Characteristics: Age" = "pop",
                          "Population Characteristics: Income, Education and Race"= "popc",
+                         "Population Forecasts" = "popf",
                          "Housing and Households" = "housing",
-                          "Employment and Demographic Forecast"="emply",
                          "Commuting" = "comm",
+                         "Employment and Demographic Forecast"="emply",
                          "Employment by Industry"="emplind"),
-                        selected =  c("stats","pop","popc",
-                                      "housing","emply","comm","emplind")
+                        selected =  c("stats","pop","popc","popf",
+                                      "housing","comm", "emply","emplind")
                        ),
     
     #Action Button
     actionButton("profile","View Profile"),
     actionButton("comparison","View Comparison"),
     actionButton("contact","Contact SDO"),
-<<<<<<< HEAD
     downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),
-    tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}"))
-=======
-    downloadLink("singlePDF", label="Output Profile to PDF")
-
->>>>>>> cd07a009037decb30a7b57f3fe1b9c529d22e94e
+         tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
+                   )
   ), #dashboardSidebar
   dashboardBody(  tags$head( #Link to CSS...
-                  tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css")
+                  tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),
+                  tags$title("State demography Office Community Profile Dashboard")
                   ),
                   tags$style(HTML("
                   .box.box-solid.box-primary>.box-header {
@@ -1206,7 +1753,7 @@ server <- function(session,input, output) {
          outputList <- list(lnError)
          }  else { 
            withProgress(message = 'Generating Profile', value = 0, {  # Initialize Progress bar 
-         #Building fipslist
+          #Building fipslist
          if(input$level == "Counties") {
               fipslist <- listTofips(CountyList,input$level,input$unit)
               PlFilter <- FALSE
@@ -1228,17 +1775,15 @@ server <- function(session,input, output) {
 
      svals <- reactiveValues(a=NULL,b=NULL,c=NULL)
      ln1 <- tags$h1(simpleCap(input$unit))
-     outputList <- list(ln1)
-
-     
+      
     #stats; Basic Statistics
     if("stats" %in% input$outChk) {
       stats.text <- tags$h2("Basic Statistics")
       if(input$level == "Counties") {
-           stats.tab1 <- statsTable1(fipslist,"",2010,2016)
+           stats.tab1 <- statsTable1(fipslist,"",2010,2016,curACS)
       }
       if(input$level == "Municipalities/Places") {
-        stats.tab1 <- statsTable1(CtyFips,fipslist,2010,2016)
+        stats.tab1 <- statsTable1(CtyFips,fipslist,2010,2016,curACS)
       }
       stats.map <- cp_countymap(substr(fipslist,3,5)) 
       stats.obj <<- list("table" = stats.tab1,"plot"= stats.map)
@@ -1251,26 +1796,24 @@ server <- function(session,input, output) {
                                tags$li(tags$a(href="https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml","U.S. Census Bureau American Community Survey",target="_blank")
                                        )))
       
-      stats.box1 <- tabBox(width=6, height=280,
+      stats.box0 <- box(width=12,ln1)
+      stats.box1 <- tabBox(width=8, height=350,
                            tabPanel("Table",tags$div(class="Row1Tab",renderTable({stats.tab1},colnames=FALSE))),
                            tabPanel("Information",Stats.info))
-      stats.box2 <- box(width=4, height=280,renderPlot({stats.map},height=270))
+      stats.box2 <- box(width=4, height=350,renderPlot({stats.map},height=270))
 
- 
       
       #building List
-      stats.list <- list(stats.box1, stats.box2)
-      outputList <- append(outputList,stats.list)
+      stats.list <<- list(stats.box0, stats.box1, stats.box2)
       incProgress()
     }
      
     #pop: Population, Migration and Natural Increase
     if("pop" %in% input$outChk){
       #Generate tables, plots and text...
-      pop.text0 <- "Population, Migration and Natural Increase Trends"
       pop.tab1  <<- popTable(substr(fipslist,3,5),input$unit,1990,2016)
       pop.plot2 <<- county_timeseries(fips=as.numeric(substr(fipslist,3,5)),endYear=2016,base=10)
-      pop.plot3 <<- ageForecastPRO(fips=as.numeric(substr(fipslist,3,5)),2015,2025,base=10)
+      pop.plot3 <<- ageForecastPRO(fips=as.numeric(substr(fipslist,3,5)),2010,2015,2025,base=10)
       pop.plot4 <<- cocPlot(fips=as.numeric(substr(fipslist,3,5)),cName=input$unit,2016) 
 
       popb1.info <- tags$div(class="dInfo","The Population Growth Table compares population growth for a place to the State.",tags$br(),
@@ -1299,10 +1842,8 @@ server <- function(session,input, output) {
 
       
       # Bind to boxes
-       pop.box0 <- box(width=12, height= 40, title= pop.text0, 
-                        status="primary", solidHeader = TRUE)
        pop.box1 <- tabBox(width=6, height=400,
-                          tabPanel("Table",tags$div(class="cleanTab", HTML(srcFix(pop.tab1$table)))),
+                          tabPanel("Table",tags$div(class="cleanTab", HTML(pop.tab1$table))),
                           tabPanel("Sources and Downloads",popb1.info))
        pop.box2 <- tabBox(width=6, height=400,
                           tabPanel("Chart", renderPlot({pop.plot2$plot},height=340)),
@@ -1316,19 +1857,17 @@ server <- function(session,input, output) {
    
        
        #Append to List
-       pop.list <- list(pop.box0,pop.box1,pop.box2,pop.box3,pop.box4)
-       outputList <- append(outputList,pop.list)
+       pop.list <<- list(pop.box1,pop.box2,pop.box3,pop.box4)
        incProgress()
     }
     # Population Chatacteristics 
      if("popc" %in% input$outChk){
 
        #Generate tables, plots and text...
-       popc.text0 <- "Population Characteristics: Income, Education and Race"
-       popc.plot1 <<- incomePRO(fips=substr(fipslist,3,5))
-       popc.plot2 <<- educPRO(fips=substr(fipslist,3,5))
-       popc.tab1 <<- raceTab1(fips=substr(fipslist,3,5),ctyname=input$unit,"acs1115") 
-       popc.tab2 <<- raceTab2(fips=substr(fipslist,3,5),ctyname=input$unit,"acs1115")
+       popc.plot1 <<- incomePRO(fips=substr(fipslist,3,5),ctyname=simpleCap(input$unit), dbid=curACS)
+       popc.plot2 <<- educPRO(fips=substr(fipslist,3,5), ctyname=simpleCap(input$unit), dbid=curACS)
+       popc.tab1 <<- raceTab1(fips=substr(fipslist,3,5),ctyname=input$unit,curACS) 
+       popc.tab2 <<- raceTab2(fips=substr(fipslist,3,5),ctyname=input$unit,curACS)
       
        #Contents of Information Tabs
        popcb1.info <- tags$div(class="dInfo","The Income Disctibution Chart compares the distribution of household income for a selected location to the State.",tags$br(),
@@ -1350,32 +1889,34 @@ server <- function(session,input, output) {
                                downloadButton("popcb3Data","Download Data"))
        
        popcb4.info <- tags$div(class="dInfo","The Race Comparison Table compares the distribution of racial idenification of a place to the State.",tags$br(),
-                               "Information on racial identification is taken from the American Community Survey",tags$br(), tags$br(),
+                               "Information on racial identification is taken from the American Community Survey",tags$br(), 
+                               "Esitmates of statistically significant differences are calculated at the 90% confidence level.", tags$br(),
+                               "For more information on the Margin of Error and its use in statistical testing, see:", tags$br(),
+                               tags$ul(
+                               tags$li(tags$a(href="https://demography.dola.colorado.gov/demography/understanding-margins-error/","Understanding Margins of Error",target="_blank"), " and "),
+                               tags$li(tags$a(href="https://www.census.gov/programs-surveys/acs/guidance.html","U.S. Census Bureau American Community Survey Guidance for Data Users",target="_blank"))),
+                               tags$br(),
                                "To download this table, click on the 'Output PDF' button in the sidebar of the dashboard.",tags$br(), tags$br(),
                                "To download data click on the button below", tags$br(),
                                downloadButton("popcb4Data","Download Data"))
        
        # Bind to boxes
-       popc.box0 <- box(width=12, height= 40, title= popc.text0, 
-                        status="primary", solidHeader = TRUE)
        popc.box1 <- tabBox(width=6, height=400,
                            tabPanel("Chart",renderPlot({popc.plot1$plot},height=340)),
                            tabPanel("Sources and Downloads",popcb1.info))
        popc.box2 <- tabBox(width=6, height=400,
                            tabPanel("Chart",renderPlot({popc.plot2$plot},height=340)),
                            tabPanel("Sources and Downloads",popcb2.info))
-       popc.box3 <- tabBox(width=6, height=400,
+       popc.box3 <- tabBox(width=6, height=500,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(popc.tab1$table))),
                            tabPanel("Sources and Downloads",popcb3.info))
-       popc.box4 <- tabBox(width=6, height=400,
+       popc.box4 <- tabBox(width=6, height=500,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(popc.tab2$table))),
                            tabPanel("Sources and Downloads",popcb4.info))
 
        
        #Append to List
-       popc.list <- list(popc.box0,popc.box1,popc.box2,popc.box3,popc.box4)
-       outputList <- append(outputList,popc.list)
-       
+       popc.list <<- list(popc.box1,popc.box2,popc.box3,popc.box4)
        incProgress()
      }
        toggle(id="singlePDF")     
@@ -1383,7 +1924,15 @@ server <- function(session,input, output) {
          }#if input$unit == ""
       
      # Output UI...
-    output$ui <- renderUI(outputList)
+    output$ui  <- renderUI({
+      tabs <- lapply(1:length(input$outChk), function(i) {  # this determines the number of tabs needed
+        id <- paste0("tab", i)
+        tabPanel(
+          title = tabTitle(input$outChk[[i]]), tabList(input$outChk[[i]])
+        ) # TabPanel
+      })       
+      do.call(tabsetPanel, tabs)
+    }) #renderUI
     
     
  
