@@ -24,13 +24,9 @@
 #setwd("J:/Community Profiles/Shiny Demos")
 #setwd("C:/Users/Adam/Documents/Colorado State Demography/Shiny Demos")
 rm(list = ls())
-library(plyr, quietly=TRUE)
 library(tidyverse, quietly=TRUE)
 library(readxl, quietly=TRUE)
 library(scales, quietly=TRUE)
-library(shiny, quietly=TRUE)
-library(shinydashboard, quietly=TRUE)
-library(shinyjs, quietly=TRUE)
 library(codemogAPI, quietly=TRUE)
 library(codemogProfile, quietly=TRUE)
 library(knitr, quietly=TRUE)
@@ -38,7 +34,9 @@ library(kableExtra, quietly=TRUE)
 library(RPostgreSQL, quietly=TRUE)
 library(rmarkdown)
 library(robR)
-
+library(shiny, quietly=TRUE)
+library(shinydashboard, quietly=TRUE)
+library(shinyjs, quietly=TRUE)
 
 
 # validStatuses values for boxes
@@ -49,7 +47,8 @@ library(robR)
 #danger Red
 
 
-#Start Functions
+#Start Functions Will be modified once a project is established
+#Utility functions
 #1) Utility Functions
 
 #'  popPlace : Populates the input$unit field using information from the PostGres estimates database.
@@ -62,67 +61,67 @@ library(robR)
 
 
 popPlace <- function(level) {
-
-# create a connection
-# save the password that we can "hide" it as best as we can by collapsing it
-pw <- {
-  "demography"
-}
-
-# loads the PostgreSQL driver
-drv <- dbDriver("PostgreSQL")
-# creates a connection to the postgres database
-# note that "con" will be used later in each connection to the database
-con <- dbConnect(drv, dbname = "dola",
-                 host = "104.197.26.248", port = 5433,
-                 user = "codemog", password = pw)
-rm(pw) # removes the password
-
-if(level == "County") {
-# f.cLookup contains the county records
-f.cLookup <- dbGetQuery(con, "SELECT countyfips, placefips, municipalityname, year, totalpopulation
-          FROM estimates.county_muni_timeseries WHERE year=2016 and placefips = 0;")
-
-#closing the connections
-dbDisconnect(con)
-dbUnloadDriver(drv)
-rm(con)
-rm(drv)
-
-f.cLookup <- f.cLookup[c(2:nrow(f.cLookup)),]
-return(f.cLookup)
-}
-if(level == "Place") {
-#f.pLookup is the place records, includes records with countyfips 999, which are multi
-#county municipalities
-
-f.pLookup <- dbGetQuery(con, "SELECT countyfips, placefips, municipalityname, year, totalpopulation
-          FROM estimates.county_muni_timeseries WHERE year=2016 and placefips != 0 
-                        and placefips != 99990 and countyfips != 999;")
-
-f.pLookup$municipalityname <- sub(' \\(Part\\)',' ',f.pLookup$municipalityname)
-
-
-#f.mLookup is the multi county cities
-f.mLookup <- dbGetQuery(con, "SELECT countyfips, placefips,  year, totalpopulation
-          FROM estimates.county_muni_timeseries WHERE year=2016 and placefips != 0 
-                        and placefips != 99990 and countyfips = 999;")
-
-#Closing the connection
-dbDisconnect(con)
-dbUnloadDriver(drv)
-rm(con)
-rm(drv)
-
-#merging f.pLookup and f.mLookup and updating totalpopulation value
-f.mLookup <- f.mLookup[,c(2,4)]
-
-f.pLookupFin <- merge(f.pLookup,f.mLookup,by="placefips", all.x=TRUE)
-
-f.pLookupFin$totalpopulation <- ifelse(is.na(f.pLookupFin$totalpopulation.y),f.pLookupFin$totalpopulation.x,f.pLookupFin$totalpopulation.y)
-f.pLookupFin <- f.pLookupFin[,c(2,1,3,4,7)]
-return(f.pLookupFin)
-}
+  
+  # create a connection
+  # save the password that we can "hide" it as best as we can by collapsing it
+  pw <- {
+    "demography"
+  }
+  
+  # loads the PostgreSQL driver
+  drv <- dbDriver("PostgreSQL")
+  # creates a connection to the postgres database
+  # note that "con" will be used later in each connection to the database
+  con <- dbConnect(drv, dbname = "dola",
+                   host = "104.197.26.248", port = 5433,
+                   user = "codemog", password = pw)
+  rm(pw) # removes the password
+  
+  if(level == "County") {
+    # f.cLookup contains the county records
+    f.cLookup <- dbGetQuery(con, "SELECT countyfips, placefips, municipalityname, year, totalpopulation
+                            FROM estimates.county_muni_timeseries WHERE year=2016 and placefips = 0;")
+    
+    #closing the connections
+    dbDisconnect(con)
+    dbUnloadDriver(drv)
+    rm(con)
+    rm(drv)
+    
+    f.cLookup <- f.cLookup[c(2:nrow(f.cLookup)),]
+    return(f.cLookup)
+  }
+  if(level == "Place") {
+    #f.pLookup is the place records, includes records with countyfips 999, which are multi
+    #county municipalities
+    
+    f.pLookup <- dbGetQuery(con, "SELECT countyfips, placefips, municipalityname, year, totalpopulation
+                            FROM estimates.county_muni_timeseries WHERE year=2016 and placefips != 0 
+                            and placefips != 99990 and countyfips != 999;")
+    
+    f.pLookup$municipalityname <- sub(' \\(Part\\)',' ',f.pLookup$municipalityname)
+    
+    
+    #f.mLookup is the multi county cities
+    f.mLookup <- dbGetQuery(con, "SELECT countyfips, placefips,  year, totalpopulation
+                            FROM estimates.county_muni_timeseries WHERE year=2016 and placefips != 0 
+                            and placefips != 99990 and countyfips = 999;")
+    
+    #Closing the connection
+    dbDisconnect(con)
+    dbUnloadDriver(drv)
+    rm(con)
+    rm(drv)
+    
+    #merging f.pLookup and f.mLookup and updating totalpopulation value
+    f.mLookup <- f.mLookup[,c(2,4)]
+    
+    f.pLookupFin <- merge(f.pLookup,f.mLookup,by="placefips", all.x=TRUE)
+    
+    f.pLookupFin$totalpopulation <- ifelse(is.na(f.pLookupFin$totalpopulation.y),f.pLookupFin$totalpopulation.x,f.pLookupFin$totalpopulation.y)
+    f.pLookupFin <- f.pLookupFin[,c(2,1,3,4,7)]
+    return(f.pLookupFin)
+  }
 }
 
 
@@ -149,7 +148,7 @@ simpleCap <- function(x) {
 
 listTofips <- function(df, level, inList1){
   # Function to produce a vector of FIPS codes from an input list of names and codes
-
+  
   fipsl <- vector()
   switch(level,
          "State" = {fipsl = "300"},
@@ -192,7 +191,7 @@ listTofips <- function(df, level, inList1){
            } #if
          } #Municipalities/Places
          
-         ) #switch
+  ) #switch
   
   return(fipsl)
 } #end listTofips
@@ -262,8 +261,8 @@ roundUpNice <- function(x, Unit) {
 #'  
 ## Generates the data download
 components_d=function(fips, name,lYr){
-  yrLst <- seq(1985,lYr,1)
-  x=county_profile(fips, 1985:lYr, vars="births,deaths,netmigration")%>%
+  yrLst <- seq(1990,lYr,1)
+  x=county_profile(fips, 1990:lYr, vars="births,deaths,netmigration")%>%
     mutate(births=as.numeric(births),
            deaths=as.numeric(deaths),
            netmigration=as.numeric(netmigration),
@@ -283,11 +282,12 @@ components_d=function(fips, name,lYr){
 tabTitle <-function(item) {
   outTitle <- switch(item,
                      "stats" = "Basic Statistics",
-                     "pop" ="Population, Migration and Natural Increase",
-                     "popc"= "Population Characteristics",
+                     "popf" = "Population Change",
+                     "pop" ="Age",
+                     "popc"= "Income, Race and Education",
                      "housing" = "Housing and Households",
-                     "emply" = "Employment Forecast",
                      "comm" = "Commuting",
+                     "emply" = "Employment Forecast",
                      "emplind" = "Employment by Industry")
   return(outTitle)
 }
@@ -303,15 +303,138 @@ tabList <- function(item){
   if(item == "stats") {
     outList <- stats.list
   }
+  if(item == "popf") {
+    outList <- popf.list
+  }
   if(item == "pop") {
-    outList <- pop.list
+    outList <- popa.list
   }
   if(item == "popc") {
     outList <- popc.list
   }
- return(outList)
+  return(outList)
 }
 
+#' downloadObjUI and downloadObj  File Download Modules
+#' downloadObjUI is the UI function that creates the download buttons
+#' @param id is the data name and creates the module/namespace ID
+#' downloadObj is the server function that facilitates the download
+#' @param place is the place name, typically the value of input$unit
+#' @dboj is the data object to be output
+#' @export 
+
+downloadObjUI <- function(id) {
+  
+  ns <- NS(id)
+  #Identifying data object and type
+  dtype <- substr(id,6,9)
+  
+  #setting button label
+  outLabel <- ifelse(dtype== "plot","Download Plot","Download Data")
+  
+  downloadButton(ns("download"),outLabel)
+}
+
+downloadObj <- function(input, output, session, place, oname, dobj) { 
+  dname <- substr(oname,1,5)
+  dtype <- substr(oname,6,9)
+  
+  prefix <- switch(dname,
+                   "popf1" = "PopGrowthComp",
+                   "popf2" = "PopGrowth",
+                   "popf3" = "PopForecast",
+                   "popf4" = "ComponentsOfChange",
+                   
+                   "popa1" = "AgeDistribution",
+                   "popa2" = "MedianAge",
+                   "popa3" = "AgeForecast",
+                   "popa4" = "MigrationbyAge",
+                   
+                   "popc1" = "Income",
+                   "popc2" = "EducAtt",
+                   "popc3" = "RaceTrend",
+                   "popc4" = "RaceComp")
+  
+  suffix <- ifelse(dtype == "plot","_Plot.png","_Data.csv")
+  
+  output$download <-  downloadHandler(
+    filename = function() {
+      paste0(place,prefix,suffix)
+    },
+    content = function(file) {
+      if(suffix == "_Data.csv") {
+        write.csv(dobj, file, row.names = FALSE)
+      }
+      if(suffix == "_Plot.png") {
+        ggsave(file, plot = dobj, width =8, height=6, units	="in", device = "png")
+      }
+    } #content
+  ) #DowhloadHandler
+} #downloadObj
+
+
+
+#' boxContent outputs the HTML code for content and buttons of the various info boxes
+#'    need  to put the box text in a HTML() call to render
+#' @param topic The short description of the box content
+#' @param descr The long description of the Box
+#' @param source the data source (SDO, ACS, or CEN)
+#' @param stats A T/F value to output information about statistical tests
+#' @param bthType Speciifies whether to output a Plot button and Data button ("plot") 
+#'          or just a data button ("data")
+#' @return  Content and buttons for a specified info box, buttons:
+#'          PlotBtn is the button to download a plot in the downloadHandler
+#'          DataBtn is the button to download a data file in the downloadHandler  
+#' @export
+#' 
+boxContent <- function(topic, description, source, stats) {
+  
+  ui1 <- "" #description
+  ui2 <- "" #source string
+  ui3 <- "" #stats string 1
+  ui4 <- "" #stats string 2
+  ui5 <- "" #stats string 3
+ 
+  
+  ui1 <- tags$div(description, tags$br())
+  
+  # source
+  if(source =="SDO") {
+    ui2 <- paste0("Information on ",topic," is taken from the State Demography Office.")
+  }
+  if(source =="ACS"){
+    ui2 <- paste0("Information on ",topic," is taken from the American Community Survey conducted by the U.S. Census Bureau.")
+  }
+  if(source =="CEN"){
+    ui2 <-  paste0("Information on ",topic," is taken from the 2000 and 2010 decennial Census.")
+  }
+  
+  
+  
+  #stats block
+  if(stats == "T") {
+    ui3 <- "Estimates of statistically significant differences are calculated at the 90% confidence level."
+    ui4 <-  "For more information on the Margin of Error and its use in statistical testing, see:"
+    ui5 <- tags$ul(
+        tags$li(tags$a(href="https://demography.dola.colorado.gov/demography/understanding-margins-error/","Understanding Margins of Error",target="_blank")), 
+        tags$li(tags$a(href="https://www.census.gov/programs-surveys/acs/guidance.html","U.S. Census Bureau American Community Survey Guidance for Data Users",target="_blank"))
+      )
+    
+  }
+ 
+  
+  box <- tags$div(ui1, tags$br(),
+                  ui2, tags$br(),
+                  ui3, tags$br(),
+                  ui4, tags$br(),
+                  ui5)
+  
+  
+  return(box)
+}
+
+
+# Table Functions
 # 2) Table Production Functions
 
 #' statsTable1 outputes the summary table in the stats section of the dashboard, draws data from the census API
@@ -328,27 +451,27 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS){
   state <- substr(cty,1,2)
   ctyfips <- substr(cty,3,5)
   if(nchar(place) > 0) {
-       placefips <- substr(place,3,7)
+    placefips <- substr(place,3,7)
   }
   
   #Population and Change Rows
   if(nchar(place) == 0) {  #Counties
-     tPopyr1 <- county_profile(as.numeric(ctyfips), sYr,"totalpopulation")
-     tPopyr2 <- county_profile(as.numeric(ctyfips), eYr,"totalpopulation")
-     tJobs <-  county_jobs(fips=as.numeric(ctyfips), year = eYr) #County
-     hhinc <- codemog_api(data="b19013",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
-     MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
-     # Poverty Value
-     Poverty <- codemog_api(data="b17001",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
-     pctPoverty <- percent((as.numeric(Poverty$b17001002)/as.numeric(Poverty$b17001001))*100)
-     # Percent native
-     Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
-     pctNative <- percent((as.numeric(Native$b05002003)/as.numeric(Native$b05002001))*100)
-     #Cost of Living Index
-     coli=county_coli%>%
-       filter(countyfips==as.numeric(ctyfips))%>%
-       mutate(coli_level=paste(coli, level, sep=", "))%>%
-       select(coli_level)
+    tPopyr1 <- county_profile(as.numeric(ctyfips), sYr,"totalpopulation")
+    tPopyr2 <- county_profile(as.numeric(ctyfips), eYr,"totalpopulation")
+    tJobs <-  county_jobs(fips=as.numeric(ctyfips), year = eYr) #County
+    hhinc <- codemog_api(data="b19013",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+    MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+    # Poverty Value
+    Poverty <- codemog_api(data="b17001",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+    pctPoverty <- percent((as.numeric(Poverty$b17001002)/as.numeric(Poverty$b17001001))*100)
+    # Percent native
+    Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
+    pctNative <- percent((as.numeric(Native$b05002003)/as.numeric(Native$b05002001))*100)
+    #Cost of Living Index
+    coli=county_coli%>%
+      filter(countyfips==as.numeric(ctyfips))%>%
+      mutate(coli_level=paste(coli, level, sep=", "))%>%
+      select(coli_level)
   } 
   if(nchar(place) > 0) {  #Places
     tPopyr1 <- muni_est(as.numeric(placefips), sYr,as.numeric(ctyfips),"totalpopulation")
@@ -376,7 +499,7 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS){
   
   popchg <- as.numeric(tPopyr2$totalpopulation) - as.numeric(tPopyr1$totalpopulation)
   
-
+  
   #state Values
   #Median Household Income  B18140 is the total median earnings...  from the 2012-2016 ACS API
   hhinc_state=codemog_api(data="b19013",db=ACS, geonum=paste("1", state,  sep=""), meta="no")
@@ -384,7 +507,7 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS){
   #median Househld Value 
   MedHHValue_state=codemog_api(data="b25077",db=ACS, geonum=paste("1", state,  sep=""), meta="no")
   
- #Preparing table
+  #Preparing table
   outTab <- matrix("",nrow=9,ncol=2)
   outTab[1,1] <- format(as.numeric(tPopyr2$totalpopulation),nsmall=0, big.mark=",")
   outTab[2,1] <- paste0("Population (",eYr,")*")
@@ -393,12 +516,12 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS){
   outTab[2,2]  <- paste0("Population Change (",sYr," to ",eYr, ")*")
   
   outTab[3,1] <- format(round(as.numeric(tJobs$totalJobs),digits=0),nsmall=0, big.mark=",")
- # if(nchar(place) == 0) {
-         outTab[4,1] <- paste0("County Employment (",eYr,")*")
- # } else {
- #        outTab[4,1] <- paste0("Municipal/Place Employment (",eYr,")*")   
- # }
-
+  # if(nchar(place) == 0) {
+  outTab[4,1] <- paste0("County Employment (",eYr,")*")
+  # } else {
+  #        outTab[4,1] <- paste0("Municipal/Place Employment (",eYr,")*")   
+  # }
+  
   outTab[3,2] <- coli$coli_level
   outTab[4,2] <- "County Cost of Living Index (CO=100)*"
   outTab[5,1] <- paste0("$",format(as.numeric(hhinc$b19013001),nsmall=0, big.mark=","))
@@ -406,17 +529,17 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS){
   
   outTab[5,2] <- paste0("$",format(as.numeric(MedHHValue$b25077001),nsmall=0, big.mark=","))
   outTab[6,2] <- paste0("Median House Value (Colorado: ","$",format(as.numeric(MedHHValue_state$b25077001),nsmall=0, big.mark=","),")+")
- 
+  
   outTab[7,1] <- pctPoverty
   outTab[7,2] <- pctNative
-
+  
   outTab[8,1] <- "Percentage of Population with Incomes lower than the Poverty Line+"
   outTab[8,2] <- "Percentage of Population Born in Colorado+"
   
   outTab[9,1] <- "Sources: *State Demography Office"
   outTab[9,2] <- "+U.S. Census Bureau, 2011-2015 American Community Survey"
   
-
+  
   return(outTab)
 }
 
@@ -433,7 +556,6 @@ popTable <- function(cty,ctyname,sYr,eYr) {
  
   state <- "Colorado"
   cntynum <- as.numeric(cty)
-  ctyname <- simpleCap(ctyname)
   yrs <- as.character(setYrRange(sYr,eYr))
   #State Population and Growth Rate
   popCO=county_profile(0, sYr:eYr, "totalpopulation")%>%
@@ -454,47 +576,47 @@ popTable <- function(cty,ctyname,sYr,eYr) {
            Population=comma(totalpopulation))
   
   # Creating Output Table
-
+  
   f.County <- popCounty[,c(3,5:7)]
   f.CO <- popCO[,c(1,5:7)]
   f.Out <- merge(f.County,f.CO,by="year")
   m.OutTab <- as.matrix(f.Out[,c(1,4,3,7,6)])
   m.OutTab <- gsub("NA%","",m.OutTab)
   names_spaced <- c("Year","Population","Annual Growth<br/>Rate","Population","Annual Growth<br/>Rate") 
-
- # create vector with colspan
- tblHead <- c(" " = 1, ctyname = 2, state = 2)
+  
+  # create vector with colspan
+  tblHead <- c(" " = 1, ctyname = 2, state = 2)
+  
+  # set vector names 
+  names(tblHead) <- c(" ", ctyname,state)
+  
+  # Creating Final Table (kable)
+  OutTab  <- m.OutTab %>%
+    kable(format='html', table.attr='class="myTable"',
+          caption = "Population Trend",
+          digits=1, 
+          row.names=FALSE, 
+          align='lccccc', 
+          col.names = names_spaced,
+          escape = FALSE) %>%
+    kable_styling(bootstrap_options = "condensed") %>%
+    column_spec(1, bold = T) %>%
+    column_spec(2, width = "13em") %>%
+    column_spec(3, width ="18em") %>%
+    column_spec(4, width = "13em") %>%
+    column_spec(5, width = "18em") %>%
+    add_header_above(header=tblHead)  %>%
+    add_footnote(c("Source: State Demography Office"))
+  
+  # Creating Final Data Set
+  f.Out <- f.Out[,c(1,4,3,7,6)]
+  names(f.Out) <- c("Year",paste0("Population: ",ctyname),paste0("Growth Rate: ",ctyname),
+                    "Population: Colorado","Growth Rate: Colorado")
+  
  
- # set vector names 
- names(tblHead) <- c(" ", ctyname,state)
- 
- # Creating Final Table (kable)
- OutTab  <- m.OutTab %>%
-   kable(format='html', table.attr='class="myTable"',
-         caption = "Population Trend",
-         digits=1, 
-         row.names=FALSE, 
-         align='lccccc', 
-         col.names = names_spaced,
-         escape = FALSE) %>%
-   kable_styling(bootstrap_options = "condensed") %>%
-   column_spec(1, bold = T) %>%
-   column_spec(2, width = "13em") %>%
-   column_spec(3, width ="18em") %>%
-   column_spec(4, width = "13em") %>%
-   column_spec(5, width = "18em") %>%
-   add_header_above(header=tblHead)  %>%
-   add_footnote(c("Source: State Demography Office"))
- 
- # Creating Final Data Set
- f.Out <- f.Out[,c(1,2,4,3,5,7,6)]
- names(f.Out) <- c("Year","County","C_Population","C_GrowthRate","State","S_Population","S_GrowthRate")
- f.Out$County <- paste0(f.Out$County," County")
- f.Out$C_GrowthRate <- gsub("NA%","",f.Out$C_GrowthRate)
- f.Out$S_GrowthRate <- gsub("NA%","",f.Out$S_GrowthRate)
- # bind list
- outList <- list("table" = OutTab,"data" = f.Out)
- 
+  # bind list
+  outList <- list("table" = OutTab,"data" = f.Out)
+  
   return(outList)
   
 }
@@ -635,7 +757,7 @@ raceTab1 <- function(fips,ctyname,ACS) {
   tblHead <- c(" " = 1, ctyname = (ncol(m.race)-1))
   
   # set vector names 
-  names(tblHead) <- c(" ", simpleCap(ctyname))
+  names(tblHead) <- c(" ", ctyname)
   
   race_tab <- m.race %>%
     kable(format='html', table.attr='class="cleanTable"', 
@@ -657,7 +779,7 @@ raceTab1 <- function(fips,ctyname,ACS) {
                  notation = "symbol")
   
   race_data <- data.frame(m.race)
-  race_data$geoname <- simpleCap(ctyname)
+  race_data$geoname <- ctyname
   race_data <- race_data[,c(5,1:4)]
   names(race_data) <- c("Geography","Race Category","Census 2000", "Census 2010",toupper(ACS))
   
@@ -823,7 +945,7 @@ raceTab2 <- function(fips,ctyname,ACS) {
   tblHead <- c(" " = 1, ctyname = 2, "Colorado"  = 2, " " = 1)
   
   # set vector names 
-  names(tblHead) <- c(" ", simpleCap(ctyname),"Colorado"," ") 
+  names(tblHead) <- c(" ", ctyname,"Colorado"," ") 
   
   race_t <- m.race %>%
     kable(format='html', table.attr='class="cleanTable"', 
@@ -847,8 +969,8 @@ raceTab2 <- function(fips,ctyname,ACS) {
   
   race_data <- data.frame(m.race)
   names(race_data)[1] <- "Race Category"
-  names(race_data)[2] <- paste0(simpleCap(ctyname),": ","Percentage")
-  names(race_data)[3] <- paste0(simpleCap(ctyname),": ","Margin of Error")
+  names(race_data)[2] <- paste0(ctyname,": ","Percentage")
+  names(race_data)[3] <- paste0(ctyname,": ","Margin of Error")
   names(race_data)[4] <- "Colorado: Percentage"
   names(race_data)[5] <- "Colorado: Margin of Error"
   names(race_data)[6] <- "Signficant Difference?"
@@ -860,205 +982,6 @@ raceTab2 <- function(fips,ctyname,ACS) {
   return(outListR)
 }
 
-#' housePRO  Produces the housing table
-#' calls ms_housing  AB 12/2017
-#'  CO Housing Unit Table
-#'
-#'  This function pulls data on housing types by vacancy, vacancy type, and
-#'  tenure from the 2000 and 2010 Census data.
-#'
-#'  @param fips The FIPS of the Place or County to use for the graph
-#'  @param ACS  The American Community Survey Vintage
-#'  @param state  The State FIPS to use.  Defaults to CO.
-#' @return kable formatted HTML table
-#' @export
-#' 
-ms_housing=function(fips, state="08"){
-  
-  h3_10=codemog_api(data="h3", geonum=paste("1", state, fips, sep=""),meta="no")
-  h3_10[,7:ncol(h3_10)]=as.numeric(as.character(h3_10[,7:ncol(h3_10)]))
-  h3_10=h3_10%>%rename(Total=h3001, Occupied=h3002, Vacant=h3003)%>%
-    mutate(OccPercent=percent(round((Occupied/Total)*100,3)),
-           VacPercent=percent(round((Vacant/Total)*100,3)),
-           Occupied=comma(Occupied),
-           Vacant=comma(Vacant),
-           Total=comma(Total))
-  
-  h4_10=codemog_api(data="h4", geonum=paste("1", state, fips, sep=""),meta="no")
-  h4_10[,7:ncol(h4_10)]=as.numeric(as.character(h4_10[,7:ncol(h4_10)]))
-  h4_10=h4_10%>%  mutate(Owner=h4002+h4003,
-                         Renter=h4004)%>%
-    select(-h4001:-h4004)%>%
-    mutate(ownPercent=percent(round((Owner/(Owner+Renter))*100,3)),
-           rentPercent=percent(round((Renter/(Owner+Renter))*100,3)),
-           Owner=comma(Owner),
-           Renter=comma(Renter))
-  h5_10=codemog_api(data="h5", geonum=paste("1", state, fips, sep=""),meta="no")
-  h5_10[,7:ncol(h5_10)]=as.numeric(as.character(h5_10[,7:ncol(h5_10)]))
-  h5_10=h5_10%>%
-    mutate(Seasonal=h5006,
-           Other=h5002+h5003+h5004+h5005+h5007+h5008)%>%
-    select(-h5001:-h5008)%>%
-    mutate(seasPercent=percent(round((Seasonal/(Other+Seasonal))*100,3)),
-           otherPercent=percent(round((Other/(Other+Seasonal))*100,3)),
-           Other=comma(Other),
-           Seasonal=comma(Seasonal))
-  housing_10=inner_join(h3_10,h5_10)%>%inner_join(h4_10)%>%
-    gather(var, Census.2010, Total:rentPercent, -geoname, -state, -county, -place,-tract,-bg,-geonum)
-  h3_00=codemog_api(data="h3",db="c2000", geonum=paste("1", state, fips, sep=""),meta="no")
-  h3_00[,7:ncol(h3_00)]=as.numeric(as.character(h3_00[,7:ncol(h3_00)]))
-  h3_00=h3_00%>%rename(Total=h3001, Occupied=h3002, Vacant=h3003)%>%
-    mutate(OccPercent=percent(round((Occupied/Total)*100,3)),
-           VacPercent=percent(round((Vacant/Total)*100,3)),
-           Total=comma(Total),
-           Occupied=comma(Occupied),
-           Vacant=comma(Vacant))
-  
-  h4_00=codemog_api(data="h4",db="c2000", geonum=paste("1", state, fips, sep=""),meta="no")
-  h4_00[,7:ncol(h4_00)]=as.numeric(as.character(h4_00[,7:ncol(h4_00)]))
-  h4_00=h4_00%>%  rename(Owner=h4002,
-                         Renter=h4003)%>%
-    select(-h4001)%>%
-    mutate(ownPercent=percent(round((Owner/(Owner+Renter))*100,3)),
-           rentPercent=percent(round((Renter/(Owner+Renter))*100,3)),
-           Owner=comma(Owner),
-           Renter=comma(Renter))
-  h5_00=codemog_api(data="h5",db="c2000", geonum=paste("1", state, fips, sep=""),meta="no")
-  h5_00[,7:ncol(h5_00)]=as.numeric(as.character(h5_00[,7:ncol(h5_00)]))
-  h5_00=h5_00%>%
-    mutate(Seasonal=h5005,
-           Other=h5002+h5003+h5004+h5006+h5007)%>%
-    select(-h5001:-h5007)%>%
-    mutate(seasPercent=percent(round((Seasonal/(Other+Seasonal))*100,3)),
-           otherPercent=percent(round((Other/(Other+Seasonal))*100,3)),
-           Other=comma(Other),
-           Seasonal=comma(Seasonal))
-  
-  housing_00=inner_join(h3_00,h5_00)%>%inner_join(h4_00)%>%
-    gather(var, Census.2000, Total:rentPercent, -geoname, -state, -county, -place,-tract,-bg,-geonum)
-  
-  housing=inner_join(housing_00,housing_10)
-  return(housing)
-}
-
-housePRO=function(fips, ctyname, ACS){
-  state="08"
-  
-  # Building ACS Table...
-  f.b25001 <- codemog_api(data="b25001", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
-  f.b25003 <- codemog_api(data="b25003", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
-  f.b25004 <- codemog_api(data="b25004", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
-  
-  f.acshousing <- cbind(f.b25001[,c(1,8)], f.b25003[,8:10],f.b25004[,8:15])
-  
-  f.acshousing[,2:13]=as.numeric(as.character(f.acshousing[,2:13]))
-  
-  f.acshousing <- f.acshousing %>% rename(Total=b25001001, Occupied=b25003001, Vacant=b25004001,
-                                          Owner = b25003002, Renter = b25003003, Seasonal = b25004006)%>%
-    mutate(Other = sum(b25004002, b25004003, b25004004, b25004005, b25004007,b25004008), 
-           OccPercent=percent(round((Occupied/Total)*100,3)),
-           ownPercent = percent(round((Owner/Occupied)*100,3)),
-           rentPercent = percent(round((Renter/Occupied)*100,3)),
-           VacPercent = percent(round((Vacant/Total)*100,3)),
-           seasPercent =  percent(round((Seasonal/Vacant)*100,3)),
-           otherPercent = percent(round((Other/Vacant)*100,3)),
-           Occupied=comma(Occupied),
-           Vacant=comma(Vacant),
-           Owner = comma(Owner),
-           Renter = comma(Renter),
-           Seasonal = comma(Seasonal),
-           Other = comma(Other),
-           Total=comma(Total))
-  f.acsH <- f.acshousing[,c(1:6,11,14:20)] %>%
-    gather(var, ACS, Total:otherPercent, -geoname)
-  
-  # Geneerating Census Tab using ms_housing...
-  f.CensTab <- ms_housing(fips)
-  
-  #reorder f.CensTab  to match
-  f.CensTab <- f.CensTab[c(1,2,10,11,3,6,7,4,12,13,5,8,9),c(1,8:10)]
-  
-  # Assembling Combined Tab: f.longtab
-  
-  f.longTab <- merge(f.CensTab,f.acsH, by="var")
-  f.longTab <- f.longTab[c(11,2,5,7,12,9,3,1,6,8,13,10,4),c(1,3,4,6)]
-  f.count <- f.longTab[1:7,]
-  f.pct <- f.longTab[8:13,]
-  f.pct$var <- ifelse(f.pct$var == "OccPercent","Occupied",
-                      ifelse(f.pct$var == "ownPercent","Owner",
-                             ifelse(f.pct$var == "rentPercent","Renter",
-                                    ifelse(f.pct$var == "VacPercent","Vacant",
-                                           ifelse(f.pct$var == "seasPercent","Seasonal","Other")))))
-  f.HouseTab <- merge(f.count,f.pct,by="var",all.x=TRUE)
-  
-  #Reordering Table and prepating output
-  
-  f.HouseTab <- f.HouseTab[c(6,1,3,4,7,5,2),c(1,2,5,3,6,4,7)]
-  
-  f.HouseTab[is.na(f.HouseTab)] <- ""
-  
-  f.HouseTab$var <- ifelse(f.HouseTab$var == "Total","Total Housing Units",
-                           ifelse(f.HouseTab$var == "Occupied","Occupied Housing Units",
-                                  ifelse(f.HouseTab$var == "Owner", "Owner-Occupied Units",
-                                         ifelse(f.HouseTab$var == "Renter", "Renter-Occupied Units",
-                                                ifelse(f.HouseTab$var == "Vacant", "Vacant Housing Units",
-                                                       ifelse(f.HouseTab$var == "Seasonal","Seasonal Units","All Other Units"))))))
-  
-  names(f.HouseTab) <- c("Housing Type","Census 2000 Count", "Census 2000 Percent",
-                         "Census 2010 Count", "Census 2010 Percent", 
-                         paste0(toupper(ACS)," Count"), paste0(toupper(ACS)," Percent"))
-  
-  
-  
-  
-  m.House <- as.matrix(f.HouseTab)
-  
-  # Setting up table
-  
-  #Column Names
-  ACSSrc <- paste0("Source: ACS 20",substr(ACS,6,7)," 5-Year Dataset") 
-  ACSName <- paste0("20",substr(ACS,6,7),"[note]")
-  names_spaced <- c("Housing Type","Count","Percent","Count","Percent","Count","Percent")
-  
-  #Span Header
-  
-  # create vector with colspan
-  tblHead1 <- c(" " = 1, ctyname = (ncol(m.House)-1))
-  
-  # set vector names 
-  names(tblHead1) <- c(" ", simpleCap(ctyname))
-  
-  tblHead2 <- c(" " = 1,"2000[note]" = 2,"2010[note]" = 2,ACSName = 2) 
-  names(tblHead2) <- c(" ", "2000[note]", "2010[note] ",ACSName)
-  
-  
-  Housing_tab <- m.House %>%
-    kable(format='html', table.attr='class="cleanTable"', 
-          digits=1, 
-          row.names=FALSE, 
-          align='lrrrrrr', 
-          caption="Housing Trend",
-          col.names = names_spaced, 
-          escape = FALSE)  %>%
-    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
-    column_spec(1, width = "45em",bold = T) %>%
-    column_spec(2, width = "5em") %>%
-    column_spec(3, width ="5em") %>%
-    column_spec(4, width ="5em") %>%
-    column_spec(5, width ="5em") %>%
-    column_spec(6, width ="5em") %>%
-    column_spec(7, width ="5em") %>%
-    add_header_above(header= tblHead2) %>%
-    add_header_above(header=tblHead1) %>%
-    add_footnote(c("Source; 2000 Census",
-                   "Source: 2010 Census",
-                   ACSSrc), 
-                 notation = "symbol")
-  
-  outList <- list("table" = Housing_tab, "data" = f.HouseTab)
-  return(outList)
-}
-
 #' medianAgeTab Creates table showing the Median Age by Gender
 #' for a selecte lplace and for the state
 #' @param fips The County FIPS number (without leading Zeros)
@@ -1068,8 +991,8 @@ housePRO=function(fips, ctyname, ACS){
 #' @return a kable table and dataset
 #' @export
 
-medianAgeTab <- function(fips, state="08", ACS, ctyname){
-  
+medianAgeTab <- function(fips, ACS, ctyname, state="08"){
+
   #Local place Age
   medAge <- codemog_api(data="b01002",db=ACS, geonum=paste("1", state, fips, sep=""), meta="no")
   medAgeMOE <- codemog_api(data="b01002_moe",db=ACS, geonum=paste("1", state, fips, sep=""), meta="no")
@@ -1104,7 +1027,7 @@ medianAgeTab <- function(fips, state="08", ACS, ctyname){
   
   
   
-  #Calculating signicant differences
+  #Calculating significant differences
   f.ageTab$MedAge_p <- as.numeric(f.ageTab$MedAge_p)
   f.ageTab$MOE_p <- as.numeric(f.ageTab$MOE_p)
   f.ageTab$MedAge_s <- as.numeric(f.ageTab$MedAge_s)
@@ -1113,26 +1036,27 @@ medianAgeTab <- function(fips, state="08", ACS, ctyname){
   f.ageTab$ZScore <- (abs(f.ageTab$MedAge_p - f.ageTab$MedAge_s)/
                         sqrt((f.ageTab$MOE_p^2) + (f.ageTab$MOE_p^2)))
   f.ageTab$Sig_Diff <- ifelse(f.ageTab$ZScore < 1,"No","Yes")
+  f.ageTab$Difference <- ifelse(f.ageTab$Sig_Diff == "Yes", ifelse(f.ageTab$MedAge_p < f.ageTab$MedAge_s,"Younger","Older"),"")
   
-  m.ageTab <- as.matrix(f.ageTab[,c(1:5,7)])
+  m.ageTab <- as.matrix(f.ageTab[,c(1:5,7,8)])
   #Column Names
   
   ACSSrc <- paste0("Source: ACS 20",substr(ACS,6,7)," 5-Year Dataset") 
-  names_spaced <- c("Gender","Median Age","Margin of Error","Median Age","Margin of Error","Signficant<br/>Difference?") 
+  names_spaced <- c("Gender","Median Age","Margin of Error","Median Age","Margin of Error","Signficant<br/>Difference?","Difference<br/>from State") 
   
   #Span Header
-
+  
   # create vector with colspan
-  tblHead <- c(" " = 1, ctyname = 2, "Colorado"  = 2, " " = 1)
+  tblHead <- c(" " = 1, ctyname = 2, "Colorado"  = 2, " " = 2)
   
   # set vector names 
-  names(tblHead) <- c(" ", simpleCap(ctyname),"Colorado"," ") 
+  names(tblHead) <- c(" ", ctyname,"Colorado"," ") 
   
   age_t <- m.ageTab %>%
     kable(format='html', table.attr='class="cleanTable"', 
           digits=1, 
           row.names=FALSE, 
-          align='lrrrrr', 
+          align='lrrrrrr', 
           caption="Median Age by Gender  Comparison",
           col.names = names_spaced, 
           escape = FALSE)  %>%
@@ -1144,17 +1068,200 @@ medianAgeTab <- function(fips, state="08", ACS, ctyname){
     column_spec(4, width ="5em") %>%
     column_spec(5, width ="5em") %>%
     column_spec(6, width ="5em") %>%
+    column_spec(7, width ="5em") %>%
     add_header_above(header=tblHead) %>%
     add_footnote(c(ACSSrc)) 
   
   #preparint Output data
-  f.ageTab2 <- f.ageTab[,c(1:5,7)]
+  f.ageTab2 <- f.ageTab[,c(1:5,7,8)]
   names(f.ageTab2) <- c("Gender", paste0("Median Age: ",ctyname), paste0("Margin of Error: ",ctyname), 
-                        "Median Age: Colorado", "Margin of Error: Colorado", "Sig. Difference")
+                        "Median Age: Colorado", "Margin of Error: Colorado", "Sig. Difference","Difference from State")
   
   outList <- list("table" = age_t, "data" = f.ageTab2)
   return(outList) 
 }
+
+#' housePRO  Produces the housing table
+#'  CO Housing Unit Table
+#'
+#'  This function compares housing occupancy and vacancy rates for a place to the state
+#'  tenure from the 2000 and 2010 Census data.
+#'
+#'  @param fips The FIPS of the Place or County to use for the graph
+#'  @param ctyname The place Name
+#'  @param ACS  The American Community Survey Vintage
+#'  @param state  The State FIPS to use.  Defaults to CO.
+#' @return kable formatted HTML table
+#' @export
+#' 
+
+housePRO=function(fips, ctyname, ACS){
+  
+  # Building ACS Place data table
+  f.b25001 <- codemog_api(data="b25001", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  f.b25003 <- codemog_api(data="b25003", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  f.b25004 <- codemog_api(data="b25004", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  
+  f.AcsPl <- cbind(f.b25001[,c(1,8)], f.b25003[,8:10],f.b25004[,8:15])
+  
+  f.AcsPl[,2:13]=as.numeric(as.character(f.AcsPl[,2:13]))
+  
+  f.AcsPl <- f.AcsPl %>% rename(Total=b25001001, Occupied=b25003001, Vacant=b25004001,
+                                Owner = b25003002, Renter = b25003003, Seasonal = b25004006)%>%
+    mutate(Other = sum(b25004002, b25004003, b25004004, b25004005, b25004007,b25004008))
+  
+  f.AcsPlace <- f.AcsPl[,c(1:6,11,14)] %>%
+    gather(var, ACS, Total:Other, -geoname)
+  
+  
+  # Building ACS Place MOE table
+  f.b25001_moe <- codemog_api(data="b25001_moe", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  f.b25003_moe <- codemog_api(data="b25003_moe", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  f.b25004_moe <- codemog_api(data="b25004_moe", db=ACS, geonum=paste("1", "08", fips, sep=""),meta="no")
+  
+  f.AcsPl_moe <- cbind(f.b25001_moe[,c(1,8)], f.b25003_moe[,8:10],f.b25004_moe[,8:15])
+  
+  f.AcsPl_moe[,2:13]=as.numeric(as.character(f.AcsPl_moe[,2:13]))
+  
+  f.AcsPl_moe <- f.AcsPl_moe %>% rename(Total=b25001_moe001, Occupied=b25003_moe001, Vacant=b25004_moe001,
+                                        Owner = b25003_moe002, Renter = b25003_moe003, Seasonal = b25004_moe006)%>%
+    mutate(Other = sqrt(sum(b25004_moe002^2, b25004_moe003^2, b25004_moe004^2, b25004_moe005^2, b25004_moe007^2,b25004_moe008^2)))
+  f.AcsPlace_moe <- f.AcsPl_moe[,c(1:6,11,14)] %>%
+    gather(var, ACS, Total:Other, -geoname)
+  
+  #Finalizing place table
+  f.AcsPLFin <- merge(f.AcsPlace,f.AcsPlace_moe, by="var")
+  f.AcsPLFin <- f.AcsPLFin[,c(1:3,5)]
+  names(f.AcsPLFin) <- c("HCat", "geoname","PL_Value", "PL_MOE")
+  #Calculating  proportions
+  PL_Tot <- as.numeric(f.AcsPLFin[6,3])
+  f.AcsPLFin$PL_VAL_Prop <- f.AcsPLFin$PL_Value/PL_Tot
+  f.AcsPLFin$PL_MOE_Prop <- f.AcsPLFin$PL_MOE/PL_Tot
+  f.AcsPLFin$PL_VAL_PCT <- percent(f.AcsPLFin$PL_VAL_Prop *100)
+  f.AcsPLFin$PL_MOE_PCT <- percent(f.AcsPLFin$PL_MOE_Prop *100)
+  
+  f.AcsPLFin <- f.AcsPLFin[,c(1:3,5,7,4,6,8)]
+  
+  # Building ACS state data table
+  f.b25001St <- codemog_api(data="b25001", db=ACS, geonum=paste("1", "08",  sep=""),meta="no")
+  f.b25003St <- codemog_api(data="b25003", db=ACS, geonum=paste("1", "08",  sep=""),meta="no")
+  f.b25004St <- codemog_api(data="b25004", db=ACS, geonum=paste("1", "08",  sep=""),meta="no")
+  
+  f.AcsSt <- cbind(f.b25001St[,c(1,8)], f.b25003St[,8:10],f.b25004St[,8:15])
+  
+  f.AcsSt[,2:13]=as.numeric(as.character(f.AcsSt[,2:13]))
+  
+  f.AcsSt <- f.AcsSt %>% rename(Total=b25001001, Occupied=b25003001, Vacant=b25004001,
+                                Owner = b25003002, Renter = b25003003, Seasonal = b25004006)%>%
+    mutate(Other = sum(b25004002, b25004003, b25004004, b25004005, b25004007,b25004008))
+  
+  f.AcsState <- f.AcsSt[,c(1:6,11,14)] %>%
+    gather(var, ACS, Total:Other, -geoname)
+  
+  
+  # Building ACS State MOE table
+  f.b25001St_moe <- codemog_api(data="b25001_moe", db=ACS, geonum=paste("1", "08", sep=""),meta="no")
+  f.b25003St_moe <- codemog_api(data="b25003_moe", db=ACS, geonum=paste("1", "08", sep=""),meta="no")
+  f.b25004St_moe <- codemog_api(data="b25004_moe", db=ACS, geonum=paste("1", "08", sep=""),meta="no")
+  
+  f.AcsSt_moe <- cbind(f.b25001St_moe[,c(1,8)], f.b25003St_moe[,8:10],f.b25004St_moe[,8:15])
+  
+  f.AcsSt_moe[,2:13]=as.numeric(as.character(f.AcsSt_moe[,2:13]))
+  
+  f.AcsSt_moe <- f.AcsSt_moe %>% rename(Total=b25001_moe001, Occupied=b25003_moe001, Vacant=b25004_moe001,
+                                        Owner = b25003_moe002, Renter = b25003_moe003, Seasonal = b25004_moe006)%>%
+    mutate(Other = sqrt(sum(b25004_moe002^2, b25004_moe003^2, b25004_moe004^2, b25004_moe005^2, b25004_moe007^2,b25004_moe008^2)))
+  f.AcsState_moe <- f.AcsSt_moe[,c(1:6,11,14)] %>%
+    gather(var, ACS, Total:Other, -geoname)
+  
+  
+  #Finalizing state table
+  f.AcsStFin <- merge(f.AcsState,f.AcsState_moe, by="var")
+  f.AcsStFin <- f.AcsStFin[,c(1:3,5)]
+  names(f.AcsStFin) <- c("HCat", "geoname","ST_Value", "ST_MOE")
+  #Calculating  proportions
+  ST_Tot <- as.numeric(f.AcsStFin[6,3])
+  f.AcsStFin$ST_VAL_Prop <- f.AcsStFin$ST_Value/ST_Tot
+  f.AcsStFin$ST_MOE_Prop <- f.AcsStFin$ST_MOE/ST_Tot
+  f.AcsStFin$ST_VAL_PCT <- percent(f.AcsStFin$ST_VAL_Prop *100)
+  f.AcsStFin$ST_MOE_PCT <- percent(f.AcsStFin$ST_MOE_Prop *100)
+  
+  f.AcsStFin <- f.AcsStFin[,c(1:3,5,7,4,6,8)]
+  
+  # Assembling Combined Tab: f.longtab
+  
+  f.longTab <- merge(f.AcsPLFin,f.AcsStFin, by="HCat")
+  
+  # Calculating Statistical Test
+  f.longTab$ZScore <- (abs(f.longTab$PL_VAL_Prop - f.longTab$ST_VAL_Prop)/
+                         sqrt((f.longTab$PL_MOE_Prop^2) + (f.longTab$ST_MOE_Prop^2)))
+  f.longTab$Sig_Diff <- ifelse(f.longTab$ZScore < 1,"No","Yes")
+  
+  
+  f.longTab$HCat <- ifelse(f.longTab$HCat == "Total","Total Housing Units",
+                           ifelse(f.longTab$HCat == "Occupied","Occupied Housing Units",
+                                  ifelse(f.longTab$HCat == "Owner", "Owner-Occupied Units",
+                                         ifelse(f.longTab$HCat == "Renter", "Renter-Occupied Units",
+                                                ifelse(f.longTab$HCat == "Vacant", "Vacant Housing Units",
+                                                       ifelse(f.longTab$HCat == "Seasonal","Seasonal Units","All Other Rental Units"))))))  
+  
+  #Reordering Table and prepating output
+  
+  f.HouseTab <- f.longTab[c(6,1,3,4,5,2,7),c(1,3,5,8,10,12,15,17)]
+  f.HouseTab[2] <- comma(f.HouseTab[2])
+  f.HouseTab[5] <- comma(f.HouseTab[5])
+  f.HouseTab[1,3] <- ""
+  f.HouseTab[1,4] <- ""
+  f.HouseTab[1,6] <- ""
+  f.HouseTab[1,7] <- ""
+  f.HouseTab[1,8] <- ""
+  
+  m.House <- as.matrix(f.HouseTab)
+  
+  names(f.HouseTab) <- c("Housing Type", paste0("Housing Units: ",ctyname),
+                         paste0("Percentage: ",ctyname),paste0("Margin of Error: ",ctyname),
+                         "Housing Units: Colorado", "Percentage: Colorado", "Margin of Error: Colorado",
+                         "Signficant Difference")
+  
+  # Setting up table
+  
+  #Column Names
+  ACSSrc <- paste0("Source: ACS 20",substr(ACS,6,7)," 5-Year Dataset") 
+  names_spaced <- c("Housing Type","Count","Percent","Margin of Error","Count","Percent","Margin of Error","Significant Difference?")
+  #Span Header
+  
+  # create vector with colspan
+  tblHead1 <- c(" " = 1, ctyname = 3, "Colorado" = 3, " " = 1)
+  
+  # set vector names 
+  names(tblHead1) <- c(" ", ctyname, "Colorado", " ")
+  
+  
+  Housing_tab <- m.House %>%
+    kable(format='html', table.attr='class="cleanTable"', 
+          row.names=FALSE, 
+          align='lrrrrrrr', 
+          caption="Housing Comparison",
+          col.names = names_spaced, 
+          escape = FALSE)  %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
+    column_spec(1, width = "45em",bold = T) %>%
+    column_spec(2, width = "5em") %>%
+    column_spec(3, width ="5em") %>%
+    column_spec(4, width ="5em") %>%
+    column_spec(5, width ="5em") %>%
+    column_spec(6, width ="5em") %>%
+    column_spec(7, width ="5em") %>%
+    column_spec(8, width ="5em") %>%
+    add_header_above(header=tblHead1) %>%
+    add_footnote(c(ACSSrc), 
+                 notation = "symbol")
+  
+  outList <- list("table" = Housing_tab, "data" = f.HouseTab)
+  return(outList)
+}
+
+#Plotting Functions 
 #3) Plotting Functions
 
 #' county_timeseries Creates a \code{ggplot2} chart of the population for a CO county
@@ -1168,7 +1275,7 @@ medianAgeTab <- function(fips, state="08", ACS, ctyname){
 #'
 #' @param fips The County FIPS number (without leading Zeros)
 #' @param beginyear The first year in the timeseries Defaults to 1990.
-#' @param endYear The first year in the timeseries Defaults to 2013.
+#' @param endYear The last year in the timeseries Defaults to 2013.
 #' @param base Base font size.
 #' @return ggplot2 graphic
 #' @export
@@ -1176,7 +1283,7 @@ medianAgeTab <- function(fips, state="08", ACS, ctyname){
 
 
 county_timeseries=function(fips, beginyear=1990,endYear, base=12){
-  require(grid, quietly=TRUE)
+
   fips=as.numeric(fips)
   
   d=county_profile(fips, beginyear:endYear, "totalpopulation")%>%
@@ -1204,33 +1311,33 @@ county_timeseries=function(fips, beginyear=1990,endYear, base=12){
 #' cocPlot: Components of Change Chart, this is a county-level chart, regardless of output level
 #'  Contains the call to components_d
 #' @param  fips numeric, county-level FIPS code  ** will need to extract county level FIPS code in all calls
-#' @param  cName County Name string, from input$unit
+#' @param  ctyname County Name string, from input$unit
 #' @param  lYr the last year of the output date range
 #' @return ggplot2 graphic
 #' @export 
 
-cocPlot <- function(fips, cName,lYr,base=12) {
-  f.coccty <- components_d(fips=fips, name=cName, lYr = lYr)
+cocPlot <- function(fips, ctyname,lYr,base=12) {
+  f.coccty <- components_d(fips=fips, name=ctyname, lYr = lYr)
   f.cocLong <- gather(f.coccty, key = TypeChange, value=Pop, Births, Deaths, NetMigration)
   f.cocLong$TypeChange <- ifelse(f.cocLong$TypeChange =="NetMigration","Net Migration", f.cocLong$TypeChange)
   
   f.cocLong$TypeChange <- factor(f.cocLong$TypeChange,
                                  levels=c("Births","Deaths", "Net Migration"))
- 
+  
   pltTitle <- "Components of Change:\nBirths, Deaths, and Net Migration"
-  subTitle <- simpleCap(cName)
+  subTitle <- ctyname
   minPop <- roundUpNice(min(f.cocLong$Pop),2500)
   maxPop <- roundUpNice(max(f.cocLong$Pop),2500)
   
   
- cocPlt <-  ggplot(data=f.cocLong,aes(x=year, y=Pop, colour=TypeChange)) +
+  cocPlt <-  ggplot(data=f.cocLong,aes(x=year, y=Pop, colour=TypeChange)) +
     geom_line() + 
     geom_point(aes(x=year, y=Pop, colour=TypeChange, shape=TypeChange),size=2) +
     scale_colour_manual("Type of Change", values=c("#82BC00", "#009ADD", "#5C666F")) +
     scale_shape_manual("Type of Change", values=seq(15, 17, 1)) +
-    scale_x_continuous(breaks=seq(1985, lYr, 5)) +
+    scale_x_continuous(breaks=seq(1990, lYr, 5)) +
     scale_y_continuous(breaks=seq(minPop, maxPop, 2500),label=comma)+
-   theme_codemog(base_size=base)+
+    theme_codemog(base_size=base)+
     labs(title = pltTitle,
          subtitle = subTitle,
          caption = "Source: State Demography Office", 
@@ -1240,10 +1347,10 @@ cocPlot <- function(fips, cName,lYr,base=12) {
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")
- 
- outList <- list("plot" = cocPlt, "data" = f.coccty) 
   
-return(outList)  
+  outList <- list("plot" = cocPlt, "data" = f.coccty) 
+  
+  return(outList)  
 }
 
 #' ageForecastPRO Produces a Age Forecast data set and chart
@@ -1261,7 +1368,7 @@ return(outList)
 #' @export
 
 ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
- 
+  
   fips=as.numeric(fips)
   
   yrs=c(stYr, mYr, eYr)
@@ -1274,7 +1381,7 @@ ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
     group_by(agecat)%>%
     arrange(countyfips, year)
   
- 
+  
   barCol <- c("#82BC00", "#009ADD", "#5C666F")  
   pltTitle <- paste0("Age Forecast")
   subTitle <- paste0(as.character(d[1,2]), " County: Change in Population by Age: ",stYr," to ",eYr )
@@ -1299,7 +1406,7 @@ ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
           legend.position= "bottom") 
   
   #Regrouping Data
-
+  
   dWide <- spread(d, Year, totalpopulation)
   names(dWide)[4] <- paste0("totalPop_",stYr)
   names(dWide)[5] <- paste0("totalPop_",mYr) 
@@ -1332,8 +1439,8 @@ ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
 #'  @export
 #' 
 incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", dbid= "acs1115", base=12){
- 
-  hhinc1=codemog_api(data="b19001",db=dbid, geonum=paste("1", state, fips, sep=""), meta="no")%>%
+  
+  hhinc1VAL=codemog_api(data="b19001",db=dbid, geonum=paste("1", state, fips, sep=""), meta="no")%>%
     select(-b19001001)%>%
     gather(var, value, b19001002:b19001017, -geoname, -state, -county, -place,-tract,-bg,-geonum)%>%
     mutate(geoname=str_trim(geoname, side="both"),
@@ -1347,12 +1454,46 @@ incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", dbid= "acs1
     mutate(cat=ordered(group, levels=1:12, labels=c("Less than $10,000","$10,000 to $19,999","$20,000 to $29,999",
                                                     "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999",
                                                     "$60,000 to $74,999","$75,000 to $99,999","$100,000 to $124,999",
-                                                    "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more")))%>%
-    separate(geoname, into=c("geoname", "state_name"), sep=",")%>%
-    select(-state_name, -group)%>%
-    mutate(p=as.numeric(value)/sum(as.numeric(value)))
+                                                    "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more")))
   
-  hhinc2=codemog_api(data="b19001",db=dbid, geonum=paste("1", state2, fips2, sep=""), meta="no")%>%
+  
+  # Place MOE
+  hhinc1MOE=codemog_api(data="b19001_moe",db=dbid, geonum=paste("1", state, fips, sep=""), meta="no")%>%
+    select(-b19001_moe001)%>%
+    gather(var, value, b19001_moe002:b19001_moe017, -geoname, -state, -county, -place,-tract,-bg,-geonum)%>%
+    mutate(geoname=str_trim(geoname, side="both"),
+           var2=str_sub(var, -2,-1),
+           var3=as.numeric(as.character(var2)),
+           group=car::recode(var3, "2=1; 3:4=2; 5:6=3;7:8=4;9:10=5; 11=6;12=7;13=8;14=9;
+                             15=10;16=11;17=12"))%>%
+    group_by(geoname,group)%>%
+    summarise(value=sum(as.numeric(value)))%>%
+    
+    mutate(cat=ordered(group, levels=1:12, labels=c("Less than $10,000","$10,000 to $19,999","$20,000 to $29,999",
+                                                    "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999",
+                                                    "$60,000 to $74,999","$75,000 to $99,999","$100,000 to $124,999",
+                                                    "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more")))
+  
+  names(hhinc1MOE)[3] <- "MOE"
+  # Combining Place Level Data File; Calculating percentages
+  f.hh1VAL <- hhinc1VAL[, c(4,1,3)]
+  f.hh1MOE <- hhinc1MOE[,c(4,3)]
+  hhinc1 <- merge(f.hh1VAL, f.hh1MOE, by="cat")
+  # Calculating Confidence intervale and Percentage valuse
+  f.hhinc1 <- hhinc1 %>%
+    mutate(p_propVAL = value/sum(value),
+           p_propMOE = MOE/sum(value)) 
+  f.hhinc1$geoname <- ctyname
+  f.hhinc1$p_ciLOW  <- f.hhinc1$p_propVAL - f.hhinc1$p_propMOE
+  f.hhinc1$p_ciHIGH <- f.hhinc1$p_propVAL + f.hhinc1$p_propMOE
+  f.hhinc1$p_pctVAL <- percent(f.hhinc1$p_propVAL *100)
+  f.hhinc1$p_pctMOE <- percent(f.hhinc1$p_propMOE *100)
+  f.hhinc1$p_pctLOW <- percent(f.hhinc1$p_ciLOW *100)
+  f.hhinc1$p_pctHIGH <- percent(f.hhinc1$p_ciHIGH *100)
+  
+  
+  #State Value
+  hhinc2VAL=codemog_api(data="b19001",db=dbid, geonum=paste("1", state2, fips2, sep=""), meta="no")%>%
     select(-b19001001)%>%
     gather(var, value, b19001002:b19001017, -geoname, -state, -county, -place,-tract,-bg,-geonum)%>%
     mutate(geoname=str_trim(geoname, side="both"),
@@ -1366,18 +1507,65 @@ incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", dbid= "acs1
     mutate(cat=ordered(group, levels=1:12, labels=c("Less than $10,000","$10,000 to $19,999","$20,000 to $29,999",
                                                     "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999",
                                                     "$60,000 to $74,999","$75,000 to $99,999","$100,000 to $124,999",
-                                                    "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more")))%>%
-    mutate(p=as.numeric(value)/sum(as.numeric(value)))
+                                                    "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more")))
   
-  hhinc=bind_rows(hhinc1, hhinc2)
-  hhinc$geoname <- factor( hhinc$geoname, levels=c(ctyname, "Colorado"))
+  #State MOE
+  hhinc2MOE=codemog_api(data="b19001_moe",db=dbid, geonum=paste("1", state2, fips2, sep=""), meta="no")%>%
+    select(-b19001_moe001)%>%
+    gather(var, value, b19001_moe002:b19001_moe017, -geoname, -state, -county, -place,-tract,-bg,-geonum)%>%
+    mutate(geoname=str_trim(geoname, side="both"),
+           var2=str_sub(var, -2,-1),
+           var3=as.numeric(as.character(var2)),
+           group=car::recode(var3, "2=1; 3:4=2; 5:6=3;7:8=4;9:10=5; 11=6;12=7;13=8;14=9;
+                             15=10;16=11;17=12"))%>%
+    group_by(geoname,group)%>%
+    summarise(value=sum(as.numeric(value)))%>%
+    
+    mutate(cat=ordered(group, levels=1:12, labels=c("Less than $10,000","$10,000 to $19,999","$20,000 to $29,999",
+                                                    "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999",
+                                                    "$60,000 to $74,999","$75,000 to $99,999","$100,000 to $124,999",
+                                                    "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more")))
+  
+  names(hhinc2MOE)[3] <- "MOE"
+  # Combining Place Level Data File; Calculating percentages
+  f.hh2VAL <- hhinc2VAL[, c(4,1,3)]
+  f.hh2MOE <- hhinc2MOE[,c(4,3)]
+  hhinc2 <- merge(f.hh2VAL, f.hh2MOE, by="cat")
+  # Calculating Confidence intervale and Percentage valuse
+  f.hhinc2 <- hhinc2 %>%
+    mutate(s_propVAL = value/sum(value),
+           s_propMOE = MOE/sum(value)) 
+  
+  f.hhinc2$s_ciLOW  <- f.hhinc2$s_propVAL - f.hhinc2$s_propMOE
+  f.hhinc2$s_ciHIGH <- f.hhinc2$s_propVAL + f.hhinc2$s_propMOE
+  f.hhinc2$s_pctVAL <- percent(f.hhinc2$s_propVAL *100)
+  f.hhinc2$s_pctMOE <- percent(f.hhinc2$s_propMOE *100)
+  f.hhinc2$s_pctLOW <- percent(f.hhinc2$s_ciLOW *100)
+  f.hhinc2$s_pctHIGH <- percent(f.hhinc2$s_ciHIGH *100)
+  
+  #Preparing Chart 
+  f.hhinc1p <- f.hhinc1[, c(1,2,5,7,8)]
+  names(f.hhinc1p) <- c("Income_Cat","geoname","prop","propLOW","propHIGH")
+  f.hhinc2p <- f.hhinc2[, c(1,2,5,7,8)]
+  names(f.hhinc2p) <- c("Income_Cat","geoname","prop","propLOW","propHIGH")
+  
+  hhinc <- rbind( f.hhinc1p,  f.hhinc2p)
+  
+  hhinc$Income_Cat <- factor(hhinc$Income_Cat, levels=c("Less than $10,000","$10,000 to $19,999","$20,000 to $29,999",
+                                                        "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999",
+                                                        "$60,000 to $74,999","$75,000 to $99,999","$100,000 to $124,999",
+                                                        "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more"))
+  hhinc$geoname <- factor(hhinc$geoname, levels=c(ctyname, "Colorado"))
   pltTitle <- "Household Income Distribution"
-  subTitle <- as.character(hhinc[1,1])
+  subTitle <- ctyname
   srcTitle <- paste0("Source: 20", substr(dbid,6,8)," American Community Survey 5-Year Dataset")
   xTitle <- paste0("Income (in 20",substr(dbid,6,8)," Dollars)")
   
-  p=hhinc%>%ggplot(aes(x=cat, y=as.numeric(p), fill=geoname))+
+  p=hhinc%>%ggplot(aes(x=Income_Cat, y=prop, fill=geoname))+
     geom_bar(stat="identity", position="dodge")+
+    geom_errorbar(aes(ymin=propLOW, ymax=propHIGH),
+                  width=.2,                    # Width of the error bars
+                  position=position_dodge(.9)) +
     scale_y_continuous(label=percent)+
     scale_fill_manual(values=c("#6EC4E8","#00953A"),
                       name="Geography")+
@@ -1393,26 +1581,37 @@ incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", dbid= "acs1
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")
   
- 
   # Building Output dataset
- hh_place <- hhinc1[,c(3,2,4)]
- names(hh_place)[1] <- "Income_Cat"
- names(hh_place)[2] <- paste(gsub(" ","_",subTitle),"_Count")
- names(hh_place)[3] <- paste(gsub(" ","_",subTitle),"_Pct")
- 
- hh_state <- hhinc2[,c(4,3,5)]
- names(hh_state)[1] <- "Income_Cat"
- names(hh_state)[2] <- "CO_Count"
- names(hh_state)[3] <- "CO_Pct"
- 
- dWide <- merge(hh_place,hh_state,by="Income_Cat")
-                  
+  hh_place <- f.hhinc1[,c(1,5,6,9:12)]
+  
+  hh_state <- f.hhinc2[,c(1,5,6,9:12)]
+  
+  f.dWide <- merge(hh_place,hh_state,by="cat")
+  
+  #calcualting Statistical Test
+  #Calculating the statistical test
+  f.dWide$ZScore <- (abs(f.dWide$p_propVAL - f.dWide$s_propVAL)/
+                       sqrt((f.dWide$p_propMOE^2) + (f.dWide$s_propMOE^2)))
+  f.dWide$Sig_Diff <- ifelse(f.dWide$ZScore < 1,"No","Yes")
+  f.dWide$Sig_Diff <- ifelse(is.na(f.dWide$Sig_Diff)," ",f.dWide$Sig_Diff)
+  
+  f.dwideo <-  f.dWide[,c(1,4:7,10:13,15)]
+  
+  names(f.dwideo) <- c("Income_Cat",paste0("Percentage: ",ctyname), paste0("Margin of Error: ",ctyname),
+                       paste0("Lower 90% Conf Int: ",ctyname),paste0("Upper 90% Conf Int: ",ctyname),
+                       "Percentage: Colorado", "Margin of Error: Colorado",
+                       "Lower 90% Conf Int: Colorado","Upper 90% Conf Int: Colorado","Significant Difference")
+  
+  f.dwideo$Income_Cat <- factor(f.dwideo$Income_Cat, levels=c("Less than $10,000","$10,000 to $19,999","$20,000 to $29,999",
+                                                              "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999",
+                                                              "$60,000 to $74,999","$75,000 to $99,999","$100,000 to $124,999",
+                                                              "$125,000 to $149,999","$150,000 to $199,999","$200,000 or more"))
   #bind list
-  outList <- list("plot"= p, "data" =  dWide)
+  outList <- list("plot"= p, "data" =  f.dwideo)
   return(outList)
 }
 
-#' educPRo Creates a Chart comparing educational attainment of two areas
+#' educPRO Creates a Chart comparing educational attainment of two areas
 #' Modified from ms_ed in codemogProfile AB 12/2017
 #' Uses the codemog_api function to access ACS data (defaults to 13-5yr) to create a ggplot2 chart for
 #' use in profiles.
@@ -1425,12 +1624,13 @@ incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", dbid= "acs1
 #' @param base is the abse text size for the ggplot2 object and codemog_theme()
 #' @return ggplot2 graphic
 #' @export
- 
+
 educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", dbid="acs1115", base=12){
- 
+  
+  #Place Education Value
   d13p <- codemog_api(data="b15003",db=dbid,geonum=paste("1",state , fips,sep=""),meta="no")
   d13p[,7:32]=as.numeric(as.character(d13p[,7:32]))
-  d13pm <- d13p%>%
+  d13pVAL <- d13p%>%
     mutate(ed1=b15003002+b15003003+b15003004+b15003005+b15003006+b15003007+b15003008+b15003009+b15003010+b15003011+
              b15003012+b15003013+b15003014+b15003015+b15003016,
            ed2=b15003017+b15003018,
@@ -1441,16 +1641,63 @@ educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", dbid="acs1
     gather(EdLevel, value, ed1:ed5, factor_key=TRUE)%>%  #Needed to change this part of the call
     mutate(educcat=ordered(as.factor(EdLevel), levels=c("ed1", "ed2", "ed3", "ed4",
                                                         "ed5"),
-                          labels=c("Less than High School",
-                                   "High School Graduate \n(or GED)","Some College or \nAssociate's Degree", "Bachelor's Degree",
-                                   "Graduate or \nProfessional Degree")))%>%
+                           labels=c("Less than High School",
+                                    "High School Graduate \n(or GED)","Some College or \nAssociate's Degree", "Bachelor's Degree",
+                                    "Graduate or \nProfessional Degree")))%>%
     separate(geoname, into=c("geoname","statename"),sep=",")%>%
     select(-statename)%>%
     mutate(geoname=stri_trans_general(geoname,id="Title"))
   
+  # Place Education MOE
+  d13pm <- codemog_api(data="b15003_moe",db=dbid,geonum=paste("1",state , fips,sep=""),meta="no")
+  d13pm[,7:32]=as.numeric(as.character(d13pm[,7:32]))
+  
+  #Calculating the summary MOE
+  d13pMOE <- d13pm %>%
+    mutate(ed1=sqrt(b15003_moe002^2+b15003_moe003^2+b15003_moe004^2+b15003_moe005^2+b15003_moe006^2+b15003_moe007^2+
+                      b15003_moe008^2+b15003_moe009^2+b15003_moe010^2+b15003_moe011^2+b15003_moe012^2+b15003_moe013^2+
+                      b15003_moe014^2+b15003_moe015^2+b15003_moe016^2),
+           ed2=sqrt(b15003_moe017^2+b15003_moe018^2),
+           ed3=sqrt(b15003_moe019^2+b15003_moe020^2+b15003_moe021^2),
+           ed4=b15003_moe022,
+           ed5=sqrt(b15003_moe023^2+b15003_moe024^2+b15003_moe025^2)) %>%
+    select(geoname:geonum,ed1:ed5)%>%
+    gather(EdLevel, value, ed1:ed5, factor_key=TRUE)%>%  #Needed to change this part of the call
+    mutate(educcat=ordered(as.factor(EdLevel), levels=c("ed1", "ed2", "ed3", "ed4",
+                                                        "ed5"),
+                           labels=c("Less than High School",
+                                    "High School Graduate \n(or GED)","Some College or \nAssociate's Degree", "Bachelor's Degree",
+                                    "Graduate or \nProfessional Degree")))%>%
+    separate(geoname, into=c("geoname","statename"),sep=",")%>%
+    select(-statename)%>%
+    mutate(geoname=stri_trans_general(geoname,id="Title"))
+  
+  #Preparing data
+  names(d13pMOE)[9] <- "MOE"
+  d13pVAL2 <- d13pVAL[,c(1,8,10,9)]
+  d13pMOE2 <- d13pMOE[,c(8,9)]
+  
+  d13pF <- merge(d13pVAL2,d13pMOE2,by="EdLevel")
+  f.d13pFin <- d13pF %>%
+    mutate(p_propVAL = value/sum(value),
+           p_propMOE = MOE/sum(value)) 
+  
+  f.d13pFin$p_ciLOW  <- f.d13pFin$p_propVAL - f.d13pFin$p_propMOE
+  f.d13pFin$p_ciHIGH <- f.d13pFin$p_propVAL + f.d13pFin$p_propMOE
+  f.d13pFin$p_pctVAL <- percent(f.d13pFin$p_propVAL *100)
+  f.d13pFin$p_pctMOE <- percent(f.d13pFin$p_propMOE *100)
+  f.d13pFin$p_pctLOW <- percent(f.d13pFin$p_ciLOW *100)
+  f.d13pFin$p_pctHIGH <- percent(f.d13pFin$p_ciHIGH *100)
+  
+  f.d13pFinM <- f.d13pFin[, c(3,2,6,8,9)]
+  names(f.d13pFinM)[2] <- ctyname
+  names(f.d13pFinM) <- c("Education_Cat","geoname","prop","propLOW","propHIGH")
+  
+  
+  #State Education Values
   d13c <- codemog_api(data="b15003",db=dbid,geonum=paste("1",state2 , fips2,sep=""),meta="no")
   d13c[,7:32]=as.numeric(as.character(d13c[,7:32]))
-  d13cm <- d13c%>%
+  d13cVAL <- d13c%>%
     mutate(ed1=b15003002+b15003003+b15003004+b15003005+b15003006+b15003007+b15003008+b15003009+b15003010+b15003011+
              b15003012+b15003013+b15003014+b15003015+b15003016,
            ed2=b15003017+b15003018,
@@ -1466,24 +1713,77 @@ educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", dbid="acs1
                                     "Graduate or \nProfessional Degree")))%>%
     mutate(geoname=stri_replace_all_charclass(geoname, "\\p{WHITE_SPACE}", ""))
   
-  d <- rbind(d13pm,d13cm)%>%
-    group_by(geoname)%>%
-    mutate(p=value/sum(value))
+  
+  # state Education MOE
+  d13cm <- codemog_api(data="b15003_moe",db=dbid,geonum=paste("1",state2 , fips2,sep=""),meta="no")
+  d13cm[,7:32]=as.numeric(as.character(d13cm[,7:32]))
+  
+  #Calculating the summary MOE
+  d13cMOE <- d13cm%>%
+    mutate(ed1=sqrt(b15003_moe002^2+b15003_moe003^2+b15003_moe004^2+b15003_moe005^2+b15003_moe006^2+b15003_moe007^2+
+                      b15003_moe008^2+b15003_moe009^2+b15003_moe010^2+b15003_moe011^2+b15003_moe012^2+b15003_moe013^2+
+                      b15003_moe014^2+b15003_moe015^2+b15003_moe016^2),
+           ed2=sqrt(b15003_moe017^2+b15003_moe018^2),
+           ed3=sqrt(b15003_moe019^2+b15003_moe020^2+b15003_moe021^2),
+           ed4=b15003_moe022,
+           ed5=sqrt(b15003_moe023^2+b15003_moe024^2+b15003_moe025^2)) %>%
+    select(geoname:geonum,ed1:ed5)%>%
+    gather(EdLevel, value, ed1:ed5, factor_key=TRUE)%>%  #Needed to change this part of the call
+    mutate(educcat=ordered(as.factor(EdLevel), levels=c("ed1", "ed2", "ed3", "ed4",
+                                                        "ed5"),
+                           labels=c("Less than High School",
+                                    "High School Graduate \n(or GED)","Some College or \nAssociate's Degree", "Bachelor's Degree",
+                                    "Graduate or \nProfessional Degree")))%>%
+    separate(geoname, into=c("geoname","statename"),sep=",")%>%
+    select(-statename)%>%
+    mutate(geoname=stri_trans_general(geoname,id="Title"))
+  
+  #Preparing data
+  names(d13cMOE)[9] <- "MOE"
+  d13cVAL2 <- d13cVAL[,c(1,8,10,9)]
+  d13cMOE2 <- d13cMOE[,c(8,9)]
+  
+  d13cF <- merge(d13cVAL2,d13cMOE2,by="EdLevel")
+  f.d13cFin <- d13cF %>%
+    mutate(s_propVAL = value/sum(value),
+           s_propMOE = MOE/sum(value)) 
+  
+  f.d13cFin$s_ciLOW  <- f.d13cFin$s_propVAL - f.d13cFin$s_propMOE
+  f.d13cFin$s_ciHIGH <- f.d13cFin$s_propVAL + f.d13cFin$s_propMOE
+  f.d13cFin$s_pctVAL <- percent(f.d13cFin$s_propVAL *100)
+  f.d13cFin$s_pctMOE <- percent(f.d13cFin$s_propMOE *100)
+  f.d13cFin$s_pctLOW <- percent(f.d13cFin$s_ciLOW *100)
+  f.d13cFin$s_pctHIGH <- percent(f.d13cFin$s_ciHIGH *100)
+  
+  f.d13cFinM <- f.d13cFin[, c(3,2,6,8,9)]
+  names(f.d13cFinM) <- c("Education_Cat","geoname","prop","propLOW","propHIGH")
+  
+  
+  #Preparing Plot dataset
+  d <- rbind(f.d13pFinM,f.d13cFinM)
+  
+  d$Education_Cat <- factor(d$Education_Cat, levels=c("Less than High School",
+                                                      "High School Graduate \n(or GED)",
+                                                      "Some College or \nAssociate's Degree", "Bachelor's Degree",
+                                                      "Graduate or \nProfessional Degree"))
   
   # Preparing Plot
   d$geoname <- factor(d$geoname, levels=c(ctyname, "Colorado"))
   pltTitle <- "Educational Attaiment,\nPersons Age 25 and Older "
-  subTitle <- as.character(d13pm[1,1])  #The is the county Name...
+  subTitle <- ctyname  #The is the county Name...
   srcTitle <- paste0("Source: 20", substr(dbid,6,8)," American Community Survey 5-Year Dataset")
   xTitle <- "Educational Attainment"
   
-  p=ggplot(d, aes(x=educcat, y=p, fill=geoname))+
+  p=ggplot(d, aes(x=Education_Cat, y=prop, fill=geoname))+
     geom_bar(stat="identity", position="dodge")+
+    geom_errorbar(aes(ymin=propLOW, ymax=propHIGH),
+                  width=.2,                    # Width of the error bars
+                  position=position_dodge(.9)) +
     scale_y_continuous(label=percent)+
     scale_fill_manual(values=c("#6EC4E8","#00953A"),
                       name="Geography")+
     theme_codemog(base_size=base)+
-    theme(axis.text.x=element_text(angle=0))+  #coord_flip() +
+    theme(axis.text.x=element_text(angle=0))+ 
     labs(title = pltTitle,
          subtitle = subTitle,
          caption = srcTitle, 
@@ -1496,37 +1796,77 @@ educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", dbid="acs1
   
   
   # Prepating output data set
-  ed_place <- d13pm[,c(10,9)] %>% mutate(pct=value/sum(value))
-  names(ed_place)[1] <- "Education_Cat"
-  names(ed_place)[2] <- paste(gsub(" ","_",subTitle),"_Count")
-  names(ed_place)[3] <- paste(gsub(" ","_",subTitle),"_Pct")
+  ed_place <- f.d13pFin[, c(3,6,7,10:13)]
+  
+  ed_state <- f.d13cFin[, c(3,6,7,10:13)]
   
   
-  ed_state <- d13cm[,c(10,9)] %>% mutate(p=value/sum(value))
-  names(ed_state)[1] <- "Education_Cat"
-  names(ed_state)[2] <- "CO_Count"
-  names(ed_state)[3] <- "CO_Pct"
-
-  d.wide <- merge(ed_place,ed_state,by="Education_Cat")
-  d.wide$Education_Cat <- gsub("\\n","",d.wide$Education_Cat)
-
-  d.wide$N <- ifelse(d.wide$Education_Cat == "Less than High School", 1,
-              ifelse(d.wide$Education_Cat == "High School Graduate (or GED)", 2,
-              ifelse(d.wide$Education_Cat =="Some College or Associate's Degree", 3,
-              ifelse(d.wide$Education_Cat =="Bachelor's Degree", 4,5))))
-  d.wide <- d.wide[order(d.wide$N),]                                
-  d.wide <- d.wide[,1:5]                              
-
-                                
-                        
+  f.dwide <- merge(ed_place,ed_state,by="educcat")
+  
+  
+  
+  #calcualting Statistical Test
+  #Calculating the statistical test
+  f.dwide$ZScore <- (abs(f.dwide$p_propVAL - f.dwide$s_propVAL)/
+                       sqrt((f.dwide$p_propMOE^2) + (f.dwide$s_propMOE^2)))
+  f.dwide$Sig_Diff <- ifelse(f.dwide$ZScore < 1,"No","Yes")
+  f.dwide$Sig_Diff <- ifelse(is.na(f.dwide$Sig_Diff)," ",f.dwide$Sig_Diff)
+  
+  
+  # Preparing Final File
+  f.dwideo <-  f.dwide[,c(1,4:7,10:13,15)]
+  
+  names(f.dwideo) <- c("Education_Cat",paste0("Percentage: ",ctyname), paste0("Margin of Error: ",ctyname),
+                       paste0("Lower 90% Conf Int: ",ctyname),paste0("Upper 90% Conf Int: ",ctyname),
+                       "Percentage: Colorado", "Margin of Error: Colorado",
+                       "Lower 90% Conf Int: Colorado","Upper 90% Conf Int: Colorado","Significant Difference")
+  
+  f.dwideo$Education_Cat <- gsub("\\n","",f.dwideo$Education_Cat)
+  
+  f.dwideo <- f.dwideo[c(4,3,5,1,2),]
+  
+  
   #bind list
-  outList <- list("plot"= p, "data" =  d.wide)
+  outList <- list("plot"= p, "data" =  f.dwideo)
   
   return(outList)
 }
 
+#' PopForecast Creates a Chart showing population and estmates 
+#' @param fips is the numeric fips code for the main area to be compared
+#' @param ctyname is the cplace name from input$unit
+#' @param byr is the first year of the series to be extracted by county_sya (min 1990)
+#' @param eyr is the last  year of the series to be extracted by county_sya (max 2050)
+#' @param base is the abse text size for the ggplot2 object and codemog_theme()
+#' @return ggplot2 graphic
+#' @export
 
-#' AgePlotPro Creates a Chart comparing The age distribution of a selected place to the state for a simgle year
+PopForecast <- function(fips, ctyname, byr=1990,eyr=2050, base=10) {
+
+  yrs <- seq(byr,eyr,2)
+  d <- county_sya(fips, yrs) %>%
+    group_by(county, datatype, year) %>%
+    summarize(Tot_pop = sum(as.numeric(totalpopulation)))
+  
+  p=d%>%
+    ggplot(aes(x=as.factor(year), y=round(Tot_pop, digits=0), group=datatype))+
+    geom_line(aes(linetype=datatype), color="#00953A", size=1.75) +
+    labs(x="Year", y="Population", title=paste("Population Forecast,", byr, "to", eyr, sep=" "),
+         subtitle = ctyname, 
+         caption = "Source: State Demography Office")+
+    scale_y_continuous(label=comma)+
+    theme_codemog(base_size=base)+
+    theme(axis.text.x=element_text(angle=90,size=8)) +
+    theme(legend.title=element_blank())
+  
+  # Creating Output data file  
+  d[4] <- round(d[4],digits=0)
+  d$county <- ctyname
+  outList <- list("plot" = p,"data" = d)
+  return(outList)
+}
+
+#' agePlotPRO Creates a Chart comparing The age distribution of a selected place to the state for a simgle year
 #'
 #' @param fips is the numeric fips code for the main area to be compared
 #' @param ctyname is the cplace name from input$unit
@@ -1536,7 +1876,8 @@ educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", dbid="acs1
 #' @return ggplot2 graphic
 #' @export
 
-AgePlotPro  <- function(fips, ctyname, state=0, yrs, base=10) {
+agePlotPRO  <- function(fips, ctyname, state=0, yrs, base=10, agegroup="ten") {
+
   #Creating Place data File
   f.place =county_sya(fips, yrs)%>%
     mutate(agecat=age_cat(., "age", groups=agegroup))%>%
@@ -1549,7 +1890,7 @@ AgePlotPro  <- function(fips, ctyname, state=0, yrs, base=10) {
     mutate(age_Pct = percent((totalpopulation/sum(popTot))*100)) %>%
     mutate(age_Prop = (totalpopulation/sum(popTot))*100)
   
-  f.place$county <- simpleCap(ctyname)
+  f.place$county <- ctyname
   
   #Creating State Data file
   f.state =county_sya(state, yrs)%>%
@@ -1576,7 +1917,7 @@ AgePlotPro  <- function(fips, ctyname, state=0, yrs, base=10) {
     ggplot(aes(x=agecat, y=age_Prop, fill=county))+
     geom_bar(stat="identity",color="black", position = position_dodge(width=0.8)) +
     scale_y_continuous(label=percent)+
-    scale_fill_manual(values=barCol) +
+    scale_fill_manual(values=barCol, name="Geography") +
     theme_codemog(base_size=base)+
     theme(axis.text.x=element_text(angle=45, hjust=1))+
     labs(title = pltTitle,
@@ -1590,38 +1931,202 @@ AgePlotPro  <- function(fips, ctyname, state=0, yrs, base=10) {
           legend.position= "bottom") 
   
   
-  
-  f.AgePlot2 <- f.AgePlot[ ,c(2:5,7)]
-  f.AgePlot2$totalpopulation <- round(f.AgePlot2$totalpopulation,digits = 0)
+
+  x <- merge(f.place, f.state, by="agecat")
+  f.AgePlot2 <- x[,c(1,4,5,7,12,14)]
+  f.AgePlot2[3] <- round(f.AgePlot2[3],digits=0)
+  f.AgePlot2[5] <- round(f.AgePlot2[5],digits=0)                       
+  names(f.AgePlot2) <- c("Age Category", "Year", paste0("Population: ",ctyname), paste0("Population Percentage: ",ctyname),
+                         "Population: Colorado", "Population percentage: Colorado")
   
   outList <- list("plot" = AgePlot, "data" = f.AgePlot2)
   return(outList)
 }
- 
+
+#' migbyagePRO Creates a Chart showing the 2000-2010 net Migration rate by age
+#'
+#' @param fips is the numeric fips code for the main area to be compared
+#' @param ctyname is the cplace name from input$unit
+#' @param base is the abse text size for the ggplot2 object and codemog_theme()
+#' @return ggplot2 graphic
+#' @export
+#' 
+migbyagePRO <- function(fips, ctyname, base=10) {
+  state= 0
+  
+  # create a connection
+  # save the password that we can "hide" it as best as we can by collapsing it
+  pw <- {
+    "demography"
+  }
+  
+  # loads the PostgreSQL driver
+  drv <- dbDriver("PostgreSQL")
+  # creates a connection to the postgres database
+  # note that "con" will be used later in each connection to the database
+  con <- dbConnect(drv, dbname = "dola",
+                   host = "104.197.26.248", port = 5433,
+                   user = "codemog", password = pw)
+  rm(pw) # removes the password
+  
+  sqlPlace <- paste0("SELECT fips, county, agegroup, rate0010 FROM data.netmigrbyage WHERE fips = ",fips,";")
+  f.migPlace <- dbGetQuery(con, sqlPlace)
+  
+  sqlState <- paste0("SELECT fips, county, agegroup, rate0010 FROM data.netmigrbyage WHERE fips = ",state,";")
+  f.migState <- dbGetQuery(con, sqlState)
+  
+  #Closing the connection
+  dbDisconnect(con)
+  dbUnloadDriver(drv)
+  rm(con)
+  rm(drv)
+  
+  # Preparing for merge
+  f.migPlace[2] <- ctyname
+  f.migState[2] <- "Colorado"
+  
+  
+  f.migplot <- rbind(f.migPlace, f.migState)
+  names(f.migplot)[2] <- "geoname"
+  
+  
+  
+  f.migplot$geoname <- factor(f.migplot$geoname, levels=c(ctyname, "Colorado"))
+  pltTitle <- "Net Migration Rate by Age: 2000-2010"
+  subTitle <- ctyname
+  srcTitle <- "Source: State Demography Office"
+  xTitle = "Age Group"
+  
+  
+  
+  
+  p <- f.migplot %>%ggplot(aes(x=agegroup, y=rate0010, colour=geoname))+
+    geom_line(size=1.5) +
+    scale_colour_manual("Geography", values=c("#6EC4E8", "#00953A")) +
+    theme_codemog(base_size=base)+
+    geom_hline(yintercept=0, size=1.05) +
+    labs(title = pltTitle,
+         subtitle = subTitle,
+         caption = srcTitle, 
+         x = xTitle,
+         y= "Net Migration Rate (per 1,000)") +
+    theme(plot.title = element_text(hjust = 0.5),
+          panel.background = element_rect(fill = "white", colour = "gray50"),
+          panel.grid.major = element_line(colour = "gray80"),
+          legend.position= "bottom")
+  
+  
+  #Preparing data set
+  f.migD <- merge(f.migPlace,f.migState, by="agegroup")
+  f.migData <- f.migD[,c(1,4,7)]
+  names(f.migData) <- c("5-Year Age Group",paste0("2000-2010 Migration Rate: ",ctyname), "2000-2010 Migration Rate: Colorado")
+  
+  outList <-list("plot"=p,"data"= f.migData)
+  return(outList)
+}
+
+
+#' houseEstPro Produces a plot of the housing projections from 2010 to 2050
+#' from the household_projections data table
+#'
+#' @param fips is the numeric fips code for county                                                      
+#' @param ctyname is the cplace name from input$unit
+#' @param base is the abse text size for the ggplot2 object and codemog_theme()
+#' @return ggplot2 graphic
+#' @export
+#' 
+houseEstPRO <- function(fips, ctyname, base=10) {
+  
+  fipsN <- as.numeric(fips)
+  state= 0
+  
+  # create a connection
+  # save the password that we can "hide" it as best as we can by collapsing it
+  pw <- {
+    "demography"
+  }
+  
+  # loads the PostgreSQL driver
+  drv <- dbDriver("PostgreSQL")
+  # creates a connection to the postgres database
+  # note that "con" will be used later in each connection to the database
+  con <- dbConnect(drv, dbname = "dola",
+                   host = "104.197.26.248", port = 5433,
+                   user = "codemog", password = pw)
+  rm(pw) # removes the password
+  
+  sqlPlace <- paste0("SELECT * FROM estimates.household_projections WHERE area_code = ",fipsN,";")
+  f.hhP <- dbGetQuery(con, sqlPlace)
+  
+  f.hhPlace <-  f.hhP[which(f.hhP$household_type_id == 0 & f.hhP$age_group_id == 0),]
+  
+  #Closing the connection
+  dbDisconnect(con)
+  dbUnloadDriver(drv)
+  rm(con)
+  rm(drv)
+  
+  # Preparing Plot
+  f.hhPlace$datatype <- ifelse(f.hhPlace$year <= 2016, "Estimate", "Forecast")
+  f.hhPlace$datatype <- factor(f.hhPlace$datatype, levels=c("Estimate","Forecast"))
+  
+  pltTitle <- "Total Estimated Housing Units: 2010-2050"
+  subTitle <- ctyname
+  srcTitle <- "Source: State Demography Office"
+  
+  p <- f.hhPlace%>%
+    ggplot(aes(x=year, y=total_households, group=datatype))+
+    geom_line(aes(linetype=datatype), color="#00953A", size=1.75) +
+    labs(x="Year", y="Housing Units", title=pltTitle,
+         subtitle = ctyname, 
+         caption = "Source: State Demography Office")+
+    
+    scale_x_continuous(breaks=seq(2010, 2050, 5)) +
+    scale_y_continuous(label=comma)+
+    theme_codemog(base_size=base)+
+    theme(plot.title = element_text(hjust = 0.5),
+          panel.background = element_rect(fill = "white", colour = "gray50"),
+          panel.grid.major = element_line(colour = "gray80"),
+          legend.position= "bottom",legend.title=element_blank())
+  
+  
+  
+  f.hhPlace$place <- ctyname
+  f.hhPlaceFin <- f.hhPlace[,c(10,9,8)]
+  outList <- list("plot" = p,"data" = f.hhPlaceFin)
+  return(outList) 
+}
 #End Functions
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
 # Current ACS database
-curACS = "acs1115"
+curACS <- "acs1115"
 curYr <- 2016
 
 #Basic Statistics
 stats.obj <<-list()
 stats.list <<- list()
 
-
 # Population Change
-pop.tab1 <<- list()
-pop.plot2 <<- list()
-pop.plot3 <<- list()
-pop.plot4 <<- list()
-pop.list <<- list()
+popa1 <<- list()
+popa2 <<- list()
+popa3 <<- list()
+popa4 <<- list()
+popa.list <<- list()
+
+#Population Forecast
+popf1 <<- list()
+popf2 <<- list()
+popf3 <<- list()
+popf4 <<- list()
+popf.list <<- list()
+
 
 #Population Characteristics
-popc.plot1 <<- list()
-popc.plot2 <<- list()
-popc.tab1 <<- list()
-popc.tab2 <<- list()
+popc1 <<- list()
+popc2 <<- list()
+popc3 <<- list()
+popc4 <<- list()
 popc.list <<- list()
 
 
@@ -1644,14 +2149,14 @@ ui <-
     #Output Content Checkboxes
     checkboxGroupInput("outChk", "Select the data elements to display:",
                        choices = c("Basic Statistics" = "stats", 
+                                   "Population Change" = "popf",
                          "Population Characteristics: Age" = "pop",
                          "Population Characteristics: Income, Education and Race"= "popc",
-                         "Population Forecasts" = "popf",
                          "Housing and Households" = "housing",
                          "Commuting" = "comm",
                          "Employment and Demographic Forecast"="emply",
                          "Employment by Industry"="emplind"),
-                        selected =  c("stats","pop","popc","popf",
+                        selected =  c("stats","popf","pop","popc",
                                       "housing","comm", "emply","emplind")
                        ),
     
@@ -1767,15 +2272,17 @@ server <- function(session,input, output) {
                      PlFilter= FALSE
                    } else {
                      PlFilter <- TRUE
-                   }
+                   } #else PLFilter
                }
-          }
+         }
+           
              
     #Generate profile UI objects
 
      svals <- reactiveValues(a=NULL,b=NULL,c=NULL)
-     ln1 <- tags$h1(simpleCap(input$unit))
-      
+     placeName <- simpleCap(input$unit)
+     ln1 <- tags$h1(placeName)
+
     #stats; Basic Statistics
     if("stats" %in% input$outChk) {
       stats.text <- tags$h2("Basic Statistics")
@@ -1807,116 +2314,181 @@ server <- function(session,input, output) {
       stats.list <<- list(stats.box0, stats.box1, stats.box2)
       incProgress()
     }
+     # Population change
+     if("popf" %in% input$outChk){
+ 
+       #Chart/Table Objects
+       popf1  <<- popTable(substr(fipslist,3,5),placeName,1990,2016)
+       popf2 <<- county_timeseries(fips=as.numeric(substr(fipslist,3,5)),endYear=2016,base=10)
+       popf3 <<- PopForecast(fips=as.numeric(substr(fipslist,3,5)), ctyname = placeName)
+       popf4 <<- cocPlot(fips=as.numeric(substr(fipslist,3,5)),ctyname=placeName,2016) 
+       
+       
+       #infobox Objects
+       popf1.info <- tags$div(boxContent(topic= "Population Growth estimates",
+                                        description = "The Population Growth Table compares population growth for a place to the State.",
+                                        source = "SDO",
+                                        stats = "F"),  
+                            downloadObjUI("popf1data")) 
+       
+       popf2.info <- tags$div(boxContent(topic= "Population Growth data",
+                                        description = "The Population Growth Chart shows the growth the total population for a selected location.",
+                                        source = "SDO",
+                                        stats = "F"),
+                             tags$br(), downloadObjUI("popf2plot"), tags$br(),
+                             tags$br(), downloadObjUI("popf2data")) 
+       
+       popf3.info <- tags$div(boxContent(topic= "Population Forecast",
+                                        description = "The Population Forecast plot shows the estimated population growth between 1990 and 2025 for the selected county.",
+                                        source = "SDO",
+                                        stats = "F"),  
+                              tags$br(), downloadObjUI("popf3plot"), tags$br(),
+                              tags$br(), downloadObjUI("popf3data")) 
+  
+       popf4.info <- tags$div(boxContent(topic= "Components of Change",
+                                        description = "The Components of Change chart shows the estimated births, deaths and net migration values for a selected place betwwen 1990 and the present.",
+                                        source = "SDO",
+                                        stats = "F"),
+                             tags$br(), downloadObjUI("popf4plot"), tags$br(),
+                             tags$br(), downloadObjUI("popf4data")) 
+       
+
+       # Bind to boxes
+       popf1.box <- tabBox(width=6, height=400,
+                          tabPanel("Table",tags$div(class="cleanTab", HTML(popf1$table))),
+                          tabPanel("Sources and Downloads",popf1.info))
+       popf2.box <- tabBox(width=6, height=400,
+                          tabPanel("Plot", renderPlot({popf2$plot},height=340)),
+                          tabPanel("Sources and Downloads",popf2.info))
+       popf3.box <- tabBox(width=6, height=400,
+                          tabPanel("Plot",renderPlot({popf3$plot},height=340)),
+                          tabPanel("Sources and Downloads", popf3.info))
+       popf4.box <- tabBox(width=6, height=400,
+                          tabPanel("Plot",renderPlot({popf4$plot},height=340)),
+                          tabPanel("Sources and Downloads",popf4.info))
+       
+       
+       #Append to List
+       popf.list <<- list(popf1.box,popf2.box,popf3.box,popf4.box)
+       incProgress()
+       
+       
+     }  # popf
      
-    #pop: Population, Migration and Natural Increase
+     
+    #pop: Population Table, County Time Series, Population by Age, Median Age
     if("pop" %in% input$outChk){
       #Generate tables, plots and text...
-      pop.tab1  <<- popTable(substr(fipslist,3,5),input$unit,1990,2016)
-      pop.plot2 <<- county_timeseries(fips=as.numeric(substr(fipslist,3,5)),endYear=2016,base=10)
-      pop.plot3 <<- ageForecastPRO(fips=as.numeric(substr(fipslist,3,5)),2010,2015,2025,base=10)
-      pop.plot4 <<- cocPlot(fips=as.numeric(substr(fipslist,3,5)),cName=input$unit,2016) 
-
-      popb1.info <- tags$div(class="dInfo","The Population Growth Table compares population growth for a place to the State.",tags$br(),
-                             "The Population Growth estimates are developed by the State Demography Office.",tags$br(),
-                             "To download this table, click on the 'Output PDF' button in the sidebar of the dashboard.",tags$br(),
-                             "To download data click on the button below", tags$br(),
-                             downloadButton("popb1Data","Download Data"))
+     
+      popa1 <<- agePlotPRO(fips=as.numeric(substr(fipslist,3,5)), ctyname=placeName, yrs=2016)
+      popa2 <<- medianAgeTab(fips=substr(fipslist,3,5), ACS="acs1115", ctyname=placeName)
+      popa3 <<- ageForecastPRO(fips=as.numeric(substr(fipslist,3,5)),2010,2015,2025,base=10)
+      popa4 <<- migbyagePRO(fips=as.numeric(substr(fipslist,3,5)), ctyname = placeName)
       
-      popb2.info <- tags$div(class="dInfo","The Population Growth Chart shows the growth the total population for a selected location",tags$br(),
-                             "The Population Growth data is developed by the State Demography Office.",tags$br(),
-                             "To download the chart and the underlying data click on the buttons below", tags$br(),
-                             downloadButton("popb2Plot","Download Chart"),
-                             downloadButton("popb2Data","Download Data"))
+      #Info Boxes
+      popa1.info <- tags$div(boxContent(topic= "Age data",
+                         description = "The Population by Age chart displays age categories a single year.",
+                         source = "SDO",
+                         stats = "F"), tags$br(),
+                         downloadObjUI("popa1plot"), tags$br(), tags$br(),
+                         downloadObjUI("popa1data")) 
+    
+      popa2.info <- tags$div(boxContent(topic= "Median Age data",
+                               description = "The Median Age table compares the median age by gender for a location to the state. ",
+                               source = "ACS",
+                               stats = "T"), tags$br(),
+                              downloadObjUI("popa2data")) 
+    
+      popa3.info <- tags$div(boxContent(topic= "Population Forecast by Age",
+                                        description = "The Population Forecast by Age Chart displays the age distribution between 2010 and 2025 .",
+                                        source = "SDO",
+                                        stats = "F"), tags$br(),
+                                        downloadObjUI("popa3plot"), tags$br(), tags$br(),
+                                        downloadObjUI("popa3data")) 
       
-      popb3.info <- tags$div(class="dInfo","The Age Forecast Chart compares the age distribution for selected location at two points in time.",tags$br(),
-                            "The Age Forecast data is developed by the State Demography Office.",tags$br(),
-                            "To download the chart and the underlying data click on the buttons below", tags$br(),
-                            downloadButton("popb3Plot","Download Chart"),
-                            downloadButton("popb3Data","Download Data"))
-      
-      popb4.info <- tags$div(class="dInfo","The Components of Change data shows trends in the number of births, deaths, and net migration for a selected location",tags$br(),
-                              "The Components of Change data is developed by the State Demography Office.",tags$br(),
-                              "To download the chart and the underlying data click on the buttons below", tags$br(),
-                              downloadButton("popb4Plot","Download Chart"),
-                              downloadButton("popb4Data","Download Data"))
-
+      popa4.info <- tags$div(boxContent(topic= "Net Migration by Age",
+                                        description = "The Net Migration by Age chart compares the net migration rate by age group between 2000 and 2010 for a selected place and the state ",
+                                        source = "CEN",
+                                        stats = "F"), tags$br(),
+                                        downloadObjUI("popa4plot"), tags$br(), tags$br(),
+                                        downloadObjUI("popa4data")) 
       
       # Bind to boxes
-       pop.box1 <- tabBox(width=6, height=400,
-                          tabPanel("Table",tags$div(class="cleanTab", HTML(pop.tab1$table))),
-                          tabPanel("Sources and Downloads",popb1.info))
-       pop.box2 <- tabBox(width=6, height=400,
-                          tabPanel("Chart", renderPlot({pop.plot2$plot},height=340)),
-                          tabPanel("Sources and Downloads",popb2.info))
-       pop.box3 <- tabBox(width=6, height=400,
-                          tabPanel("Chart",renderPlot({pop.plot3$plot},height=340)),
-                          tabPanel("Sources and Downloads", popb3.info))
-       pop.box4 <- tabBox(width=6, height=400,
-                          tabPanel("Chart",renderPlot({pop.plot4$plot},height=340)),
-                          tabPanel("Sources and Downloads",popb4.info))
+       popa1.box <- tabBox(width=6, height=400,
+                          tabPanel("Table",renderPlot({popa1$plot},height=340)),
+                          tabPanel("Sources and Downloads",popa1.info))
+       popa2.box <- tabBox(width=6, height=400,
+                          tabPanel("Plot", tags$div(class="cleanTab", HTML(popa2$table))),
+                          tabPanel("Sources and Downloads",popa2.info))
+       popa3.box <- tabBox(width=6, height=400,
+                          tabPanel("Plot",renderPlot({popa3$plot},height=340)),
+                          tabPanel("Sources and Downloads", popa3.info))
+       popa4.box <- tabBox(width=6, height=400,
+                          tabPanel("Table",renderPlot({popa4$plot},height=340)),
+                          tabPanel("Sources and Downloads",popa4.info))
    
        
        #Append to List
-       pop.list <<- list(pop.box1,pop.box2,pop.box3,pop.box4)
+       popa.list <<- list(popa1.box,popa2.box,popa3.box,popa4.box)
        incProgress()
     }
-    # Population Chatacteristics 
+      
+     
+    # Population c Chatacteristics 
      if("popc" %in% input$outChk){
 
        #Generate tables, plots and text...
-       popc.plot1 <<- incomePRO(fips=substr(fipslist,3,5),ctyname=simpleCap(input$unit), dbid=curACS)
-       popc.plot2 <<- educPRO(fips=substr(fipslist,3,5), ctyname=simpleCap(input$unit), dbid=curACS)
-       popc.tab1 <<- raceTab1(fips=substr(fipslist,3,5),ctyname=input$unit,curACS) 
-       popc.tab2 <<- raceTab2(fips=substr(fipslist,3,5),ctyname=input$unit,curACS)
+       popc1 <<- incomePRO(fips=substr(fipslist,3,5),ctyname=placeName, dbid=curACS)
+       popc2 <<- educPRO(fips=substr(fipslist,3,5), ctyname=placeName, dbid=curACS)
+       popc3 <<- raceTab1(fips=substr(fipslist,3,5),ctyname=placeName,curACS) 
+       popc4 <<- raceTab2(fips=substr(fipslist,3,5),ctyname=placeName,curACS)
       
        #Contents of Information Tabs
-       popcb1.info <- tags$div(class="dInfo","The Income Disctibution Chart compares the distribution of household income for a selected location to the State.",tags$br(),
-                               "Information on household Income is taken from the American Community Survey",tags$br(), tags$br(),
-                               "To download the chart and the underlying data click on the buttons below", tags$br(),
-                               downloadButton("popcb1Plot","Download Chart"),
-                               downloadButton("popcb1Data","Download Data"))
+       popc1.info <- tags$div(boxContent(topic= "household income",
+                                          description = "The Income Disctibution Chart compares the distribution of household income for a selected location to the state.",
+                                          source = "ACS",
+                                          stats = "T"),  tags$br(),
+                                         downloadObjUI("popc1plot"), tags$br(), tags$br(),
+                                         downloadObjUI("popc1data"))
        
-       popcb2.info <- tags$div(class="dInfo","The Educational Attainment Chart compares the categories of educational attaiment for adults aged 25 and older for a selected location to the State.",tags$br(),
-                               "Information on educational attainment is taken from the American Community Survey",tags$br(), tags$br(),
-                               "To download the chart and the underlying data click on the buttons below", tags$br(),
-                               downloadButton("popcb2Plot","Download Chart"),
-                               downloadButton("popcb2Data","Download Data"))
-       
-       popcb3.info <- tags$div(class="dInfo","The Race Trend Table shows changes in the distribution of racial idenification since the 2000 Census.",tags$br(),
-                               "Information on racial identification is taken from the U.S. Census Bureau and the American Community Survey",tags$br(), tags$br(),
-                               "To download this table, click on the 'Output PDF' button in the sidebar of the dashboard.",tags$br(), tags$br(),
-                               "To download data click on the button below", tags$br(),
-                               downloadButton("popcb3Data","Download Data"))
-       
-       popcb4.info <- tags$div(class="dInfo","The Race Comparison Table compares the distribution of racial idenification of a place to the State.",tags$br(),
-                               "Information on racial identification is taken from the American Community Survey",tags$br(), 
-                               "Esitmates of statistically significant differences are calculated at the 90% confidence level.", tags$br(),
-                               "For more information on the Margin of Error and its use in statistical testing, see:", tags$br(),
-                               tags$ul(
-                               tags$li(tags$a(href="https://demography.dola.colorado.gov/demography/understanding-margins-error/","Understanding Margins of Error",target="_blank"), " and "),
-                               tags$li(tags$a(href="https://www.census.gov/programs-surveys/acs/guidance.html","U.S. Census Bureau American Community Survey Guidance for Data Users",target="_blank"))),
-                               tags$br(),
-                               "To download this table, click on the 'Output PDF' button in the sidebar of the dashboard.",tags$br(), tags$br(),
-                               "To download data click on the button below", tags$br(),
-                               downloadButton("popcb4Data","Download Data"))
-       
+       popc2.info <- tags$div(boxContent(topic= "education attainment",
+                                          description= "The Educational Attainment Chart compares the categories of educational attaiment for adults aged 25 and older for a selected location to the State.",
+                                          source = "ACS",
+                                          stats = "T"), tags$br(),
+                                          downloadObjUI("popc2plot"), tags$br(), tags$br(),
+                                          downloadObjUI("popc2data"))
+         
+
+       popc3.info <- tags$div(boxContent(topic= "racial identification",
+                                         description= "The Race Trend Table shows changes in the distribution of racial idenification since the 2000 Census.",
+                                         source = "ACS",
+                                         stats = "F"), tags$br(),
+                                         downloadObjUI("popc3data"))
+         
+         popc4.info <- tags$div(boxContent(topic= "racial identification",
+                                           description= "The Race Comparison Table compares the distribution of racial idenification of a place to the State.",
+                                           source = "ACS",
+                                           stats = "T"), tags$br(),
+                                          downloadObjUI("popc4data"))
+           
+           
        # Bind to boxes
-       popc.box1 <- tabBox(width=6, height=400,
-                           tabPanel("Chart",renderPlot({popc.plot1$plot},height=340)),
-                           tabPanel("Sources and Downloads",popcb1.info))
-       popc.box2 <- tabBox(width=6, height=400,
-                           tabPanel("Chart",renderPlot({popc.plot2$plot},height=340)),
-                           tabPanel("Sources and Downloads",popcb2.info))
-       popc.box3 <- tabBox(width=6, height=500,
-                           tabPanel("Table",tags$div(class="cleanTab",HTML(popc.tab1$table))),
-                           tabPanel("Sources and Downloads",popcb3.info))
-       popc.box4 <- tabBox(width=6, height=500,
-                           tabPanel("Table",tags$div(class="cleanTab",HTML(popc.tab2$table))),
-                           tabPanel("Sources and Downloads",popcb4.info))
+       popc1.box <- tabBox(width=6, height=400,
+                           tabPanel("Plot",renderPlot({popc1$plot},height=340)),
+                           tabPanel("Sources and Downloads",popc1.info))
+       popc2.box <- tabBox(width=6, height=400,
+                           tabPanel("Plot",renderPlot({popc2$plot},height=340)),
+                           tabPanel("Sources and Downloads",popc2.info))
+       popc3.box <- tabBox(width=6, height=500,
+                           tabPanel("Table",tags$div(class="cleanTab",HTML(popc3$table))),
+                           tabPanel("Sources and Downloads",popc3.info))
+       popc4.box <- tabBox(width=6, height=500,
+                           tabPanel("Table",tags$div(class="cleanTab",HTML(popc4$table))),
+                           tabPanel("Sources and Downloads",popc4.info))
 
        
        #Append to List
-       popc.list <<- list(popc.box1,popc.box2,popc.box3,popc.box4)
+       popc.list <<- list(popc1.box,popc2.box,popc3.box,popc4.box)
        incProgress()
      }
        toggle(id="singlePDF")     
@@ -1939,8 +2511,8 @@ server <- function(session,input, output) {
   }) #observeEvent input$profile
   
   #Event to output PDF documents
+  # report
    output$singlePDF <- downloadHandler(
-        # For PDF output, change this to "report.pdf"
         filename = function() {
              paste0(input$unit," Community Profile ",format(Sys.Date(),"%Y%m%d"), ".pdf")
         },
@@ -1952,127 +2524,44 @@ server <- function(session,input, output) {
       }) # Output singlePDF
   
    #Event to outload plot and data
-   #Population, migration and Natural Increase
+   #Population Forecast
+   callModule(downloadObj, id = "popf1data", simpleCap(input$unit), "popf1data", popf1$data)
    
-   # Population Growth Table
-   output$popb1Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," PopGrowthComp_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(pop.tab1$data, file, row.names = FALSE)
-     }
-   ) 
+   callModule(downloadObj, id = "popf2plot", simpleCap(input$unit),"popf2plot", popf2$plot)
+   callModule(downloadObj, id = "popf2data", simpleCap(input$unit),"popf2data", popf2$data)
    
-   #Population Growth
-   output$popb2Plot <- downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," PopGrowth_Plot",".png")
-     },
-     content = function(file) {
-       ggsave(file, plot = pop.plot2$plot, width =8, height=6, units	="in", device = "png")
-     }  )
+   callModule(downloadObj, id = "popf3plot", simpleCap(input$unit), "popf3plot", popf3$plot)
+   callModule(downloadObj, id = "popf3data", simpleCap(input$unit), "popf3data", popf3$data)
    
-   output$popb2Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," PopGrowth_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(pop.plot2$data, file, row.names = FALSE)
-     }
-   )
+   callModule(downloadObj, id = "popf4plot", simpleCap(input$unit), "popf4plot", popf4$plot)
+   callModule(downloadObj, id = "popf4data", simpleCap(input$unit), "popf4data", popf4$data)
    
-   #Age Forecast
-   output$popb3Plot <- downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," AgeForecast_Plot",".png")
-     },
-     content = function(file) {
-       ggsave(file, plot = pop.plot3$plot, width =8, height=6, units	="in", device = "png")
-     }  )
+   #Age
+   callModule(downloadObj, id = "popa1plot", simpleCap(input$unit),"popa1plot", popa1$plot)
+   callModule(downloadObj, id = "popa1data", simpleCap(input$unit),"popa1data", popa1$data)
    
-   output$popb3Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," AgeForecast_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(pop.plot3$data, file, row.names = FALSE)
-     }
-   )
-   
-   #Components of Change
-   output$popb4Plot <- downloadHandler(
-       filename = function() {
-         paste0(simpleCap(input$unit)," ComponentsOfChange_Plot",".png")
-       },
-       content = function(file) {
-         ggsave(file, plot = pop.plot3$plot, width =8, height=6, units	="in", device = "png")
-       }  )
+   callModule(downloadObj, id = "popa2plot", simpleCap(input$unit),"popa2plot", popa2$plot)
+   callModule(downloadObj, id = "popa2data", simpleCap(input$unit),"popa2data", popa2$data)
 
-   output$popb4Data <-  downloadHandler(
-         filename = function() {
-           paste0(simpleCap(input$unit)," ComponentsOfChange_Data",".csv")
-         },
-         content = function(file) {
-           write.csv(pop.plot3$data, file, row.names = FALSE)
-         }
-       )
+   callModule(downloadObj, id = "popa3plot", simpleCap(input$unit), "popa3plot", popa3$plot)
+   callModule(downloadObj, id = "popa3data", simpleCap(input$unit), "popa3data", popa3$data)
    
-    #Population Characteristics
-    #Income Distribution
-   output$popcb1Plot <- downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," Income_Plot",".png")
-     },
-     content = function(file) {
-       ggsave(file, plot = popc.plot1$plot, width =8, height=6, units	="in", device = "png")
-     }  )
+   callModule(downloadObj, id = "popa4plot", simpleCap(input$unit), "popa4plot", popa4$plot)
+   callModule(downloadObj, id = "popa4data", simpleCap(input$unit), "popa4data", popa4$data)
+ 
+   #Population Characteristics
+   callModule(downloadObj, id = "popc1plot", simpleCap(input$unit),"popc1plot", popc1$plot)
+   callModule(downloadObj, id = "popc1data", simpleCap(input$unit),"popc1data", popc1$data)
    
-   output$popcb1Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," Income_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(popc.plot1$data, file, row.names = FALSE)
-     }
-   )
-   #Educational Attainment
-   output$popcb2Plot <- downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," EducAtt_Plot",".png")
-     },
-     content = function(file) {
-       ggsave(file, plot = popc.plot2$plot, width =8, height=6, units	="in", device = "png")
-     }  )
+   callModule(downloadObj, id = "popc2plot", simpleCap(input$unit),"popc2plot", popc2$plot)
+   callModule(downloadObj, id = "popc2data", simpleCap(input$unit),"popc2data", popc2$data)
    
-   output$popcb2Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," EducAtt_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(popc.plot2$data, file, row.names = FALSE)
-     }
-   ) 
+   callModule(downloadObj, id = "popc3data", simpleCap(input$unit), "popc3data", popc3$data)
    
-   #Race Trend
-   output$popcb3Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," RaceTrend_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(popc.tab1$data, file, row.names = FALSE)
-     }
-   ) 
+   callModule(downloadObj, id = "popc4data", simpleCap(input$unit), "popc4data", popc4$data) 
    
-   #Race Comparison
-   output$popcb4Data <-  downloadHandler(
-     filename = function() {
-       paste0(simpleCap(input$unit)," RaceComp_Data",".csv")
-     },
-     content = function(file) {
-       write.csv(popc.tab2$data, file, row.names = FALSE)
-     }
-   ) 
+   #Housing
+   
   }  #server
 
 
