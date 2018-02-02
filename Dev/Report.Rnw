@@ -1,0 +1,203 @@
+% Colorado State demography Office Community report template code
+% !TeX program = pdfLaTeX
+
+\documentclass[11pt]{report}
+
+%defining the page geometry
+\usepackage{geometry}
+\geometry{letterpaper, margin=1in}
+
+%setting the font (currently helvetica)
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{xcolor,lipsum}
+\usepackage{titlesec}
+
+%defining dolagreen color
+\definecolor{dolagreen}{RGB}{0,149,58}
+
+
+%Suppressing the section numbers
+
+\renewcommand\thesection{}
+\makeatletter
+\renewcommand\thesection{}
+\renewcommand\thesubsection{\@arabic\c@section.\@arabic\c@subsection}
+\makeatother
+
+% defining section command
+\titleformat{name=\section}[block]
+{\sffamily\large}
+{}
+{0pt}
+{\colorsection}
+\titlespacing*{\section}{0pt}{\baselineskip}{\baselineskip}
+\newcommand{\colorsection}[1]{%
+	\colorbox{dolagreen}{\parbox{\dimexpr\textwidth-2\fboxsep}{\color{white}\thesection\ #1}}}
+
+% defining subsection command
+\titleformat{name=\subsection}[block]
+{\sffamily\large}
+{}
+{0pt}
+{\colorsubsection}
+\titlespacing*{\section}{0pt}{\baselineskip}{\baselineskip}
+\newcommand{\colorsubsection}[1]{%
+	\colorbox{dolagreen}{\parbox{\dimexpr\textwidth-2\fboxsep}{\color{white}\thesection\ #1}}}
+
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+%\SweaveOpts{concordance=TRUE}
+<<setup, include=FALSE, warning=FALSE, message=FALSE, echo=FALSE>>=
+render_sweave()
+#Replicating the library, function and data setup from the dashboard
+# load libraries
+library(tidyverse, quietly=TRUE)
+library(scales, quietly=TRUE)
+library(knitr, quietly=TRUE)
+library(kableExtra, quietly=TRUE)
+library(rmarkdown)
+library(gridExtra)
+
+## Package and Function Install
+
+
+# Creating the conditional display vars
+if("stats" %in% input$outChk) {
+  outStats <- TRUE
+} else {
+  outStats <- FALSE
+}
+if("popf" %in% input$outChk) {
+  outPopf <- TRUE
+} else {
+  outPopf <- FALSE
+}
+
+if("pop" %in% input$outChk) {
+  outPop <- TRUE
+} else {
+  outPop <- FALSE
+}
+
+if("popc" %in% input$outChk) {
+  outPopC <- TRUE
+} else {
+  outPopC <- FALSE
+}
+
+if("housing" %in% input$outChk) {
+  outHouse <- TRUE
+} else {
+  outHouse <- FALSE
+}
+
+if("comm" %in% input$outChk) {
+  outComm <- TRUE
+} else {
+  outComm <- FALSE
+}
+
+if("emply" %in% input$outChk) {
+  outEmply <- TRUE
+} else {
+  outEmply <- FALSE
+}
+
+if("emplind" %in% input$outChk) {
+  outEmplind <- TRUE
+} else {
+  outEmplind <- FALSE
+}
+
+
+
+#converting input$fipslist to numeric
+fipsN <- as.numeric(substr(fipslist,3,5))
+fips3 <- substr(fipslist,3,5)
+placeName <- simpleCap(as.character(input$unit))
+curACS <- "acs1216"
+
+@
+
+
+\section{\Sexpr{paste0("Community Profile for ",placeName)}}
+
+
+<<statsOut,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'>>=
+#Basic Stats
+if(outStats){
+    cat(paste("\\subsection{Basic Statistics}",""))
+  #Stats Table
+   cat(statsTable1(stats.obj$table))
+  #area Map
+    print(stats.obj$plot)
+   }
+
+@
+
+<<popOutf,   warning=FALSE, message=FALSE, echo=FALSE, results='asis'>>=
+ #Population, Migration and Natural Increase
+   if(outPopf){
+      cat(paste("\\subsection{Population Forecasts}",""))
+      # Population Change Table
+      cat(popTable(popf1$data,placeName))
+      #County Time series
+      print(popf2$plot)
+      #County forecast
+      print(popf3$plot)
+      #Components of Change
+      print(popf4$plot)
+   }
+@
+
+<<popOut,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'>>=
+ #Population, Migration and Natural Increase
+   if(outPop){
+      cat(paste("\\subsection{Population by Age}",""))
+      # Age Plot
+      print(popa1$plot)
+      #Median Age Table
+      cat(medianAgeTab(popa2$data,placeName,curACS))
+      #Age forecast
+      print(popa3$plot)
+      #Migration by Age
+      print(popa4$plot)
+   }
+@
+
+<<popOutC, warning=FALSE, message=FALSE, echo=FALSE, results='asis'>>=
+ if(outPopC){
+    # Population Chatacteristics
+       cat(paste("\\subsection{Population Characteristics: Income, Education and Race}",""))
+       print(popc1$plot)
+       print(popc2$plot)
+       cat(raceTab1(popc3$data,ctyname=placeName,ACS=curACS))
+       cat(raceTab2(popc4$data,ctyname=placeName,ACS=curACS))
+       }
+@
+
+<<popHouse, warning=FALSE, message=FALSE, echo=FALSE, results='asis'>>=
+ if(outHouse){
+    # Housing
+       cat(paste("\\subsection{Housing and Households}",""))
+       print(poph1$plot)
+       print(housePro(poph2$data,ctyname=placeName,ACS=curACS),floating=FALSE)
+       cat(OOHouse(poph3$data,ctyname=placeName,ACS=curACS))
+       cat(RTHouse(poph4$data,ctyname=placeName,ACS=curACS))
+       }
+@
+
+
+<<popComm,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'>>=
+ if(outComm){
+    # Commuting
+       cat(paste("\\subsection{Commuting}",""))
+       print(grid.draw(popt1$plot))
+       cat(LocTable(popt1$dataTab1,ctyname=placeName, type="work"))
+       cat(LocTable(popt1$dataTab2,ctyname=placeName,type="live"))
+       }
+@
+
+\end{document}

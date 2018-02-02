@@ -1,0 +1,58 @@
+% Colorado State demography Office Community report template code 
+
+\documentclass[11pt]{report}
+
+%defining the page geometry
+\usepackage{geometry}
+\geometry{letterpaper, margin=1in}
+
+%setting the font (currently helvetica)
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{xcolor,lipsum}
+\usepackage{titlesec}
+
+%defining dolagreen color
+\definecolor{dolagreen}{RGB}{0,149,58}
+
+%Suppressing the section numbers
+
+\renewcommand\thesection{}
+\makeatletter
+\renewcommand\thesection{}
+\renewcommand\thesubsection{\@arabic\c@section.\@arabic\c@subsection}
+\makeatother
+
+% defining section command
+\titleformat{name=\section}[block]
+{\sffamily\large}
+{}
+{0pt}
+{\colorsection}
+\titlespacing*{\section}{0pt}{\baselineskip}{\baselineskip}
+\newcommand{\colorsection}[1]{%
+	\colorbox{dolagreen}{\parbox{\dimexpr\textwidth-2\fboxsep}{\color{white}\thesection\ #1}}}
+
+% defining subsection command
+\titleformat{name=\subsection}[block]
+{\sffamily\large}
+{}
+{0pt}
+{\colorsubsection}
+\titlespacing*{\section}{0pt}{\baselineskip}{\baselineskip}
+\newcommand{\colorsubsection}[1]{%
+	\colorbox{dolagreen}{\parbox{\dimexpr\textwidth-2\fboxsep}{\color{white}\thesection\ #1}}}
+
+
+\begin{document}
+
+\section{Community Profile for some place}
+
+This is some sample text
+
+\subsection{Basic Statistics}
+This is more text...
+
+\subsection{Population Characteristics}
+Still more text...
+\end{document}
