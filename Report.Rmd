@@ -1,0 +1,409 @@
+---
+title: " "
+output: 
+  pdf_document:
+    latex_engine: xelatex
+mainfont: Arial
+fontsize: 12pt
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{array}
+  - \usepackage{placeins}
+  - \newcommand{\bminione}{\begin{minipage}{0.50 \textwidth}}
+  - \newcommand{\bminitwo}{\begin{minipage}{0.50 \textwidth}}
+  - \newcommand{\emini}{\end{minipage}}
+params:
+  outChk: NA
+  fips: NA
+  ctyName: NA
+  curACS: NA
+  curYr: NA
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'H')
+# invalidate cache when the tufte version changes
+memory.limit(size=100000)
+
+library(tidyverse, quietly=TRUE)
+library(scales, quietly=TRUE)
+library(codemogAPI, quietly=TRUE)
+library(codemogProfile, quietly=TRUE)
+library(knitr, quietly=TRUE)
+library(kableExtra, quietly=TRUE)
+library(RPostgreSQL, quietly=TRUE)
+library(rmarkdown)
+library(tinytex)
+library(VennDiagram)
+library(gridExtra)
+library(coProfileDashboard)
+
+#text Functions
+baseText<- function(place){
+  outTest <- paste0("Information for ",place," is compiled by the State Demography Office and the U.S. Bureau of the Census (NEED TEXT)")
+ return(outTest)
+}
+
+# Creating the conditional display vars
+#Basic Stats
+if("stats" %in% params$outChk) {
+  outStats <- TRUE
+} else {
+  outStats <- FALSE
+}
+
+#Population Forecast
+if("popf" %in% params$outChk) {
+  outPopf <- TRUE
+} else {
+  outPopf <- FALSE
+}
+
+#Population Characteristics: Age
+if("pop" %in% params$outChk) {
+  outPop <- TRUE
+} else {
+  outPop <- FALSE
+}
+
+#Population Characteristics: Income, Education and Race
+if("popc" %in% params$outChk) {
+  outPopC <- TRUE
+} else {
+  outPopC <- FALSE
+}
+
+#Housing
+if("housing" %in% params$outChk) {
+  outHouse <- TRUE
+} else {
+  outHouse <- FALSE
+}
+
+#Commuting
+if("comm" %in% params$outChk) {
+  outComm <- TRUE
+} else {
+  outComm <- FALSE
+}
+
+#Employment by Industry
+if("emplind" %in% params$outChk) {
+  outEmply <- TRUE
+} else {
+  outEmply <- FALSE
+}
+
+#Employment and Demographic Forecast
+if("emply" %in% params$outChk) {
+  outEmplind <- TRUE
+} else {
+  outEmplind <- FALSE
+}
+oYr <- params$curYr
+oACS <- params$curACS
+placeName <- params$ctyName
+fips5 <- params$fips
+fips3 <- substr(params$fips,3,5)
+fipsN <- as.numeric(fips3)
+```
+# Demographic and Economic Profile for `r placeName`
+
+`r if(outStats) '## Basic Statistics'`
+
+
+\bminione
+```{r basetext,  fig_height= 3.5, fig.width=7, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+    if(outStats) {
+      cat(baseText(placeName))
+      
+#`r colFmt(paste0(placeName," Demographic and Economic Profile"),"dolagreen")`
+    } 
+```
+\emini
+\bminitwo
+```{r County_Map, fig.height= 3.5, fig.width= 3.5, warning=FALSE,  echo= FALSE, message=FALSE, results='asis'}
+if(outStats){
+   y <- cp_countymap(substr(fips5,3,5))
+   print(y)
+   }
+
+```
+\emini
+\FloatBarrier
+```{r Basic_Table,  warning=FALSE,  echo= FALSE, message=FALSE, results='asis'}
+if(outStats){
+  x <-  statsTable1(cty=fips5, 
+                             place="",
+                             sYr=2010,
+                             eYr= oYr,
+                             ACS=oACS,
+                             oType="latex")
+   print(x)
+   }
+
+```
+
+\newpage  
+
+
+`r if(outPopf) '## Population Forecasts'`
+
+```{r popOutf_tab, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ #Population, Migration and Natural Increase
+   if(outPopf){  
+      # Population Change Table
+      popTab <- popTable(cty=fips3,ctyname=placeName,sYr=1990,eYr=oYr,oType="latex")
+      cat(popTab$text)
+      print(popTab$table)
+   }
+```      
+
+```{r popOutf_popF, fig.height=4,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+      #County forecast
+    if(outPopf) {
+      popf1 <- county_timeseries(fips=fips3,endYear=oYr)
+       popf2 <- popForecast(fips=fipsN, ctyname = placeName)
+       popf3 <- cocPlot(fips=fipsN,ctyname=placeName,lYr=oYr)
+       print(popf1$plot)
+       print(popf2$plot)
+       print(popf3$plot)
+    }
+```
+
+
+\newpage
+
+`r if(outPop) '## Population by Age'`
+
+`r if(outPop) "Age Text (NEED TEXT)"`
+
+
+```{r popOut_ageP1, fig.height= 4,   warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ #Population, Migration and Natural Increase
+   if(outPop){
+      # Age Plot
+      popa1 <- agePlotPRO(fips=fipsN, ctyname=placeName, yrs=2016)
+      print(popa1$plot)
+
+   }
+```
+
+```{r popOut_ageP3, fig.height= 4,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ #Population, Migration and Natural Increase
+   if(outPop){
+      popa3 <- ageForecastPRO(fips=fipsN,stYr=2010,mYr=2015,eYr=2025)
+      print(popa3$plot)
+   }
+```
+
+
+```{r popOut_MigAge, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ #Population, Migration and Natural Increase
+    if(outPop){
+      medAge <- medianAgeTab(fips=fips3, ACS=oACS, ctyname=placeName,oType ="latex")
+      print(medAge)
+    }
+   
+```
+
+```{r popOut_ageP4, fig.height= 4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ #Population, Migration and Natural Increase
+   if(outPop){
+      # Age Plot
+     popa4 <- migbyagePRO(fips=fipsN, ctyname = placeName)
+      print(popa4$plot)
+   }
+```  
+
+\newpage
+
+`r if(outPopC) '## Population Characteristics: Income, Education and Race'`
+
+
+`r if(outPopC) 'Population Characteristics: Income, Education and Race Text (NEED TEXT)'`
+
+
+```{r popOutC_income, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outPopC){
+    # Population Chatacteristics 
+       popc1 <- incomePRO(fips=fips3,ctyname=placeName, ACS=oACS)
+             print(popc1$plot)
+ }
+```
+
+
+```{r popOutC_educ, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+   if(outPopC){
+      popc2 <- educPRO(fips=fips3, ctyname=placeName, ACS=oACS)
+      print(popc2$plot)
+   }
+```
+\FloatBarrier
+```{r popOutC_race1, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+   if(outPopC){
+     race1 <- raceTab1(fips=fips3,ctyname=placeName,ACS=oACS,oType="latex") 
+      print(race1)
+   }
+```
+
+```{r popOutC_race2, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+   if(outPopC){      
+       race2 <- raceTab2(fips=fips3,ctyname=placeName,ACS=oACS,oType="latex")
+      print(race2)
+       }
+```
+
+\newpage
+
+
+`r if(outHouse) '## Housing and Households'`
+
+`r if(outHouse) 'Housing Text (NEED TEXT)'`
+
+
+```{r popHouse_housEst, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outHouse){
+    # Housing
+     poph1 <<- houseEstPRO(fips=fips3,ctyname=placeName,curYr=oYr)
+     print(poph1$plot)
+ }
+```
+
+
+```{r popHouse_hcomp, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outHouse){
+     hTab <- housePRO(fips=fips3, ctyname=placeName, ACS=oACS, oType="latex")
+     print(hTab)
+ }
+```
+
+```{r popHouse_OO, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outHouse){
+     OOTab <- OOHouse(fips=fips3,ctyname=placeName,ACS=oACS, oType="latex")
+     print(OOTab)
+ }
+```
+
+
+```{r popHouse_RT, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outHouse){
+     RTTab <- RTHouse(fips=fips3,ctyname=placeName,ACS=oACS, oType="latex")
+     print(RTTab)
+        }
+```
+
+\newpage
+`r if(outComm) '## Commuting'`
+
+\bminione
+```{r popComm_text, fig.height= 4, fig.width= 3.5, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+   if(outComm){
+     cat("Commuting Text (NEED TEXT)")
+   }
+
+```
+\emini
+\bminitwo
+```{r popComm_venn, fig.height= 4, fig.width= 3.5,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outComm){
+    # Commuting 
+      popt1 <<- GenerateVenn(fips=fips3,ctyname=placeName,oType="latex")
+      grid.arrange(popt1$plot)
+ }
+```
+\emini
+
+\FloatBarrier
+```{r popComm_Work, fig.height= 4, fig.width= 3.5, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+     if(outComm){
+       print(popt1$workTab)
+     }
+```
+
+```{r popComm_Live, fig.height= 4, fig.width= 3.5, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+    if(outComm){
+      print(popt1$liveTab)
+      }
+```
+
+```{r popComm_jMig,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outComm){ 
+      popt2 <<- jobMigration(fips=fips3,ctyname=placeName,maxyr = oYr)
+      print(popt2$plot)
+       }
+```
+
+\newpage
+`r if(outEmply) '## Employment by Industry'`
+
+`r if(outEmply) 'Employment by Industry text (NEED TEXT)'`
+
+
+```{r outEmply_msjobs,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmply) {
+       popei1 <<- coProfileDashboard::ms_jobs(fips=fips3,ctyname=placeName, maxyr = oYr)
+       print(popei1$plot)
+ }
+```
+
+
+```{r outEmply_jind,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmply) {
+       popei2 <<- jobsByIndustry(fips=fips3,ctyname=placeName, curyr = oYr)
+       print(popei2$plot)
+ }
+```
+
+
+```{r outEmply_base,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmply) {
+       popei3 <<- baseIndustries(fips=fips3,ctyname=placeName, curyr = oYr, oType="latex")
+       print(popei3$plot)
+ }
+```
+
+
+```{r outEmply_base2,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmply) {
+       print(popei3$table)
+ }
+```
+
+\newpage
+
+`r if(outEmplind) '## Employment and Demographic Forecast'`
+
+
+`r if(outEmplind) 'Employment and Demographic Forecast text (NEED TEXT)'`
+
+```{r outEmplind_jobsPop,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmplind) {
+   #Employment and Demographic Forecast Materials
+       popem1 <<- jobsPopForecast(fips=fips3,ctyname=placeName)
+       print(popem1$plot)
+ }
+```
+
+
+```{r outEmplind_wages,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmplind) {
+      popem2 <<- weeklyWages(fips=fips3,ctyname=placeName)
+      print(popem2$plot)
+ }
+```
+
+
+```{r outEmplind_resLF1,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmplind) {
+       popem3 <<- residentialLF(fips=fips3,ctyname=placeName)
+       print(popem3$plot1)
+ }
+```
+
+
+```{r outEmplind_resLF2,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
+ if(outEmplind) {
+       print(popem3$plot2)
+ }
+```
