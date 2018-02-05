@@ -39,6 +39,7 @@ downloadObj <- function(input, output, session, place, oname, dobj) {
                    "poph2" = " Housing Type",
                    "poph3" = " Owner Housing",
                    "poph4" = " Rental Housing",
+                   "poph5" = " House Value",
 
                    "popt1" = " Commutting_Venn",
                    "popt2" = " Commutting_Live",

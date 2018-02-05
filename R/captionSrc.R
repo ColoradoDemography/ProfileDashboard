@@ -7,7 +7,7 @@
 #'
 captionSrc <- function(type, dataSrc) {
 
-  dateStr <- as.character(format(Sys.Date(),"%m/%d/%Y"))
+  dateStr <- paste0("Print Date: ",as.character(format(Sys.Date(),"%m/%d/%Y")))
 
   if(type == "SDO") {
     srcStr <- paste0("Source: State Demography Office ", dateStr)
