@@ -18,7 +18,7 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(gridExtra)
-library(coProfileDashboard)
+library(ProfileDashboard)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -56,6 +56,7 @@ poph1 <<- list()
 poph2 <<- list()
 poph3 <<- list()
 poph4 <<- list()
+poph5 <<- list() # Housing Values
 poph.list <<- list()
 
 #Commuting (Transit)
@@ -448,6 +449,7 @@ server <- function(session,input, output) {
        poph2 <<- housePRO(fips=substr(fipslist,3,5), ctyname=placeName, ACS=curACS,oType="html")
        poph3 <<- OOHouse(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
        poph4 <<- RTHouse(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
+       poph5 <<- HouseVal(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
 
        #Contents of Information Tabs
        poph1.info <- tags$div(boxContent(title= "Housing Unit Forecast",
@@ -467,18 +469,25 @@ server <- function(session,input, output) {
 
 
        poph3.info <- tags$div(boxContent(title= "Characteristics of Owner-Occupied Housing",
-                                         description= "The Owner-Occupied Housing Table compares the characteristics of owner-occupied housing in a selected place to the State.",
-                                         MSA= "F", stats = "T", table = "T",
+                                         description= "The Owner-Occupied Housing Table displays the characteristics of owner-occupied housing in a selected place.",
+                                         MSA= "F", stats = "F", table = "T",
                                          urlList = list(c("American Community Survey American Fact Finder","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                          tags$br(),
                                          downloadObjUI("poph3data"))
 
        poph4.info <- tags$div(boxContent(title= "Characteristics of Rental Housing",
-                                         description= "The Rental Housing Table compares the characteristics of owner-occupied housing in a selected place to the State.",
-                                         MSA= "F", stats = "T",table = "T",
+                                         description= "The Rental Housing Table displays the characteristics of rental housing in a selected place.",
+                                         MSA= "F", stats = "F",table = "T",
                                          urlList = list(c("American Community Survey American Fact Finder","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                          tags$br(),
                                          downloadObjUI("poph4data"))
+       poph5.info <- tags$div(boxContent(title= "Comparative Housing Values",
+                                         description= "The Comparative Housing Table compares the economic characteristics of  owner-occupied and rental housing in a selected place to the State.",
+                                         MSA= "F", stats = "T",table = "T",
+                                         urlList = list(c("American Community Survey American Fact Finder","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
+                              tags$br(),
+                              downloadObjUI("poph5data"))
+
 
 
        # Bind to boxes
@@ -488,16 +497,20 @@ server <- function(session,input, output) {
        poph2.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph2$table))),
                            tabPanel("Sources and Downloads",poph2.info))
-       poph3.box <- tabBox(width=6, height=700,
+       poph6.box <- box(width=6,height=300)
+       poph5.box <- tabBox(width=6, height = 300,
+                           tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$table))),
+                           tabPanel("Sources and Downloads",poph5.info))
+       poph3.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph3$table))),
                            tabPanel("Sources and Downloads",poph3.info))
-       poph4.box <- tabBox(width=6, height=700,
+       poph4.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph4$table))),
                            tabPanel("Sources and Downloads",poph4.info))
 
 
        #Append to List
-       poph.list <<- list(poph1.box,poph2.box,poph3.box,poph4.box)
+       poph.list <<- list(poph1.box,poph2.box, poph6.box, poph5.box, poph3.box,poph4.box)
        incProgress()
      }
 
@@ -784,12 +797,10 @@ server <- function(session,input, output) {
    #Housing
    callModule(downloadObj, id = "poph1plot", simpleCap(input$unit),"poph1plot", poph1$plot)
    callModule(downloadObj, id = "poph1data", simpleCap(input$unit),"poph1data", poph1$data)
-
    callModule(downloadObj, id = "poph2data", simpleCap(input$unit),"poph2data", poph2$data)
-
    callModule(downloadObj, id = "poph3data", simpleCap(input$unit), "poph3data", poph3$data)
-
    callModule(downloadObj, id = "poph4data", simpleCap(input$unit), "poph4data", poph4$data)
+   callModule(downloadObj, id = "poph5data", simpleCap(input$unit), "poph5data", poph5$data)
 
    #commuting
    callModule(downloadObj, id = "popt1plot", simpleCap(input$unit),"popt1plot", popt1$plot)
