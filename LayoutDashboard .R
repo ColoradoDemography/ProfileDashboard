@@ -497,8 +497,7 @@ server <- function(session,input, output) {
        poph2.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph2$table))),
                            tabPanel("Sources and Downloads",poph2.info))
-       poph6.box <- box(width=6,height=300)
-       poph5.box <- tabBox(width=6, height = 300,
+       poph5.box <- tabBox(width=12, height = 300,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$table))),
                            tabPanel("Sources and Downloads",poph5.info))
        poph3.box <- tabBox(width=6, height=400,
@@ -510,7 +509,7 @@ server <- function(session,input, output) {
 
 
        #Append to List
-       poph.list <<- list(poph1.box,poph2.box, poph6.box, poph5.box, poph3.box,poph4.box)
+       poph.list <<- list(poph1.box,poph2.box, poph5.box, poph3.box,poph4.box)
        incProgress()
      }
 
@@ -577,7 +576,7 @@ server <- function(session,input, output) {
      #Employment by Industry
      if("emplind" %in% input$outChk){
        #Generate tables, plots and text...
-       popei1 <<- coProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+       popei1 <<- ProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
        popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
        popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
