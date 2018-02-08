@@ -206,6 +206,7 @@ server <- function(session,input, output) {
               fipslist <- listTofips(CountyList,input$level,input$unit)
               PlFilter <- FALSE
          } else {  #This is for all other levels, need to write aggergation functions for regions and states
+
                fipslist <- listTofips(PlaceList,input$level,input$unit)
                # checking place size for Municipalities/Places, if place size <= 200 report county information
                if(input$level == "Municipalities/Places"){
@@ -230,10 +231,10 @@ server <- function(session,input, output) {
     if("stats" %in% input$outChk) {
       stats.text <- tags$h2("Basic Statistics")
       if(input$level == "Counties") {
-           stats.tab1 <- statsTable1(fipslist,"",2010,2016,curACS,oType="html")
+           stats.tab1 <- statsTable1(fipslist,"",placeName,2010,2016,curACS,oType="html")
       }
       if(input$level == "Municipalities/Places") {
-        stats.tab1 <- statsTable1(CtyFips,fipslist,2010,2016,curACS)
+        stats.tab1 <- statsTable1(CtyFips,fipslist,placeName,2010,2016,curACS,oType="html")
       }
       stats.map <- cp_countymap(substr(fipslist,3,5))
 
@@ -481,13 +482,18 @@ server <- function(session,input, output) {
                                          urlList = list(c("American Community Survey American Fact Finder","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                          tags$br(),
                                          downloadObjUI("poph4data"))
-       poph5.info <- tags$div(boxContent(title= "Comparative Housing Values",
+       poph5.info <- tags$div(boxContent(title= "Comparative Owner-Occupied Housing Values",
                                          description= "The Comparative Housing Table compares the economic characteristics of  owner-occupied and rental housing in a selected place to the State.",
                                          MSA= "F", stats = "T",table = "T",
                                          urlList = list(c("American Community Survey American Fact Finder","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                               tags$br(),
                               downloadObjUI("poph5data"))
-
+       poph6.info <- tags$div(boxContent(title= "Comparative Rental Housing Values",
+                                         description= "The Comparative Housing Table compares the economic characteristics of  owner-occupied and rental housing in a selected place to the State.",
+                                         MSA= "F", stats = "T",table = "T",
+                                         urlList = list(c("American Community Survey American Fact Finder","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
+                              tags$br(),
+                              downloadObjUI("poph6data"))
 
 
        # Bind to boxes
@@ -497,9 +503,12 @@ server <- function(session,input, output) {
        poph2.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph2$table))),
                            tabPanel("Sources and Downloads",poph2.info))
-       poph5.box <- tabBox(width=12, height = 300,
-                           tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$table))),
+       poph5.box <- tabBox(width=6, height = 350,
+                           tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$table0))),
                            tabPanel("Sources and Downloads",poph5.info))
+       poph6.box <- tabBox(width=6, height = 350,
+                           tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$tableR))),
+                           tabPanel("Sources and Downloads",poph6.info))
        poph3.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph3$table))),
                            tabPanel("Sources and Downloads",poph3.info))
@@ -509,7 +518,7 @@ server <- function(session,input, output) {
 
 
        #Append to List
-       poph.list <<- list(poph1.box,poph2.box, poph5.box, poph3.box,poph4.box)
+       poph.list <<- list(poph1.box,poph2.box, poph5.box, poph6.box, poph3.box,poph4.box)
        incProgress()
      }
 
@@ -800,6 +809,7 @@ server <- function(session,input, output) {
    callModule(downloadObj, id = "poph3data", simpleCap(input$unit), "poph3data", poph3$data)
    callModule(downloadObj, id = "poph4data", simpleCap(input$unit), "poph4data", poph4$data)
    callModule(downloadObj, id = "poph5data", simpleCap(input$unit), "poph5data", poph5$data)
+   callModule(downloadObj, id = "poph6data", simpleCap(input$unit), "poph6data", poph5$data)
 
    #commuting
    callModule(downloadObj, id = "popt1plot", simpleCap(input$unit),"popt1plot", popt1$plot)
