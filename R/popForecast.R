@@ -24,8 +24,9 @@ popForecast <- function(fips, ctyname, byr=1990,eyr=2050, base=10) {
          caption = captionSrc("SDO",""))+
     scale_y_continuous(label=comma)+
     theme_codemog(base_size=base)+
-    theme(axis.text.x=element_text(angle=90,size=8)) +
-    theme(legend.title=element_blank())
+    theme(axis.text.x=element_text(angle=90,size=8),
+    plot.title = element_text(hjust = 0.5, size=18),
+          legend.title=element_blank())
 
   # Creating Output data file
   d[4] <- round(d[4],digits=0)

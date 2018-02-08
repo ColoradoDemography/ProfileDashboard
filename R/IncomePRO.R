@@ -150,7 +150,7 @@ incomePRO=function(fips, ctyname, fips2="", state="08", state2="08", ACS= "acs11
          caption = captionSrc("ACS",ACS),
          x = xTitle,
          y= "Percentage") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")

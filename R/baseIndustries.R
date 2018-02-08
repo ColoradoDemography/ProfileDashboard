@@ -113,7 +113,7 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
          caption = captionSrc("SDO",""),
          x = "Base Indistries",
          y= "Percentage") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           axis.text.x  = element_text(angle=90, vjust=-0.5),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
@@ -148,9 +148,9 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
             escape = FALSE)  %>%
       kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
       row_spec(0, align = "c") %>%
-      column_spec(1, width = "30em",bold = T) %>%
-      column_spec(2, width = "5em") %>%
-      column_spec(3, width ="5em") %>%
+      column_spec(1, width = "2in") %>%
+      column_spec(2, width = "0.75in") %>%
+      column_spec(3, width = "0.75in") %>%
       add_footnote(captionSrc("SDO",""))
   }
 
@@ -161,7 +161,8 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
                                caption=paste0("Jobs by Sector: ",ctyname, ", ",curyr),
                                format="latex", booktabs=TRUE,
                                col.names = names_spaced)  %>%
-      kable_styling() %>%
+      kable_styling(latex_options="HOLD_position") %>%
+      row_spec(0, align = "c") %>%
       column_spec(1, width = "2in") %>%
       column_spec(2, width = "0.75in") %>%
       column_spec(3, width = "0.75in") %>%

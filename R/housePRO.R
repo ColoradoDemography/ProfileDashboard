@@ -40,7 +40,7 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
   f.AcsPLFin$PL_VAL_PCT <- percent(f.AcsPLFin$PL_VAL_Prop *100)
 
 
-  
+
   # Assembling Combined Tab: f.longtab
 
   f.longTab <- f.AcsPLFin[,c(2,3,5)]
@@ -50,7 +50,7 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
                                   ifelse(f.longTab$geoname == "Owner", "Owner-Occupied Units",
                                          ifelse(f.longTab$geoname == "Renter", "Renter-Occupied Units",
                                                 ifelse(f.longTab$geoname == "Vacant", "Vacant Housing Units",
-                                                       ifelse(f.longTab$geoname == "Seasonal","Seasonal Units","All Other Rental Units"))))))
+                                                       ifelse(f.longTab$geoname == "Seasonal","Seasonal Units","All Other Vacant Units"))))))
 
   #Reordering Table and prepating output
 
@@ -84,10 +84,10 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
           escape = FALSE)  %>%
     kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
     row_spec(0, align = "c") %>%
-    column_spec(1, bold = T) %>%
-    column_spec(2, width = "5em") %>%
-    column_spec(3, width ="5em") %>%
-    add_indent(c(3:7)) %>%
+    column_spec(1, width = "3.5in") %>%
+    column_spec(2, width ="0.5in") %>%
+    column_spec(3, width ="0.5in") %>%
+    add_indent(c(3,4,6,7)) %>%
     add_header_above(header=tblHead1) %>%
     add_footnote(captionSrc("ACS",ACS))
 
@@ -101,11 +101,11 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
         align="lrr",
         caption="Housing Units", row.names=FALSE,
         format="latex", booktabs=TRUE)  %>%
-        kable_styling() %>%
-        column_spec(1, width = "2in") %>%
-        column_spec(2, width ="0.55in") %>%
-        column_spec(3, width ="0.55in") %>%
-        add_indent(c(3:7)) %>%
+        kable_styling(latex_options="HOLD_position") %>%
+        column_spec(1, width = "3.5in") %>%
+        column_spec(2, width ="0.5in") %>%
+        column_spec(3, width ="0.5in") %>%
+        add_indent(c(3,4,6,7)) %>%
         add_header_above(header=tblHead1) %>%
         add_footnote(captionSrc("ACS",ACS))
 

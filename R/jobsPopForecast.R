@@ -70,7 +70,7 @@ jobsPopForecast <- function(fips, ctyname, base=10){
   f.plotdata <- f.plotdata[which(f.plotdata$year >= 2010 & f.plotdata$year <= 2040),]
   f.plotdata$type <- factor(f.plotdata$type, c("Jobs Estimate","Population Estimate"))
 
-  pltTitle <- paste0("Forecast Change in Jobs and Population ",as.character(min(f.plotdata$year))," to ",as.character(max(f.plotdata$year)))
+  pltTitle <- paste0("Forecast Change in Jobs and Population\n",as.character(min(f.plotdata$year))," to ",as.character(max(f.plotdata$year)))
 
   Plot <- f.plotdata %>%
     ggplot(aes(x=year, y=people, color=type))+
@@ -84,7 +84,7 @@ jobsPopForecast <- function(fips, ctyname, base=10){
          caption = captionSrc("SDO",""),
          x = "Year",
          y= "Change") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")

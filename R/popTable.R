@@ -20,7 +20,7 @@ popTable <- function(cty,ctyname,sYr,eYr,oType) {
     mutate(name="Colorado",
            totalpopulation=as.numeric(totalpopulation),
            year=as.numeric(year),
-           growthRate=percent(round(ann_gr(lag(totalpopulation), totalpopulation, year-lag(year)), digits=2)),
+           growthRate=percent(round(ann_gr(lag(totalpopulation), totalpopulation, year-lag(year)))),
            Population=totalpopulation)
   #County Population and Growth Rate
   popCounty=county_profile(cntynum, sYr:eYr, "totalpopulation")%>%
@@ -29,7 +29,7 @@ popTable <- function(cty,ctyname,sYr,eYr,oType) {
     mutate(name=county,
            year=as.numeric(year),
            totalpopulation=as.numeric(totalpopulation),
-           growthRate=percent(round(ann_gr(lag(totalpopulation), totalpopulation, year-lag(year)), digits=2)),
+           growthRate=percent(round(ann_gr(lag(totalpopulation), totalpopulation, year-lag(year)))),
            Population=totalpopulation)
 
 
@@ -104,16 +104,15 @@ popTable <- function(cty,ctyname,sYr,eYr,oType) {
       outTxt <- paste0(ctyname," population ",chgType," between ", sYr, " and ",eYr,".")
 
     } else {
-    outTxt <- paste0(ctyname," population ",chgType," between ", sYr, " and ",eYr,".  The peak of ",ctyname,"'s population was ",
-                     format(maxPop,big.mark=",")," in ", maxYear,".  Since ", sYr, " ",ctyname,"'s population ",
-                     chgType," by ", format(popDiff,big.mark=",")," or ",pctDiff,".")
+    outTxt <- paste0("The population of ",ctyname," ",chgType," by ", format(popDiff,big.mark=",")," (", pctDiff,") between ", sYr, " and ",eYr,".  Since 1990, the peak of ",ctyname,"'s population was ",
+                     format(maxPop,big.mark=",")," in ", maxYear,".")
     }
 
 
   outKable <- kable(m.OutTab, col.names = names_spaced ,
                caption="Population Trend",row.names = FALSE, align="c",
                format ="latex", booktabs=TRUE)  %>%
-               kable_styling() %>%
+               kable_styling(latex_options="HOLD_position") %>%
                 column_spec(1, width = "0.5in") %>%
                 column_spec(2, width = "0.75in") %>%
                 column_spec(3, width = "0.75in") %>%

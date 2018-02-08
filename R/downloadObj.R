@@ -39,7 +39,8 @@ downloadObj <- function(input, output, session, place, oname, dobj) {
                    "poph2" = " Housing Type",
                    "poph3" = " Owner Housing",
                    "poph4" = " Rental Housing",
-                   "poph5" = " House Value",
+                   "poph5" = " Comparative Housing Values",
+                   "poph6" = " Comparative Housing Values",
 
                    "popt1" = " Commutting_Venn",
                    "popt2" = " Commutting_Live",
@@ -53,8 +54,8 @@ downloadObj <- function(input, output, session, place, oname, dobj) {
 
                    "popem1" = " Jobs and Pop Forecast",
                    "popem2" = " Avg Weekly Wage",
-                   "popem3" = " Residential Labor Force Line",
-                   "popem4" = " Residential Labor Force Bar"
+                   "popem3" = " Residential Labor Force Forecast",
+                   "popem4" = " Residential Labor Force Participation"
 
   )
 

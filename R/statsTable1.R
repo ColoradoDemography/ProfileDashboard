@@ -9,7 +9,7 @@
 #' @return kable formatted table
 #' @export
 #'
-statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
+statsTable1 <- function(cty,place,plName,sYr,eYr,ACS,oType){
   #outputs the top table in the dashboard
 
   #Need to restructure this to support muni_est...
@@ -46,13 +46,11 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
     MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
     #muni Coli
 
-    # Poverty Value
-    Poverty <- codemog_api(data="b17001",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
-    pctPoverty <- percent((Poverty$b17001002/Poverty$b17001001))
+      Poverty <- codemog_api(data="b17001",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
+      pctPoverty <- percent(as.numeric(Poverty$b17001002)/as.numeric(Poverty$b17001001))
 
-    # Percent native
-    Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
-    pctNative <- percent((native$b05002003/native$b05002001))
+      Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
+      pctNative <- percent(as.numeric(Native$b05002003)/as.numeric(Native$b05002001))
 
     #Cost of Living Index
     coli=county_coli%>%
@@ -116,9 +114,38 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
       column_spec(2, width = "30em")
   }
   if(oType == "latex") {
-    outKable <- kable(outTab, caption="Community Quick Facts",align="c",
-                      format ="latex", booktabs=FALSE) %>%
-                kable_styling(latex_options="scale_down")
+    latTab <- matrix(nrow=11, ncol=3,"")
+    latTab[1,2] <- plName
+    latTab[1,3] <- "Colorado"
+    latTab[2,1] <- outTab[2,1]
+    latTab[2,2] <- outTab[1,1]
+    latTab[3,1] <- outTab[2,2]
+    latTab[3,2] <- outTab[1,2]
+    latTab[4,1] <- outTab[4,1]
+    latTab[4,2] <- outTab[3,1]
+    latTab[5,1] <- outTab[4,2]
+    latTab[5,2] <- outTab[3,2]
+    latTab[6,1] <- outTab[8,1]
+    latTab[6,2] <- outTab[7,1]
+    latTab[7,1] <- outTab[8,2]
+    latTab[7,2] <- outTab[7,2]
+    latTab[8,1] <- "Median Income+"
+    latTab[8,2] <- outTab[5,1]
+    latTab[8,3] <- paste0("$",format(as.numeric(hhinc_state$b19013001),nsmall=0, big.mark=","))
+    latTab[9,1] <- "Median House Value+"
+    latTab[9,2] <- outTab[5,2]
+    latTab[9,3] <- paste0("$",format(as.numeric(MedHHValue_state$b25077001),nsmall=0, big.mark=","))
+    latTab[10,1] <- outTab[9,1]
+    latTab[11,1] <- outTab[9,2]
+
+    outKable <- kable(latTab, caption="Community Quick Facts",align="lrr",
+                      format ="latex", booktabs=TRUE) %>%
+                kable_styling(latex_options="HOLD_position") %>%
+                row_spec(9, font_size=9) %>%
+                row_spec(10, font_size=9) %>%
+                column_spec(1, width="4in") %>%
+                column_spec(2, width="1in") %>%
+                column_spec(3, width="1in")
 
   }
   return(outKable)

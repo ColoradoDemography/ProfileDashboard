@@ -64,7 +64,7 @@ migbyagePRO <- function(fips, ctyname, base=10) {
          caption = captionSrc("SDO",""),
          x = xTitle,
          y= "Net Migration Rate (per 1,000)") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")

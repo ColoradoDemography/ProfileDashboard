@@ -73,7 +73,7 @@ residentialLF <- function(fips, ctyname, base=10){
     mutate(PctPart = (LForce/Pop16P) * 100)
 
   # Building Line Chart
-  pltTitle <- "Forecast Resident Labor Force and Population Age 16 +"
+  pltTitle <- "Forecast Resident Labor Force and\nPopulation, Age 16 +"
 
 
   LFLine <-  ggplot(data=f.LFPlaceSum) +
@@ -88,7 +88,7 @@ residentialLF <- function(fips, ctyname, base=10){
          caption = captionSrc("SDO",""),
          x = "Year",
          y= "Population") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")
@@ -100,23 +100,24 @@ residentialLF <- function(fips, ctyname, base=10){
 
   f.LFBar <- rbind(f.LFPlaceSum10, f.LFStateSum10)
   pltTitle <- "Forecast Labor Force Participation Rate\n Persons Age 16 +"
-  barCol <- c("#6EC4E8","#00953A")
+
   f.LFBar$geoname <- factor(f.LFBar$geoname, levels=c(ctyname, "Colorado"))
-  maxPart <- max(f.LFBar$PctPart)
+
+  minPart <- ((min(f.LFBar$PctPart)%/%5) * 5) - 5
+  maxPart <- ((max(f.LFBar$PctPart)%/%5) * 5) + 5
 
   LFBar <- f.LFBar %>%
-    ggplot(aes(x=year10, y=PctPart, fill=geoname))+
-    geom_bar(stat="identity",color="black", position = position_dodge(), width=6) +
-    scale_y_continuous(limits= c(0,100),breaks=seq(0, 100,10),label=percent, expand = c(0, 0))+
-    scale_fill_manual(values=barCol, name="Geography") +
+    ggplot(aes(x=year10, y=PctPart, color=geoname))+
+    geom_line(size=1.50) +
+    scale_y_continuous(limits= c(minPart,maxPart),label=percent, expand = c(0, 0))+
+    scale_color_manual(values=c("#6EC4E8","#00953A"), name="Geography") +
     theme_codemog(base_size=base)+
-    #theme(axis.text.x=element_text(angle=45, hjust=1))+
     labs(title = pltTitle,
          subtitle = ctyname,
          caption = captionSrc("SDO",""),
          x = "Year",
          y= "Percentage of Labor Force Participation") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")

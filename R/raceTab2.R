@@ -170,12 +170,13 @@ raceTab2 <- function(fips,ctyname,ACS, oType) {
           escape = FALSE)  %>%
     kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
     row_spec(0, align = "c") %>%
-    column_spec(1, width = "30em",bold = T) %>%
+    column_spec(1, width = "30em") %>%
     column_spec(2, width = "5em") %>%
     column_spec(3, width ="5em") %>%
     column_spec(4, width ="5em") %>%
     column_spec(5, width ="5em") %>%
     column_spec(6, width ="5em") %>%
+    add_indent(c(3:9)) %>%
     add_header_above(header=tblHead) %>%
     add_footnote(captionSrc("ACS",ACS))
 
@@ -199,8 +200,8 @@ raceTab2 <- function(fips,ctyname,ACS, oType) {
                     col.names = names_spaced,
                     align=c("l",rep("r",5)),
                     caption="Race Comparison", row.names=FALSE,
-                    format="latex", booktabs=FALSE)  %>%
-      kable_styling(latex_options="scale_down") %>%
+                    format="latex", booktabs=TRUE)  %>%
+      kable_styling(latex_options=c("scale_down","HOLD_position")) %>%
       add_indent(c(3:9)) %>%
       add_header_above(header=tblHead) %>%
       add_footnote(captionSrc("ACS",ACS))

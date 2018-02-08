@@ -134,15 +134,12 @@ OOHouse=function(fips, ctyname, ACS, oType, state="08"){
           caption="Characteristics of Owner-Occupied Housing",
           col.names = names_spaced,
           escape = FALSE)  %>%
-    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 10) %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F) %>%
     row_spec(0, align = "c") %>%
-    row_spec(1, bold = TRUE, italic = TRUE) %>%
-    row_spec(7, bold = TRUE, italic = TRUE) %>%
-    row_spec(13, bold = TRUE, italic = TRUE) %>%
-    row_spec(14, bold = TRUE, italic = TRUE) %>%
-    column_spec(1, width = "3in",bold = T) %>%
+    column_spec(1, width = "3in") %>%
     column_spec(2, width = "0.4in") %>%
     column_spec(3, width ="0.4in") %>%
+    add_indent(c(2:6,8:12)) %>%
     add_header_above(header=tblHead1) %>%
     add_footnote(captionSrc("ACS",ACS))
 
@@ -157,15 +154,12 @@ OOHouse=function(fips, ctyname, ACS, oType, state="08"){
     align="lrr",
     caption="Characteristics of Owner-Occupied Housing", row.names=FALSE,
     format="latex", booktabs=TRUE)  %>%
-    kable_styling() %>%
+    kable_styling(latex_options="HOLD_position") %>%
     row_spec(0, align = "c") %>%
-    row_spec(1, bold = TRUE, italic = TRUE) %>%
-    row_spec(7, bold = TRUE, italic = TRUE) %>%
-    row_spec(13, bold = TRUE, italic = TRUE) %>%
-    row_spec(14, bold = TRUE, italic = TRUE) %>%
-    column_spec(1, width = "5in",bold = T) %>%
+    column_spec(1, width = "3in") %>%
     column_spec(2, width = "0.5in") %>%
     column_spec(3, width ="0.5in") %>%
+    add_indent(c(2:6,8:12)) %>%
     add_header_above(header=tblHead1) %>%
     add_footnote(captionSrc("ACS",ACS))
 

@@ -89,7 +89,7 @@ jobsByIndustry <- function(fips, ctyname, curyr, base=10){
     mutate(PLTotal = sum(total_jobs),
            total_c = comma(round(total_jobs,digits=0)),
            prop_jobs = (total_jobs/PLTotal)*100,
-           pct_jobs = percent(prop_jobs,digits=1))
+           pct_jobs = percent(prop_jobs))
 
 
   f.jobsPLMain$geoname <- ctyname
@@ -145,7 +145,7 @@ jobsByIndustry <- function(fips, ctyname, curyr, base=10){
     mutate(STTotal = sum(total_jobs),
            total_c = comma(round(total_jobs,digits=0)),
            prop_jobs = (total_jobs/STTotal)*100,
-           pct_jobs = percent(prop_jobs,digits=1))
+           pct_jobs = percent(prop_jobs))
 
 
   f.jobsSTMain$geoname <- "Colorado"
@@ -197,7 +197,7 @@ jobsByIndustry <- function(fips, ctyname, curyr, base=10){
          caption = captionSrc("SDO",""),
          x = "Job Sector",
          y = "Percentage") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")

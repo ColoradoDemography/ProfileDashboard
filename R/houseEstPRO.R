@@ -57,7 +57,7 @@ houseEstPRO <- function(fips, ctyname,curYr, base=10) {
     scale_x_continuous(breaks=seq(2010, 2050, 5)) +
     scale_y_continuous(label=comma)+
     theme_codemog(base_size=base)+
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom",legend.title=element_blank())

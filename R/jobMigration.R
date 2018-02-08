@@ -80,13 +80,14 @@ jobMigration <- function(fips, ctyname, maxyr, base=10){
   # Generating Plot
   maxYr <- as.numeric(max(f.pltdata$year5))
   minmigr <- if_else(min(f.pltdata$avgmigr) < 0, as.numeric(min(f.pltdata$avgmigr)),0)
-  maxjobs <- as.numeric(max(f.pltdata$avgjobs))
+  maxjobs <- 1000*ceiling(max(f.pltdata$avgjobs)/1000)
+  chartUnit <- ceiling(abs(abs(maxjobs)-abs(minmigr))/5)
 
   migrPlot <- ggplot(f.pltdata) + geom_bar(aes(x=year5, y=avgjobs,color="Jobs"), stat="identity", fill= "#d8c772") +
     geom_line( aes(x=year5, y=avgmigr, color="Net Migration"), size=1.75) +
     geom_hline(yintercept=0, size=1.05) +
     scale_x_continuous(breaks=seq(1985,maxYr, by=5)) +
-    scale_y_continuous(breaks=seq(minmigr,maxjobs, by=2000),labels=scales::comma) +
+    scale_y_continuous(labels=scales::comma) +
     scale_colour_manual(" ", values=c("Jobs" = "#d8c772", "Net Migration" = "#00953A")) +
     scale_fill_manual("",values="#00953A") +
 
@@ -95,7 +96,7 @@ jobMigration <- function(fips, ctyname, maxyr, base=10){
          caption = captionSrc("SDOBEA",""),
          x = "Year",
          y= "Number") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.key=element_blank(),

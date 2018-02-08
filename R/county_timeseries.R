@@ -33,7 +33,8 @@ county_timeseries=function(fips, beginyear=1990,endYear, base=10){
          caption = captionSrc("SDO",""))+
     scale_y_continuous(label=comma)+
     theme_codemog(base_size=base)+
-    theme(axis.text.x=element_text(angle=90,size=8))
+    theme(plot.title = element_text(hjust = 0.5, size=18),
+          axis.text.x=element_text(angle=90,size=8))
 
   # Bind List
   outList <- list("plot" = p, "data" = d)

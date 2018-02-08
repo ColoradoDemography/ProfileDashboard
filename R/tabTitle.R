@@ -7,7 +7,7 @@
 tabTitle <-function(item) {
   outTitle <- switch(item,
                      "stats" = "Basic Statistics",
-                     "popf" = "Population Change",
+                     "popf" = "Population Trends",
                      "pop" ="Age",
                      "popc"= "Income, Race and Education",
                      "housing" = "Housing and Households",

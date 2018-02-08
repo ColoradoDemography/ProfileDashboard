@@ -171,7 +171,7 @@ GenerateVenn <- function(fips, ctyname,oType){
   #outVenn is the final VennDiagram
   #Formatting citation
   sub.label = textGrob(captionSrc("LODES",""),
-                       gp=gpar(fontsize=9),
+                       gp=gpar(fontsize=8),
                        x = unit(1, "npc"),
                        hjust = 1,
                        vjust = 0)
@@ -216,8 +216,8 @@ GenerateVenn <- function(fips, ctyname,oType){
 
   # Formatting Work Output table.
   names_spaced <- c("Location","Count","Percent")
-  capstr1 <- paste0("Employees in ",ctyname," living in other locations")
-  capstr2 <- paste0("Residents of ",ctyname," working in other locations")
+  capstr1 <- paste0("Employees in ",ctyname," but living elsewhere")
+  capstr2 <- paste0("Residents of ",ctyname," but working elsewhere")
 
   m.work11 <- as.matrix(f.work_fin11)
   m.live11 <- as.matrix(f.live_fin11)
@@ -232,9 +232,9 @@ GenerateVenn <- function(fips, ctyname,oType){
           col.names = names_spaced,
           escape = FALSE)  %>%
     kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
-    column_spec(1, width = "55em",bold = T) %>%
-    column_spec(2, width = "5em") %>%
-    column_spec(3, width ="5em") %>%
+    column_spec(1, width = "3in") %>%
+    column_spec(2, width = "1in") %>%
+    column_spec(3, width = "1in") %>%
     add_footnote(captionSrc("LODES",""))
 
 
@@ -247,9 +247,9 @@ GenerateVenn <- function(fips, ctyname,oType){
           col.names = names_spaced,
           escape = FALSE)  %>%
     kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
-    column_spec(1, width = "55em",bold = T) %>%
-    column_spec(2, width = "5em") %>%
-    column_spec(3, width ="5em") %>%
+    column_spec(1, width = "3in") %>%
+    column_spec(2, width = "1in") %>%
+    column_spec(3, width = "1in") %>%
     add_footnote(captionSrc("LODES",""))
 
 
@@ -267,8 +267,11 @@ GenerateVenn <- function(fips, ctyname,oType){
                  align='lrr',
                  caption=capstr1,
                  format="latex", booktabs=TRUE) %>%
-    kable_styling() %>%
+    kable_styling(latex_options="HOLD_position") %>%
     row_spec(0, align = "c") %>%
+    column_spec(1, width = "2in") %>%
+    column_spec(2, width = "0.5in") %>%
+    column_spec(3, width = "0.5in") %>%
     add_footnote(captionSrc("LODES",""))
 
 
@@ -278,8 +281,11 @@ GenerateVenn <- function(fips, ctyname,oType){
                   align='lrr',
                   caption=capstr2,
                   format="latex", booktabs=TRUE) %>%
-    kable_styling() %>%
+    kable_styling(latex_options="HOLD_position") %>%
     row_spec(0, align = "c") %>%
+    column_spec(1, width = "2in") %>%
+    column_spec(2, width = "0.5in") %>%
+    column_spec(3, width = "0.5in") %>%
     add_footnote(captionSrc("LODES",""))
 
   outList <- list("plot" = outVenn, "workTab" = workTab,"liveTab" = liveTab)

@@ -55,8 +55,6 @@ boxContent <- function(title,description, source, MSA, stats, table, urlList) {
     )
     outList[[i]] <- ui5
     i <- i + 1
-    outList[[i]] <-tags$br()
-    i <- i + 1
 
   }
 

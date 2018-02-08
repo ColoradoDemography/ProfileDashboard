@@ -73,12 +73,12 @@ HouseVal <- function(fips, ctyname, ACS, oType, state="08"){
   # Assembling State Data
 
   # Raw State data Owners
-  f.b25077 <- codemog_api(data="b25077", db=ACS, geonum=paste0("1", state, fips),meta="no") # Median Value
-  f.b25092 <- codemog_api(data="b25092", db=ACS, geonum=paste0("1", state, fips),meta="no") # costs as % of Income
+  f.b25077 <- codemog_api(data="b25077", db=ACS, geonum=paste0("1", state),meta="no") # Median Value
+  f.b25092 <- codemog_api(data="b25092", db=ACS, geonum=paste0("1", state),meta="no") # costs as % of Income
 
   # Raw Place data Renters
-  f.b25064 <- codemog_api(data="b25064", db=ACS, geonum=paste0("1", state, fips),meta="no") # Median Value
-  f.b25071 <- codemog_api(data="b25071", db=ACS, geonum=paste0("1", state, fips),meta="no") # costs as % of Income
+  f.b25064 <- codemog_api(data="b25064", db=ACS, geonum=paste0("1", state),meta="no") # Median Value
+  f.b25071 <- codemog_api(data="b25071", db=ACS, geonum=paste0("1", state),meta="no") # costs as % of Income
 
   f.AcsSt <- cbind(f.b25077[,c(1,8)],f.b25092[,c(1,8)],f.b25064[,c(1,8)],f.b25071[,c(1,8)])
 
@@ -178,6 +178,9 @@ HouseVal <- function(fips, ctyname, ACS, oType, state="08"){
 
   m.HouseValR <- as.matrix(f.HouseVal[c(3,4),])
 
+
+  m.HOwn <- rbind(OOLine,m.HouseValO)
+  m.HRent <- rbind(RTLine,m.HouseValR)
   m.HouseVal <- rbind(OOLine,m.HouseValO,RTLine,m.HouseValR)
 
 
@@ -188,7 +191,7 @@ HouseVal <- function(fips, ctyname, ACS, oType, state="08"){
   # Setting up table
 
   #Column Names
-  names_spaced <- c("Variable","Value","Margin of Error","Value","Margin of Error","Significant Difference?")
+  names_spaced <- c("Variable","Value","Margin of Error","Value","Margin of Error","Sig. Diff.?")
   #Span Header
 
   # create vector with colspan
@@ -198,18 +201,16 @@ HouseVal <- function(fips, ctyname, ACS, oType, state="08"){
   names(tblHead1) <- c(" ", ctyname, "Colorado", " ")
 
   if(oType == "html") {
-    Housing_tab <- m.HouseVal %>%
+    Housing_tab1 <- m.HOwn %>%
       kable(format='html', table.attr='class="cleanTable"',
             row.names=FALSE,
             align='lrrrrrr',
-            caption="Comparison of House Values",
+            caption="Comparative Owner-Occupied Housing Values",
             col.names = names_spaced,
             escape = FALSE)  %>%
-      kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 10) %>%
+      kable_styling(bootstrap_options = "condensed",full_width = F) %>%
       row_spec(0, align = "c") %>%
-      row_spec(1, bold = TRUE, italic = TRUE) %>%
-      row_spec(4, bold = TRUE, italic = TRUE) %>%
-      column_spec(1, width = "2in",bold = T) %>%
+      column_spec(1, width = "3in") %>%
       column_spec(2, width = "0.5in") %>%
       column_spec(3, width ="0.5in") %>%
       column_spec(4, width ="0.5in") %>%
@@ -218,7 +219,25 @@ HouseVal <- function(fips, ctyname, ACS, oType, state="08"){
       add_header_above(header=tblHead1) %>%
       add_footnote(captionSrc("ACS",ACS))
 
-    outList <- list("table" = Housing_tab, "data" = f.HouseVal)
+    Housing_tab2 <- m.HRent%>%
+      kable(format='html', table.attr='class="cleanTable"',
+            row.names=FALSE,
+            align='lrrrrrr',
+            caption="Comparative Rental Housing Values",
+            col.names = names_spaced,
+            escape = FALSE)  %>%
+      kable_styling(bootstrap_options = "condensed",full_width = F) %>%
+      row_spec(0, align = "c") %>%
+      column_spec(1, width = "3in") %>%
+      column_spec(2, width = "0.5in") %>%
+      column_spec(3, width ="0.5in") %>%
+      column_spec(4, width ="0.5in") %>%
+      column_spec(5, width ="0.5in") %>%
+      column_spec(6, width ="0.5in") %>%
+      add_header_above(header=tblHead1) %>%
+      add_footnote(captionSrc("ACS",ACS))
+
+    outList <- list("table0" = Housing_tab1, "tableR" = Housing_tab2, "data" = f.HouseVal)
     return(outList)
   }
 
@@ -229,17 +248,18 @@ HouseVal <- function(fips, ctyname, ACS, oType, state="08"){
                      align=c("lrrrrr"),
                      caption="Comparison of Housing Values", row.names=FALSE,
                      format="latex", booktabs=TRUE)  %>%
-      kable_styling() %>%
+      kable_styling(latex_options="HOLD_position") %>%
       row_spec(0, align = "c") %>%
       row_spec(0, align = "c") %>%
       row_spec(1, bold = TRUE, italic = TRUE) %>%
       row_spec(4, bold = TRUE, italic = TRUE) %>%
-      column_spec(1, width = "2in",bold = T) %>%
+      column_spec(1, width = "2.5in") %>%
       column_spec(2, width = "0.5in") %>%
       column_spec(3, width ="0.5in") %>%
       column_spec(4, width ="0.5in") %>%
       column_spec(5, width ="0.5in") %>%
-      column_spec(6, width ="0.5in") %>%add_header_above(header=tblHead1) %>%
+      column_spec(6, width ="0.5in") %>%
+      add_header_above(header=tblHead1) %>%
       add_footnote(captionSrc("ACS",ACS))
 
     return(tabOut)

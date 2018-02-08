@@ -34,15 +34,15 @@ raceTab1 <- function(fips,ctyname,ACS,oType) {
            NHNHOPI=b03002007,
            NHOther=b03002008,
            NHTwo=b03002009,
-           HispanicP=percent(round(Hispanic/TotalPop, 3)*100, digits = 2),
-           NonHispanicP=percent(round(NonHispanic/TotalPop,3)*100, digits = 2),
-           NHWhiteP=percent(round(NHWhite/TotalPop, 3)*100, digits = 2),
-           NHBlackP=percent(round(NHBlack/TotalPop, 3)*100, digits = 2),
-           NHAIANP=percent(round(NHAIAN/TotalPop,3)*100, digits = 2),
-           NHAsianP=percent(round(NHAsian/TotalPop,3)*100, digits = 2),
-           NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100, digits = 2),
-           NHOtherP=percent(round(NHOther/TotalPop,3)*100, digits = 2),
-           NHTwoP=percent(round(NHTwo/TotalPop,3)*100, digits = 2))
+           HispanicP=percent(round(Hispanic/TotalPop, 3)*100),
+           NonHispanicP=percent(round(NonHispanic/TotalPop,3)*100),
+           NHWhiteP=percent(round(NHWhite/TotalPop, 3)*100),
+           NHBlackP=percent(round(NHBlack/TotalPop, 3)*100),
+           NHAIANP=percent(round(NHAIAN/TotalPop,3)*100),
+           NHAsianP=percent(round(NHAsian/TotalPop,3)*100),
+           NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100),
+           NHOtherP=percent(round(NHOther/TotalPop,3)*100),
+           NHTwoP=percent(round(NHTwo/TotalPop,3)*100))
 
 
   f.ACSRace <- gather(ACSRace2[, c(1,30:38)], key = "race", value=ACS, HispanicP:NHTwoP)
@@ -60,15 +60,15 @@ raceTab1 <- function(fips,ctyname,ACS,oType) {
     select(geoname:p9011)%>%
     mutate(TotalPop=p9001, Hispanic=p9002, NonHispanic=p9003, NHWhite=p9005, NHBlack=p9006,
            NHAIAN=p9007, NHAsian=p9008, NHNHOPI=p9009, NHOther=p9010, NHTwo=p9011,
-           HispanicP=percent(round(Hispanic/TotalPop, 3)*100, digits=2),
-           NonHispanicP=percent(round(NonHispanic/TotalPop,3)*100, digits=2),
-           NHWhiteP=percent(round(NHWhite/TotalPop, 3)*100, digits=2),
-           NHBlackP=percent(round(NHBlack/TotalPop, 3)*100, digits=2),
-           NHAIANP=percent(round(NHAIAN/TotalPop,3)*100, digits=2),
-           NHAsianP=percent(round(NHAsian/TotalPop,3)*100, digits=2),
-           NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100, digits=2),
-           NHOtherP=percent(round(NHOther/TotalPop,3)*100, digits=2),
-           NHTwoP=percent(round(NHTwo/TotalPop,3)*100, digits=2)) %>%
+           HispanicP=percent(round(Hispanic/TotalPop, 3)*100),
+           NonHispanicP=percent(round(NonHispanic/TotalPop,3)*100),
+           NHWhiteP=percent(round(NHWhite/TotalPop, 3)*100),
+           NHBlackP=percent(round(NHBlack/TotalPop, 3)*100),
+           NHAIANP=percent(round(NHAIAN/TotalPop,3)*100),
+           NHAsianP=percent(round(NHAsian/TotalPop,3)*100),
+           NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100),
+           NHOtherP=percent(round(NHOther/TotalPop,3)*100),
+           NHTwoP=percent(round(NHTwo/TotalPop,3)*100)) %>%
     select(-p9001:-p9011)%>%
     gather(race, Census.2010, HispanicP:NHTwoP, -geoname:-geonum)
 
@@ -87,15 +87,15 @@ raceTab1 <- function(fips,ctyname,ACS,oType) {
     select(geoname:p4011)%>%
     mutate(TotalPop=p4001, Hispanic=p4002, NonHispanic=p4003, NHWhite=p4005, NHBlack=p4006,
            NHAIAN=p4007, NHAsian=p4008, NHNHOPI=p4009, NHOther=p4010, NHTwo=p4011,
-           HispanicP=percent(round(Hispanic/TotalPop, 3)*100, digits=2),
-           NonHispanicP=percent(round(NonHispanic/TotalPop,3)*100, digits=2),
-           NHWhiteP=percent(round(NHWhite/TotalPop, 3)*100, digits=2),
-           NHBlackP=percent(round(NHBlack/TotalPop, 3)*100, digits=2),
-           NHAIANP=percent(round(NHAIAN/TotalPop,3)*100, digits=2),
-           NHAsianP=percent(round(NHAsian/TotalPop,3)*100, digits=2),
-           NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100, digits=2),
-           NHOtherP=percent(round(NHOther/TotalPop,3)*100, digits=2),
-           NHTwoP=percent(round(NHTwo/TotalPop,3)*100, digits=2))%>%
+           HispanicP=percent(round(Hispanic/TotalPop, 3)*100),
+           NonHispanicP=percent(round(NonHispanic/TotalPop,3)*100),
+           NHWhiteP=percent(round(NHWhite/TotalPop, 3)*100),
+           NHBlackP=percent(round(NHBlack/TotalPop, 3)*100),
+           NHAIANP=percent(round(NHAIAN/TotalPop,3)*100),
+           NHAsianP=percent(round(NHAsian/TotalPop,3)*100),
+           NHNHOPIP=percent(round(NHNHOPI/TotalPop, 3)*100),
+           NHOtherP=percent(round(NHOther/TotalPop,3)*100),
+           NHTwoP=percent(round(NHTwo/TotalPop,3)*100))%>%
     select(-p4001:-p4011)%>%
     gather(race, Census.2000, HispanicP:NHTwoP, -geoname:-geonum)
 
@@ -146,10 +146,11 @@ raceTab1 <- function(fips,ctyname,ACS,oType) {
           col.names = names_spaced,
           escape = FALSE)  %>%
     kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
-    column_spec(1, width = "45em",bold = T) %>%
-    column_spec(2, width = "5em") %>%
-    column_spec(3, width ="5em") %>%
-    column_spec(4, width ="5em") %>%
+    column_spec(1, width="4in") %>%
+    column_spec(2, width="0.5in") %>%
+    column_spec(3, width="0.5in") %>%
+    column_spec(4, width="0.5in") %>%
+    add_indent(c(3:9)) %>%
     add_header_above(header=tblHead) %>%
     add_footnote(c("Source; 2000 Census",
                    "Source: 2010 Census",
@@ -169,7 +170,7 @@ raceTab1 <- function(fips,ctyname,ACS,oType) {
      tabOut <- kable(m.race, col.names = names_spaced,
                     caption="Race Trend", row.names=FALSE, align=c("l",rep("r",3)),
                     format="latex", booktabs=TRUE)  %>%
-      kable_styling() %>%
+       kable_styling(latex_options="HOLD_position") %>%
       row_spec(0, align = "c") %>%
       column_spec(1, width="4in") %>%
       column_spec(2, width="0.5in") %>%

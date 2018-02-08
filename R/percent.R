@@ -8,6 +8,6 @@
 #' @return a numeric string formatted as a percentage
 #' @export
 #'
-percent <- function(x, digits = 2, format = "f", ...) {
+percent <- function(x, digits = 1, format = "f", ...) {
   paste0(formatC( x, format = format, digits = digits, ...), "%")
 }

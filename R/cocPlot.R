@@ -27,8 +27,6 @@ cocPlot <- function(fips, ctyname,lYr,base=12) {
 
   pltTitle <- "Components of Change:\nBirths, Deaths, and Net Migration"
   subTitle <- ctyname
-  minPop <- roundUpNice(min(f.cocLong$Pop),2500)
-  maxPop <- roundUpNice(max(f.cocLong$Pop),2500)
 
 
   cocPlt <-  ggplot(data=f.cocLong,aes(x=year, y=Pop, colour=TypeChange)) +
@@ -37,14 +35,14 @@ cocPlot <- function(fips, ctyname,lYr,base=12) {
     scale_colour_manual("Type of Change", values=c("#82BC00", "#009ADD", "#5C666F")) +
     scale_shape_manual("Type of Change", values=seq(15, 17, 1)) +
     scale_x_continuous(breaks=seq(1990, lYr, 5)) +
-    scale_y_continuous(breaks=seq(minPop, maxPop, 2500),label=comma)+
+    scale_y_continuous(label=comma)+
     theme_codemog(base_size=base)+
     labs(title = pltTitle,
          subtitle = subTitle,
          caption = captionSrc("SDO",""),
          x = "Year",
          y= "Population Change") +
-    theme(plot.title = element_text(hjust = 0.5),
+    theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
           legend.position= "bottom")

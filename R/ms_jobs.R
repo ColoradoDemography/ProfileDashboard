@@ -30,7 +30,8 @@ ms_jobs=function(fips, ctyname, maxyr,base=10){
          y="Jobs",
          title= paste0("Total Estimated Jobs, 2001 to ",as.character(maxyr)),
          subtitle = ctyname,
-         caption= paste0(captionSrc("SDO","") ,"\nNote: Grey shading represents beginning to bottom of U.S. recessions"))
+         caption= paste0(captionSrc("SDO","") ,"\nNote: Grey shading represents beginning to bottom of U.S. recessions")) +
+    theme(plot.title = element_text(hjust = 0.5, size=18))
 
   outList <- list("plot" = jobs_plot, "data" = jobs_data)
   return(outList)
