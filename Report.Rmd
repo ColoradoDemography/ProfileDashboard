@@ -150,7 +150,7 @@ if(outStats){
 ```{r Basic_Table, out.width=6, out.height=4, warning=FALSE,  echo= FALSE, message=FALSE, results='asis'}
 if(outStats){
   x <-  statsTable1(cty=fips5, 
-                             place="", plName=placeName,
+                             place="", 
                              sYr=2010,
                              eYr= oYr,
                              ACS=oACS,
