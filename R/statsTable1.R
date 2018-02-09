@@ -11,7 +11,7 @@
 #'
 statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
   #outputs the top table in the dashboard
-  browser()
+
   #Need to restructure this to support muni_est...
   state <- substr(cty,1,2)
   ctyfips <- substr(cty,3,5)
