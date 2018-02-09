@@ -80,7 +80,7 @@ OOHouse=function(fips, ctyname, ACS, oType, state="08"){
   f.OOHouse <- f.AcsPl_Fin
 
   f.OOHouse$Pl_VAL_F <-  ifelse(f.OOHouse$var == "PPH", formatC(as.numeric(f.OOHouse$Pl_VAL), format="f", digits=2),
-                         ifelse(f.OOHouse$var == "Med_Yr", formatC(as.numeric(f.OOHouse$Pl_VAL), format="f", digits=0), formatC(as.numeric(f.OOHouse$Pl_VAL),format="f", digits=0, big.mark=",")))
+                                ifelse(f.OOHouse$var == "Med_Yr", formatC(as.numeric(f.OOHouse$Pl_VAL), format="f", digits=0), formatC(as.numeric(f.OOHouse$Pl_VAL),format="f", digits=0, big.mark=",")))
 
 
   f.OOHouse$Pl_VAL_PF <- percent(f.OOHouse$Pl_VAL_P*100)
@@ -105,64 +105,89 @@ OOHouse=function(fips, ctyname, ACS, oType, state="08"){
                                                                                                     ifelse(f.OOHouse$var =="Units_OTH","Number of RVs, Boats, Vans, Etc.",
                                                                                                            ifelse(f.OOHouse$var =="Med_Yr","Median Year of Construction",
                                                                                                                   ifelse(f.OOHouse$var =="PPH","Average Number of Persons Per Household",""
-                                                                                                                         ))))))))))))))
+                                                                                                                  ))))))))))))))
 
 
   names(f.OOHouse_Fin)  <-c("Variable",paste0("Value: ",ctyname),
                             paste0("Percentage Value: ",ctyname))
 
+  #Building table
+  m.OOHouse <- matrix(nrow=8,ncol=5,"")
 
-  m.OOHouse <- as.matrix(f.OOHouse_Fin)
+  m.OOHouse[1:6,2:3] <- as.matrix(f.OOHouse_Fin[1:6,2:3])  #People
+  m.OOHouse[1:6,4:5] <- as.matrix(f.OOHouse_Fin[7:12,2:3]) #UNits
+  m.OOHouse[7,4] <- f.OOHouse_Fin[13,2]
+  m.OOHouse[8,2] <- f.OOHouse_Fin[14,2]
+
+  m.OOHouse[1,1] <- "Owner-Occupied Housing"
+  m.OOHouse[2,1] <- "Single Unit Buildings"
+  m.OOHouse[3,1] <- "Buildings with 2 to 4 Units"
+  m.OOHouse[4,1] <- " Buildings with 5 or More Units"
+  m.OOHouse[5,1] <- "Mobile Homes"
+  m.OOHouse[6,1] <- "RVs, Boats, Vans, Etc."
+  m.OOHouse[7,1] <- "Median Year of Construction"
+  m.OOHouse[8,1] <- "Average Number of Persons Per Household"
+
+  m.OOHouse[6,4] <- format(as.numeric(m.OOHouse[6,4]),big.mark=",")
 
   # Setting up table
 
   #Column Names
-  names_spaced <- c("Variable","Value","Percent")
+  names_spaced <- c("Variable","Value","Percent","Value","Percent")
   #Span Header
 
   # create vector with colspan
-  tblHead1 <- c(" " = 1, ctyname = 2)
+  tblHead1 <- c(" " = 1, ctyname = 4)
 
   # set vector names
   names(tblHead1) <- c(" ", ctyname)
 
-  if(oType == "html") {
-  Housing_tab <- m.OOHouse %>%
-    kable(format='html', table.attr='class="cleanTable"',
-          row.names=FALSE,
-          align='lrr',
-          caption="Characteristics of Owner-Occupied Housing",
-          col.names = names_spaced,
-          escape = FALSE)  %>%
-    kable_styling(bootstrap_options = "condensed",full_width = F) %>%
-    row_spec(0, align = "c") %>%
-    column_spec(1, width = "3in") %>%
-    column_spec(2, width = "0.4in") %>%
-    column_spec(3, width ="0.4in") %>%
-    add_indent(c(2:6,8:12)) %>%
-    add_header_above(header=tblHead1) %>%
-    add_footnote(captionSrc("ACS",ACS))
+  tblHead2 <- c(" " = 1, "People" = 2, "Units" = 2)
+  names(tblHead2) <- c(" ","People","Units")
 
-  outList <- list("table" = Housing_tab, "data" = f.OOHouse_Fin)
-  return(outList)
+  if(oType == "html") {
+    Housing_tab <- m.OOHouse %>%
+      kable(format='html', table.attr='class="cleanTable"',
+            row.names=FALSE,
+            align='lrrrr',
+            caption="Characteristics of Owner-Occupied Housing",
+            col.names = names_spaced,
+            escape = FALSE)  %>%
+      kable_styling(bootstrap_options = "condensed",full_width = F) %>%
+      row_spec(0, align = "c") %>%
+      column_spec(1, width = "3in") %>%
+      column_spec(2, width = "0.4in") %>%
+      column_spec(3, width ="0.4in") %>%
+      column_spec(4, width ="0.4in") %>%
+      column_spec(5, width ="0.4in") %>%
+      add_indent(c(2:6)) %>%
+      add_header_above(header=tblHead2) %>%
+      add_header_above(header=tblHead1) %>%
+      add_footnote(captionSrc("ACS",ACS))
+
+    outList <- list("table" = Housing_tab, "data" = f.OOHouse_Fin)
+    return(outList)
   }
 
   if(oType == "latex") {
 
-  tabOut <-  kable(m.OOHouse,
-    col.names = names_spaced,
-    align="lrr",
-    caption="Characteristics of Owner-Occupied Housing", row.names=FALSE,
-    format="latex", booktabs=TRUE)  %>%
-    kable_styling(latex_options="HOLD_position") %>%
-    row_spec(0, align = "c") %>%
-    column_spec(1, width = "3in") %>%
-    column_spec(2, width = "0.5in") %>%
-    column_spec(3, width ="0.5in") %>%
-    add_indent(c(2:6,8:12)) %>%
-    add_header_above(header=tblHead1) %>%
-    add_footnote(captionSrc("ACS",ACS))
+    tabOut <-  kable(m.OOHouse,
+                     col.names = names_spaced,
+                     align="lrrrr",
+                     caption="Characteristics of Owner-Occupied Housing", row.names=FALSE,
+                     format="latex", booktabs=TRUE)  %>%
+      kable_styling(latex_options="HOLD_position") %>%
+      row_spec(0, align = "c") %>%
+      column_spec(1, width = "3in") %>%
+      column_spec(2, width = "0.4in") %>%
+      column_spec(3, width ="0.4in") %>%
+      column_spec(4, width ="0.4in") %>%
+      column_spec(5, width ="0.4in") %>%
+      add_indent(c(2:6)) %>%
+      add_header_above(header=tblHead2) %>%
+      add_header_above(header=tblHead1) %>%
+      add_footnote(captionSrc("ACS",ACS))
 
-  return(tabOut)
+    return(tabOut)
   }
 }
