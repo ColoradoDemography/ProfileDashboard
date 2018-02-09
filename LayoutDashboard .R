@@ -231,10 +231,10 @@ server <- function(session,input, output) {
     if("stats" %in% input$outChk) {
       stats.text <- tags$h2("Basic Statistics")
       if(input$level == "Counties") {
-           stats.tab1 <- statsTable1(fipslist,"",placeName,2010,2016,curACS,oType="html")
+           stats.tab1 <- statsTable1(cty=fipslist,place="",plName=placeName,sYr=2010,eYr=2016,ACS=curACS,oType="html")
       }
       if(input$level == "Municipalities/Places") {
-        stats.tab1 <- statsTable1(CtyFips,fipslist,placeName,2010,2016,curACS,oType="html")
+        stats.tab1 <- statsTable1(cty=CtyFips,place=fipslist,plName=placeName,sYr=2010,eYr=2016,ACS=curACS,oType="html")
       }
       stats.map <- cp_countymap(substr(fipslist,3,5))
 
