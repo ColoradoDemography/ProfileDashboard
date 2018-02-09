@@ -503,16 +503,16 @@ server <- function(session,input, output) {
        poph2.box <- tabBox(width=6, height=400,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph2$table))),
                            tabPanel("Sources and Downloads",poph2.info))
-       poph5.box <- tabBox(width=6, height = 350,
+       poph5.box <- tabBox(width=6, height = 325,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$table0))),
                            tabPanel("Sources and Downloads",poph5.info))
-       poph6.box <- tabBox(width=6, height = 350,
+       poph6.box <- tabBox(width=6, height = 325,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$tableR))),
                            tabPanel("Sources and Downloads",poph6.info))
-       poph3.box <- tabBox(width=6, height=400,
+       poph3.box <- tabBox(width=6, height=350,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph3$table))),
                            tabPanel("Sources and Downloads",poph3.info))
-       poph4.box <- tabBox(width=6, height=400,
+       poph4.box <- tabBox(width=6, height=350,
                            tabPanel("Table",tags$div(class="cleanTab",HTML(poph4$table))),
                            tabPanel("Sources and Downloads",poph4.info))
 
