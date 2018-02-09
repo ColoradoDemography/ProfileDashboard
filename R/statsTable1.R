@@ -9,9 +9,9 @@
 #' @return kable formatted table
 #' @export
 #'
-statsTable1 <- function(cty,place,plName,sYr,eYr,ACS,oType){
+statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
   #outputs the top table in the dashboard
-
+  browser()
   #Need to restructure this to support muni_est...
   state <- substr(cty,1,2)
   ctyfips <- substr(cty,3,5)
@@ -23,6 +23,7 @@ statsTable1 <- function(cty,place,plName,sYr,eYr,ACS,oType){
   if(nchar(place) == 0) {  #Counties
     tPopyr1 <- county_profile(as.numeric(ctyfips), sYr,"totalpopulation")
     tPopyr2 <- county_profile(as.numeric(ctyfips), eYr,"totalpopulation")
+    plName <- paste0(tPopyr1$county," County")
     tJobs <-  county_jobs(fips=as.numeric(ctyfips), year = eYr) #County
     hhinc <- codemog_api(data="b19013",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
     MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
@@ -41,6 +42,7 @@ statsTable1 <- function(cty,place,plName,sYr,eYr,ACS,oType){
   if(nchar(place) > 0) {  #Places
     tPopyr1 <- muni_est(as.numeric(placefips), sYr,as.numeric(ctyfips),"totalpopulation")
     tPopyr2 <- muni_est(as.numeric(placefips), eYr,as.numeric(ctyfips),"totalpopulation")
+    plName <- tPopyr1$municipality
     tJobs <-  county_jobs(fips=as.numeric(ctyfips), year = eYr)#County
     hhinc <- codemog_api(data="b19013",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
     MedHHValue <- codemog_api(data="b25077",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
