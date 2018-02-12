@@ -1,0 +1,12 @@
+name: ProfileDashboard
+title: ProfileDashboard
+username:
+account: codemogshiny
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 273933
+bundleId: 1219687
+url: https://codemogshiny.shinyapps.io/ProfileDashboard/
+when: 1518461939.80259
+asMultiple: FALSE
+asStatic: FALSE

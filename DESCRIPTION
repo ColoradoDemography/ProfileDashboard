@@ -5,7 +5,7 @@ Version: 0.9.0
 Authors@R: person("Adam", "Bickford", email = "adam.bickford@state.co.us", role = c("aut", "cre"))
 Maintainer: "Adam Bickford" <adam.bickford@state.co.us>
 Description: A shinyDashboard application presenting community profile data plots and data. Developed for the Colorado State Demography Office 2018
-Depends: R (>= 3.1.0), tidyverse, scales, codemogAPI, codemogProfile, ProfileDashboard,
+Depends: R (>= 3.1.0), tidyverse, scales, codemogAPI, codemogProfile, codemogLib,
          knitr, kableExtra, RPostgreSQL, tinytex, rgdal,
          rmarkdown, robR, shiny, shinydashboard, 
           shinyjs,VennDiagram, gridExtra

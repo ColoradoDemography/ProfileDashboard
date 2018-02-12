@@ -18,7 +18,7 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(gridExtra)
-library(ProfileDashboard)
+library(codemogLib)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -585,7 +585,7 @@ server <- function(session,input, output) {
      #Employment by Industry
      if("emplind" %in% input$outChk){
        #Generate tables, plots and text...
-       popei1 <<- ProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+       popei1 <<- codemogLib::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
        popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
        popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
