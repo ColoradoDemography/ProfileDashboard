@@ -33,11 +33,11 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
     # Percent native
     Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, ctyfips, sep=""), meta="no")
     pctNative <- percent((as.numeric(Native$b05002003)/as.numeric(Native$b05002001))*100)
-    #Cost of Living Index
-    coli=county_coli%>%
-      filter(countyfips==as.numeric(ctyfips))%>%
-      mutate(coli_level=paste(coli, level, sep=", "))%>%
-      select(coli_level)
+    #Cost of Living Index  Removed in V1.
+#    coli=county_coli%>%
+#      filter(countyfips==as.numeric(ctyfips))%>%
+#      mutate(coli_level=paste(coli, level, sep=", "))%>%
+#     select(coli_level)
   }
   if(nchar(place) > 0) {  #Places
     tPopyr1 <- muni_est(as.numeric(placefips), sYr,as.numeric(ctyfips),"totalpopulation")
@@ -54,11 +54,11 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
       Native <- codemog_api(data="b05002",db=ACS, geonum=paste("1", state, placefips, sep=""), meta="no")
       pctNative <- percent(as.numeric(Native$b05002003)/as.numeric(Native$b05002001))
 
-    #Cost of Living Index
-    coli=county_coli%>%
-      filter(countyfips==as.numeric(ctyfips))%>%
-      mutate(coli_level=paste(coli, level, sep=", "))%>%
-      select(coli_level)
+    #Cost of Living Index removed in V1
+#    coli=county_coli%>%
+#      filter(countyfips==as.numeric(ctyfips))%>%
+#      mutate(coli_level=paste(coli, level, sep=", "))%>%
+#      select(coli_level)
   }
 
 
@@ -87,8 +87,10 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
   #        outTab[4,1] <- paste0("Municipal/Place Employment (",eYr,")*")
   # }
 
-  outTab[3,2] <- coli$coli_level
-  outTab[4,2] <- "County Cost of Living Index (CO=100)*"
+# outTab[3,2] <- coli$coli_level
+# outTab[4,2] <- "County Cost of Living Index (CO=100)*"
+  outTab[3,2] <- ""
+  outTab[4,2] <- ""
   outTab[5,1] <- paste0("$",format(as.numeric(hhinc$b19013001),nsmall=0, big.mark=","))
   outTab[6,1] <- paste0("Median Income (Colorado: ","$",format(as.numeric(hhinc_state$b19013001),nsmall=0, big.mark=","),")+")
 
