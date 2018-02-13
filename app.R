@@ -18,7 +18,7 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(gridExtra)
-library(codemogLib)
+library(ProfileDashboard)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -83,15 +83,16 @@ ui <-
   dashboardSidebar( width = 300,  useShinyjs(),
     # data level Drop down
     selectInput("level", "Select Data Level" ,
-                   choices=c("Select a Data Level","Counties","Municipalities/Places","Planning Regions","State")
+                 #  choices=c("Select a Data Level","Counties","Municipalities/Places","Planning Regions","State")  Disabled in V1
+                choices=c("Select a Data Level","Counties"),  #Enabled in V1
                    ),
 
     # profile Unit dropdown
     selectInput("unit", "Select Profile" ,choices=""),
-    # Comparison dropdown 1
-    selectizeInput("comp", "Select Comparison" ,choices=""),
-    # Comparison dropdown 2
-    selectizeInput("comp2","Select Custom Comparisons",choices ="", multiple=TRUE),
+    # Comparison dropdown 1  Disabled in V1
+ #   selectizeInput("comp", "Select Comparison" ,choices=""),
+ #   # Comparison dropdown 2
+ #    selectizeInput("comp2","Select Custom Comparisons",choices ="", multiple=TRUE),  Disabled in V1
     #Output Content Checkboxes
     checkboxGroupInput("outChk", "Select the data elements to display:",
                        choices = c("Basic Statistics" = "stats",
@@ -109,7 +110,7 @@ ui <-
 
     #Action Button
     actionButton("profile","View Profile"),
-    actionButton("comparison","View Comparison"),
+ #   actionButton("comparison","View Comparison"),  Disabled in V1
     actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')"),
     downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),
          tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
@@ -160,21 +161,21 @@ server <- function(session,input, output) {
           outUnit = ""
           outComp = ""
        }
-    if(input$level == "Planning Regions") {
-          outUnit <- seq(from=1, to=14, by=1)
-          outComp <- c("Selected Region Only" ,"State")
-       }
+ #   if(input$level == "Planning Regions") {  Disabled in V1
+ #         outUnit <- seq(from=1, to=14, by=1)
+ #         outComp <- c("Selected Region Only" ,"State")
+ #      }
     if(input$level == "Counties") {
            outUnit <- unique(as.list(CountyList[,3]))
            outComp <- c("Selected County Only", "Counties in Planning Region", "Custom List of Counties (Select Below)","State")
                                    }
-    if(input$level == "Municipalities/Places") {
-           outUnit <- unique(as.list(PlaceList[,3]))
-           outComp <- c("Selected Municipality/Place Only", "Similar Municipalities/Places", "County", "Custom List of Municipalities/Places (Select Below)", "State")
-                                               }
+ #   if(input$level == "Municipalities/Places") {  Disabled in V1
+ #          outUnit <- unique(as.list(PlaceList[,3]))
+ #          outComp <- c("Selected Municipality/Place Only", "Similar Municipalities/Places", "County", "Custom List of Municipalities/Places (Select Below)", "State")
+ #                                              }
 
     updateSelectInput(session, "unit", choices = outUnit)
-    updateSelectInput(session, "comp", choices = outComp)
+#    updateSelectInput(session, "comp", choices = outComp)
   }))  #observeEvent input$level
 
   # Event for Comparison selection
@@ -184,11 +185,12 @@ server <- function(session,input, output) {
                  custList <- as.list(CountyList[which(CountyList$municipalityname != input$unit),3])
                  updateSelectInput(session, "comp2", choices = custList)
                  }
-                 if((input$level == "Municipalities/Places") && (input$comp == "Custom List of Municipalities/Places (Select Below)")){
-                   # Creating custom list
-                   custList <- as.list(unique(PlaceList[which(PlaceList$municipalityname != input$unit),3]))
-                   updateSelectInput(session, "comp2", choices = custList)
-                 }
+ # Disabled in V1
+ #                if((input$level == "Municipalities/Places") && (input$comp == "Custom List of Municipalities/Places (Select Below)")){
+ #                  # Creating custom list
+ #                  custList <- as.list(unique(PlaceList[which(PlaceList$municipalityname != input$unit),3]))
+ #                  updateSelectInput(session, "comp2", choices = custList)
+ #                }
               }) #observeEvent input$comp
 
    # Event for click on profile button
@@ -585,7 +587,7 @@ server <- function(session,input, output) {
      #Employment by Industry
      if("emplind" %in% input$outChk){
        #Generate tables, plots and text...
-       popei1 <<- codemogLib::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+       popei1 <<- ProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
        popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
        popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
