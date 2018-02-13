@@ -49,7 +49,7 @@ jobsPopForecast <- function(fips, ctyname, base=10){
   rm(con)
   rm(drv)
 
-  f.totalJobs$type <- "Jobs Estimate"
+  f.totalJobs$type <- "Jobs"
 
   # Gathering population data
   f.Pop =county_sya(MSAList, 1990:2040,"totalpopulation")
@@ -57,7 +57,7 @@ jobsPopForecast <- function(fips, ctyname, base=10){
   f.totalPop <- f.Pop %>%
     group_by(year, datatype) %>%
     summarize(TotalPop = sum(totalpopulation))
-  f.totalPop$type <- "Population Estimate"
+  f.totalPop$type <- "Population"
 
 
   x <- as.data.frame(f.totalJobs[,c(3,5,4)])
@@ -68,14 +68,14 @@ jobsPopForecast <- function(fips, ctyname, base=10){
 
   f.plotdata <- rbind(x,y)
   f.plotdata <- f.plotdata[which(f.plotdata$year >= 2010 & f.plotdata$year <= 2040),]
-  f.plotdata$type <- factor(f.plotdata$type, c("Jobs Estimate","Population Estimate"))
+  f.plotdata$type <- factor(f.plotdata$type, c("Jobs","Population"))
 
   pltTitle <- paste0("Forecast Change in Jobs and Population\n",as.character(min(f.plotdata$year))," to ",as.character(max(f.plotdata$year)))
 
   Plot <- f.plotdata %>%
     ggplot(aes(x=year, y=people, color=type))+
     geom_line(size= 1.5)+
-    scale_colour_manual("Geography", values=c("#6EC4E8", "#00953A")) +
+    scale_colour_manual("Estimate", values=c("#6EC4E8", "#00953A")) +
     scale_y_continuous(label=comma)+
     scale_x_continuous(breaks=seq(2010,2035,5),expand = c(0, 0)) +
     theme_codemog(base_size=base)+

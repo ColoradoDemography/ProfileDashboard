@@ -91,7 +91,7 @@ jobMigration <- function(fips, ctyname, maxyr, base=10){
     scale_colour_manual(" ", values=c("Jobs" = "#d8c772", "Net Migration" = "#00953A")) +
     scale_fill_manual("",values="#00953A") +
 
-    labs(title = "Jobs and Net Migration",
+    labs(title = "Job Growth and Net Migration",
          subtitle = ctyname,
          caption = captionSrc("SDOBEA",""),
          x = "Year",

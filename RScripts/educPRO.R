@@ -157,7 +157,7 @@ educPRO <- function(fips, ctyname, state="08", fips2="", state2="08", ACS, base=
 
   # Preparing Plot
   d$geoname <- factor(d$geoname, levels=c(ctyname, "Colorado"))
-  pltTitle <- "Educational Attaiment,\nPersons Age 25 and Older "
+  pltTitle <- "Educational Attainment,\nPersons Age 25 and Older "
   subTitle <- ctyname  #The is the county Name...
   xTitle <- "Educational Attainment"
 

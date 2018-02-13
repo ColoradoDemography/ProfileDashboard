@@ -50,7 +50,7 @@ agePlotPRO  <- function(fips, ctyname, state=0, yrs, base=10, agegroup="ten") {
   AgePlot <- f.AgePlot %>%
     ggplot(aes(x=agecat, y=age_Prop, fill=county))+
     geom_bar(stat="identity",color="black", position = position_dodge()) +
-    scale_y_continuous(label=percent, expand = c(0, 0))+
+    scale_y_continuous(limits=c(0,maxProp), label=percent, expand = c(0, 0))+
     scale_fill_manual(values=barCol, name="Geography") +
     theme_codemog(base_size=base)+
     theme(axis.text.x=element_text(angle=45, hjust=1))+

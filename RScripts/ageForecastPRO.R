@@ -30,26 +30,26 @@ ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
 
   barCol <- c("#82BC00", "#009ADD", "#5C666F")
   pltTitle <- paste0("Age Forecast")
-  subTitle <- paste0(as.character(d[1,2]), " County: Change in Population by Age: ",stYr," to ",eYr )
+  subTitle <- paste0(as.character(d[1,2]), " County: Population by Age: ",stYr," to ",eYr )
   names(d)[3] <- "Year"
   d$Year <- as.factor(d$Year)
   d$Year <- factor(d$Year, levels=yrs)
 
  #Setting MaxValue
-  maxVal <- ifelse(max(d$totalpopulation) < 1000,1000,
-            ifelse(max(d$totalpopulation) < 2000,2000,
-            ifelse(max(d$totalpopulation) < 3000,3000,
-            ifelse(max(d$totalpopulation) < 4000,4000,
-            ifelse(max(d$totalpopulation) < 5000,5000,
-            ifelse(max(d$totalpopulation) < 10000,10000,
-            ifelse(max(d$totalpopulation) < 15000,15000,
-            ifelse(max(d$totalpopulation) < 25000,25000,
-            ifelse(max(d$totalpopulation) < 50000,50000, max(d$totalpopulation) + 25000)))))))))
+  maxVal <- ifelse(max(d$totalpopulation) < 1000,2500,
+            ifelse(max(d$totalpopulation) < 2000,3500,
+            ifelse(max(d$totalpopulation) < 3000,4500,
+            ifelse(max(d$totalpopulation) < 4000,6500,
+            ifelse(max(d$totalpopulation) < 5000,7500,
+            ifelse(max(d$totalpopulation) < 10000,12500,
+            ifelse(max(d$totalpopulation) < 15000,17500,
+            ifelse(max(d$totalpopulation) < 25000,26500,
+            ifelse(max(d$totalpopulation) < 50000,75000, max(d$totalpopulation) + 26000)))))))))
 
   p <- d %>%
     ggplot(aes(x=agecat, y=totalpopulation, fill=Year))+
     geom_bar(stat="identity",color="black", position = position_dodge()) +
-    scale_y_continuous(label=comma, expand = c(0, 0))+
+    scale_y_continuous(limits=c(0,maxVal),label=comma, expand = c(0, 0))+
     scale_fill_manual(values=barCol) +
     theme_codemog(base_size=base)+
     theme(axis.text.x=element_text(angle=45, hjust=1))+

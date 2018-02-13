@@ -13,6 +13,6 @@ tabTitle <-function(item) {
                      "housing" = "Housing and Households",
                      "comm" = "Commuting",
                      "emplind" = "Employment by Industry",
-                     "emply" = "Employment Forecast")
+                     "emply" = "Employment Forecast and Wage Information")
   return(outTitle)
 }

@@ -95,64 +95,9 @@ jobsByIndustry <- function(fips, ctyname, curyr, base=10){
   f.jobsPLMain$geoname <- ctyname
   f.jobsPLMainFin <- f.jobsPLMain[,c(4,13,5,10,11,12)]
 
-  #Preparing State Data set
-  f.jobsST$sector_name <- gsub("&nbsp;","",f.jobsST$sector_name)
-  f.jobsST$sector_id <- if_else(nchar(f.jobsST$sector_id) == 4,paste0("0",f.jobsST$sector_id), f.jobsST$sector_id)
-
-  # Assigning and extracginf major Categories
-  f.jobsST$sector_agg <- if_else(f.jobsST$sector_id == "01000",1,
-                                 if_else(f.jobsST$sector_id == "02000",1,
-                                         if_else(f.jobsST$sector_id == "03000",1,
-                                                 if_else(f.jobsST$sector_id == "04000",1,
-                                                         if_else(f.jobsST$sector_id == "05000",1,
-                                                                 if_else(f.jobsST$sector_id == "06000",1,
-                                                                         if_else(f.jobsST$sector_id == "07000",1,
-                                                                                 if_else(f.jobsST$sector_id == "08000",1,
-                                                                                         if_else(f.jobsST$sector_id == "09000",1,
-                                                                                                 if_else(f.jobsST$sector_id == "10000",1,
-                                                                                                         if_else(f.jobsST$sector_id == "10150",1,
-                                                                                                                 if_else(f.jobsST$sector_id == "11000",1,
-                                                                                                                         if_else(f.jobsST$sector_id == "11025",1,
-                                                                                                                                 if_else(f.jobsST$sector_id == "11050",1,
-                                                                                                                                         if_else(f.jobsST$sector_id == "12000",1,
-                                                                                                                                                 if_else(f.jobsST$sector_id == "12015",1,
-                                                                                                                                                         if_else(f.jobsST$sector_id == "13000",1,
-                                                                                                                                                                 if_else(f.jobsST$sector_id == "13015",1,
-                                                                                                                                                                         if_else(f.jobsST$sector_id == "14000",1,
-                                                                                                                                                                                 if_else(f.jobsST$sector_id == "15000",1,0))))))))))))))))))))
 
 
-
-  f.jobsSTMain <- f.jobsST[which(f.jobsST$sector_agg == 1),]
-
-  # Updating category names
-  f.jobsSTMain$sector_name <- if_else(f.jobsSTMain$ sector_name == "Accommodation and food","Accomodation and Food Services",
-                                      if_else(f.jobsSTMain$ sector_name == "Admin and waste","Adminstration and Waste Services",
-                                              if_else(f.jobsSTMain$ sector_name == "Arts","Arts, Entertainment and Recreation",
-                                                      if_else(f.jobsSTMain$ sector_name == "Education","Educational Services",
-                                                              if_else(f.jobsSTMain$ sector_name == "Finance activities","Finance and Insurance",
-                                                                      if_else(f.jobsSTMain$ sector_name == "Health Services","Healthcare and Social Assistance",
-                                                                              if_else(f.jobsSTMain$ sector_name == "Management of companies and enterprise","Management of Companies",
-                                                                                      if_else(f.jobsSTMain$ sector_name == "Other services, except public administration","Other Services",
-                                                                                              if_else(f.jobsSTMain$ sector_name == "Professional and business services","Professional and Technical Services",
-                                                                                                      if_else(f.jobsSTMain$ sector_name == "Real estate","Real Estate and Rental and Leasing",
-                                                                                                              if_else(f.jobsSTMain$ sector_name == "Wholesale trade","Wholesale Trade",
-                                                                                                                      if_else(f.jobsSTMain$ sector_name == "Transportation and warehousing","Transportation and Warehousing",f.jobsSTMain$sector_name
-                                                                                                                      ))))))))))))
-
-
-  f.jobsSTMain <- f.jobsSTMain %>%
-    mutate(STTotal = sum(total_jobs),
-           total_c = comma(round(total_jobs,digits=0)),
-           prop_jobs = (total_jobs/STTotal)*100,
-           pct_jobs = percent(prop_jobs))
-
-
-  f.jobsSTMain$geoname <- "Colorado"
-  f.jobsSTMainFin <- f.jobsSTMain[,c(4,13,5,10,11,12)]
-
-  f.jobsChart <- rbind(f.jobsSTMainFin,f.jobsPLMainFin)
-  f.jobsChart$geoname <- factor(f.jobsChart$geoname, levels = c(ctyname,"Colorado"))
+  f.jobsChart <- f.jobsPLMainFin
 
   f.jobsChart$sector_name <- factor(f.jobsChart$sector_name ,
                                     levels = c(
@@ -180,16 +125,15 @@ jobsByIndustry <- function(fips, ctyname, curyr, base=10){
 
   pltTitle <- paste0(as.character(curyr)," Share of Jobs by Industry")
   subTitle <- ctyname  #The is the county Name...
+  maxVal <- max(f.jobsChart$prop_jobs) + 10
 
-
-  p.jobs <- ggplot(f.jobsChart, aes(x=sector_name, y=prop_jobs, fill=geoname)) +
-    geom_bar(stat="identity", position="dodge")+
+  p.jobs <- ggplot(f.jobsChart, aes(x=sector_name, y=prop_jobs)) +
+    geom_bar(stat="identity", position="dodge", fill= "#6EC4E8")+
     geom_text(mapping=aes(x=sector_name, y=prop_jobs, label=pct_jobs),
               hjust = -0.5, size = 2,
               position = position_dodge(width = 1),
               inherit.aes = TRUE) +
-    scale_y_continuous(limits= c(0,20), breaks=seq(0,20, by = 5), expand = c(0, 0), label=percent)  +
-    scale_fill_manual(values=c("#6EC4E8","#00953A"), name="Geography")+
+    scale_y_continuous(limits=c(0,maxVal), expand = c(0, 0), label=percent)  +
     theme_codemog(base_size=base) + coord_flip() +
     theme(axis.text.x=element_text(angle=0))+
     labs(title = pltTitle,
@@ -199,18 +143,16 @@ jobsByIndustry <- function(fips, ctyname, curyr, base=10){
          y = "Percentage") +
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
-          panel.grid.major = element_line(colour = "gray80"),
-          legend.position= "bottom")
+          panel.grid.major = element_line(colour = "gray80"))
 
 
 
   # Building Output data
 
-  f.jobsFin <- merge(f.jobsPLMainFin,f.jobsSTMainFin, by= "sector_id")
+  f.jobsFin <- f.jobsPLMainFin
   f.jobsFin <- f.jobsFin[order(f.jobsFin$sector_id),]
-  f.jobsFin <- f.jobsFin[,c(3,4,6,9,11)]
-  names(f.jobsFin) <- c("Job Sector", paste0("Number of Jobs: ",ctyname), paste0("Percentage of Jobs: ",ctyname),
-                        "Number of Jobs: Colorado","Percentage of Jobs: Colorado")
+  f.jobsFin <- f.jobsFin[,c(3,4,6)]
+  names(f.jobsFin) <- c("Job Sector", paste0("Number of Jobs: ",ctyname), paste0("Percentage of Jobs: ",ctyname))
 
   outList <- list("plot" = p.jobs,"data"= f.jobsFin)
   return(outList)
