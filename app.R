@@ -8,7 +8,6 @@ library(readxl, quietly=TRUE)
 library(scales, quietly=TRUE)
 library(codemogAPI, quietly=TRUE)
 library(codemogProfile, quietly=TRUE)
-library(codemogLib)
 library(knitr, quietly=TRUE)
 library(kableExtra, quietly=TRUE)
 library(RPostgreSQL, quietly=TRUE)
@@ -19,6 +18,7 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(gridExtra)
+library(ProfileDashboard)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -84,7 +84,7 @@ ui <-
     # data level Drop down
     selectInput("level", "Select Data Level" ,
                  #  choices=c("Select a Data Level","Counties","Municipalities/Places","Planning Regions","State")  Disabled in V1
-                choices=c("Select a Data Level","Counties"),  #Enabled in V1
+                choices=c("Select a Data Level","Counties")  #Enabled in V1
                    ),
 
     # profile Unit dropdown
@@ -102,7 +102,7 @@ ui <-
                          "Housing and Households" = "housing",
                          "Commuting" = "comm",
                          "Employment by Industry"="emplind",
-                         "Employment and Demographic Forecast"="emply"
+                         "Employment Forecast and Wage Information"="emply"
                          ),
                         selected =  c("stats","popf","pop","popc",
                                       "housing","comm", "emplind","emply")
@@ -587,7 +587,7 @@ server <- function(session,input, output) {
      #Employment by Industry
      if("emplind" %in% input$outChk){
        #Generate tables, plots and text...
-       popei1 <<- ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+       popei1 <<- ProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
        popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
        popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
