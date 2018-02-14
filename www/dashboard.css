@@ -62,34 +62,7 @@ p{
     font-size: 75%;
 }
 
-.cleanTab {
-        text-align: right;
-	border: none;
-        font_size: 90%;
-        line-height: 70%;
-        border-spacing: 0px;
-        border-collapse: separate;
-        padding: 0px;
-	}
-.cleanTab th {
-        padding: 0px;
-        padding-bottom:0px;
-        padding-top: 0px;
-        padding-left: 0px;
-        padding-right: 0px;
 
-}
-.cleanTab tr {
-	border: 2px;
-        border-spacing: 0px;
-        border-collapse: separate;
-        padding: 0px;
-.cleanTab td {
-	border: none;
-        border-spacing: 0px;
-        border-collapse: separate;
-        padding: 0px;
-.cleanTab tr:last-child {align: left}
 	
 }
 /*button text color */
