@@ -88,22 +88,22 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
 
   #Preparing table
   outTab <- matrix("",nrow=7,ncol=3)
-  outTab[1,1] <- paste0("Population (",eYr,")",footnote_marker_symbol(1))
+  outTab[1,1] <- paste0("Population (",eYr,")",footnote_marker_alphabet(1))
   outTab[1,2] <- format(as.numeric(tPopyr2$totalpopulation),nsmall=0, big.mark=",")
-  outTab[2,1] <- paste0("Population Change (",sYr," to ",eYr, ")",footnote_marker_symbol(1))
+  outTab[2,1] <- paste0("Population Change (",sYr," to ",eYr, ")",footnote_marker_alphabet(1))
   outTab[2,2] <- format(as.numeric(popchg),nsmall=0, big.mark=",")
-  outTab[3,1] <- paste0("County Employment (",eYr,")",footnote_marker_symbol(1))
+  outTab[3,1] <- paste0("County Employment (",eYr,")",footnote_marker_alphabet(1))
   outTab[3,2] <- format(round(as.numeric(tJobs$totalJobs),digits=0),nsmall=0, big.mark=",")
-  outTab[4,1] <- paste0("Median Household Income",footnote_marker_symbol(2))
+  outTab[4,1] <- paste0("Median Household Income",footnote_marker_alphabet(2))
   outTab[4,2] <- paste0("$",format(as.numeric(hhinc$b19013001),nsmall=0, big.mark=","))
   outTab[4,3] <- paste0("$",format(as.numeric(hhinc_state$b19013001),nsmall=0, big.mark=","))
-  outTab[5,1] <- paste0("Median House Value",footnote_marker_symbol(2))
+  outTab[5,1] <- paste0("Median House Value",footnote_marker_alphabet(2))
   outTab[5,2] <- paste0("$",format(as.numeric(MedHHValue$b25077001),nsmall=0, big.mark=","))
   outTab[5,3] <- paste0("$",format(as.numeric(MedHHValue_state$b25077001),nsmall=0, big.mark=","))
-  outTab[6,1] <- paste0("Percentage of Population with Incomes lower than the Poverty Line",footnote_marker_symbol(2))
+  outTab[6,1] <- paste0("Percentage of Population with Incomes lower than the Poverty Line",footnote_marker_alphabet(2))
   outTab[6,2] <- pctPoverty
   outTab[6,3] <- pctPovertyST
-  outTab[7,1] <- paste0("Percentage of Population Born in Colorado",footnote_marker_symbol(2))
+  outTab[7,1] <- paste0("Percentage of Population Born in Colorado",footnote_marker_alphabet(2))
   outTab[7,2] <- pctNative
   outTab[7,3] <- pctNativeST
 
@@ -124,19 +124,32 @@ statsTable1 <- function(cty,place,sYr,eYr,ACS,oType){
       column_spec(1, width = "3in") %>%
       column_spec(2, width = "0.5in") %>%
       column_spec(3, width = "0.5in") %>%
-      footnote(symbol=c(captionSrc("SDO",""),captionSrc("ACS",ACS)))
+      footnote(alphabet=c("Source: State Demography Office",captionSrc("ACS",ACS)))
   }
   if(oType == "latex") {
+    #Revising Footnotes
+    outTab[1,1] <- paste0("Population (",eYr,")*")
+    outTab[2,1] <- paste0("Population Change (",sYr," to ",eYr, ")*")
+    outTab[3,1] <- paste0("County Employment (",eYr,")*")
+    outTab[4,1] <- paste0("Median Household Income+")
+    outTab[5,1] <- paste0("Median House Value+")
+    outTab[6,1] <- paste0("Percentage of Population with Incomes lower than the Poverty Line+")
+    outTab[7,1] <- paste0("Percentage of Population Born in Colorado+")
+
+    add_mat <- matrix(nrow=2,ncol=3)
+    add_mat[1,1] <- "*Source: State demography Office"
+    add_mat[2,1] <- paste0("+",captionSrc("ACS",ACS))
+
+    outTab <- rbind(outTab,add_mat)
 
     outKable <- outTab %>%
       kable(caption="Community Quick Facts",align="lrr",
             col.names = names_spaced,
             format ="latex", booktabs=TRUE) %>%
       kable_styling(latex_options="HOLD_position") %>%
-      column_spec(1, width = "3in") %>%
-      column_spec(2, width = "0.5in") %>%
-      column_spec(3, width = "0.5in") %>%
-      add_footnote(symbol=c(captionSrc("SDO",""),captionSrc("ACS",ACS)),footnote_as_chunk = T)
+      column_spec(1, width = "4in") %>%
+      column_spec(2, width = "1in") %>%
+      column_spec(3, width = "1in")
 
   }
   return(outKable)
