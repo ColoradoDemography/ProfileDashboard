@@ -8,6 +8,7 @@ library(readxl, quietly=TRUE)
 library(scales, quietly=TRUE)
 library(codemogAPI, quietly=TRUE)
 library(codemogProfile, quietly=TRUE)
+library(codemogLib)
 library(knitr, quietly=TRUE)
 library(kableExtra, quietly=TRUE)
 library(RPostgreSQL, quietly=TRUE)
@@ -18,7 +19,6 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(gridExtra)
-library(ProfileDashboard)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -96,7 +96,7 @@ ui <-
     #Output Content Checkboxes
     checkboxGroupInput("outChk", "Select the data elements to display:",
                        choices = c("Basic Statistics" = "stats",
-                                   "Population Change" = "popf",
+                                   "Population Trends" = "popf",
                          "Population Characteristics: Age" = "pop",
                          "Population Characteristics: Income, Education and Race"= "popc",
                          "Housing and Households" = "housing",
@@ -587,7 +587,7 @@ server <- function(session,input, output) {
      #Employment by Industry
      if("emplind" %in% input$outChk){
        #Generate tables, plots and text...
-       popei1 <<- ProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+       popei1 <<- ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
        popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
        popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
