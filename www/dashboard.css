@@ -44,27 +44,8 @@ p{
 	font-size: 110%;
 	line-height: 150%;
   }
-/*Table Style */
-.Row1Tab table, td{
-	border-collapse: collapse;
-	border: 1px solid black;
-	
-}
-.Row1Tab tr:nth-child(odd) {
-    text-align: center;
-    font-size: 150%;
-}
-.Row1Tab tr:nth-child(even) {
-    text-align: center;
-    font-size: 100%;
-}
-.Row1Tab tr:last-child {
-    font-size: 75%;
-}
-
 
 	
-}
 /*button text color */
 .button {
   background-color: white;
