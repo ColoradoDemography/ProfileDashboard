@@ -18,6 +18,7 @@ params:
   outChk: NA
   fips: NA
   ctyName: NA
+  level: NA
   curACS: NA
   curYr: NA
 ---
@@ -116,9 +117,19 @@ if("emply" %in% params$outChk) {
 oYr <- params$curYr
 oACS <- params$curACS
 placeName <- params$ctyName
-fips5 <- params$fips
-fips3 <- substr(params$fips,3,5)
-fipsN <- as.numeric(fips3)
+level <- params$level
+
+
+if(nchar(params$fips) == 5) {
+  fipsc <- substr(params$fips,3,5)
+}
+
+if(nchar(params$fips) == 7) {
+  fipsc <- substr(params$fips,3,7)
+}
+fipsl <- params$fips
+fipsN <- as.numeric(fipsc)
+
 ```
 # Demographic and Economic Profile for `r placeName`
 
@@ -138,7 +149,7 @@ fipsN <- as.numeric(fips3)
 \bminitwo
 ```{r County_Map, fig.width=3, fig.height=3, warning=FALSE,  echo= FALSE, message=FALSE, results='asis'}
 if(outStats){
-   y <- cp_countymap(substr(fips5,3,5))
+   y <- cp_countymap(substr(fipsl,3,5))
    print(y)
    }
 
@@ -149,7 +160,7 @@ if(outStats){
 
 ```{r Basic_Table, out.width=6, out.height=4, warning=FALSE,  echo= FALSE, message=FALSE, results='asis'}
 if(outStats){
-  x <-  statsTable1(cty=fips5, 
+  x <-  statsTable1(cty=fipsl, 
                              place="", 
                              sYr=2010,
                              eYr= oYr,
@@ -171,7 +182,7 @@ if(outStats){
  #Population, Migration and Natural Increase
    if(outPopf){  
       # Population Change Table
-      popTab <- popTable(cty=fips3,ctyname=placeName,sYr=1990,eYr=oYr,oType="latex")
+      popTab <- popTable(cty=fipsc,ctyname=placeName,sYr=1990,eYr=oYr,oType="latex")
       cat(popTab$text)
    }
 ```      
@@ -190,7 +201,7 @@ if(outStats){
       #County forecast
     if(outPopf) {
       popf1 <- popForecast(fips=fipsN, ctyname = placeName) 
-       popf2 <- county_timeseries(fips=fips3,endYear=oYr)
+       popf2 <- county_timeseries(fips=fipsc,endYear=oYr)
        popf3 <- cocPlot(fips=fipsN,ctyname=placeName,lYr=oYr)
        print(popf2$plot)
        print(popf3$plot)
@@ -207,7 +218,7 @@ if(outStats){
 ```{r popOut_AgeTab, out.width=6, out.height=2, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  #Population, Migration and Natural Increase
     if(outPop){
-      medAge <- medianAgeTab(fips=fips3, ACS=oACS, ctyname=placeName,oType ="latex")
+      medAge <- medianAgeTab(fips=fipsc, ACS=oACS, ctyname=placeName,oType ="latex")
       cat(medAge$text)
     }
    
@@ -268,7 +279,7 @@ if(outStats){
 ```{r popOutC_income, fig.width=6, fig.height=3.75, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outPopC){
     # Population Chatacteristics 
-       popc1 <- incomePRO(fips=fips3,ctyname=placeName, ACS=oACS)
+       popc1 <- incomePRO(fips=fipsc,ctyname=placeName, ACS=oACS)
              print(popc1$plot)
  }
 ```
@@ -277,7 +288,7 @@ if(outStats){
 
 ```{r popOutC_educ, fig.width=6, fig.height=3.75, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
    if(outPopC){
-      popc2 <- educPRO(fips=fips3, ctyname=placeName, ACS=oACS)
+      popc2 <- educPRO(fips=fipsc, ctyname=placeName, ACS=oACS)
       print(popc2$plot)
    }
 ```
@@ -285,14 +296,14 @@ if(outStats){
 \FloatBarrier
 ```{r popOutC_race1, out.width=6, out.height=6, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
    if(outPopC){
-     race1 <- raceTab1(fips=fips3,ctyname=placeName,ACS=oACS,oType="latex") 
+     race1 <- raceTab1(fips=fipsc,ctyname=placeName,ACS=oACS,oType="latex") 
       print(race1)
    }
 ```
 
 ```{r popOutC_race2, out.width=6, out.height=6, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
    if(outPopC){      
-       race2 <- raceTab2(fips=fips3,ctyname=placeName,ACS=oACS,oType="latex")
+       race2 <- raceTab2(fips=fipsc,ctyname=placeName,ACS=oACS,oType="latex")
       print(race2)
        }
 ```
@@ -308,7 +319,7 @@ if(outStats){
 ```{r popHouse_housEst, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outHouse){
     # Housing
-     poph1 <<- houseEstPRO(fips=fips3,ctyname=placeName,curYr=oYr)
+     poph1 <<- houseEstPRO(fips=fipsc,ctyname=placeName,curYr=oYr)
      print(poph1$plot)
  }
 ```
@@ -317,7 +328,7 @@ if(outStats){
 ```{r popHouse_housval, out.width=6, out.height=6, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outHouse){
     # Housing
-     pophval <<- HouseVal(fips=fips3,ctyname=placeName,ACS=oACS,oType="latex")
+     pophval <<- HouseVal(fips=fipsc,ctyname=placeName,ACS=oACS,oType="latex")
      print(pophval)
  }
 ```
@@ -325,7 +336,7 @@ if(outStats){
 \FloatBarrier
 ```{r popHouse_hcomp, out.width=6, out.height=6, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outHouse){
-     hTab <- housePRO(fips=fips3, ctyname=placeName, ACS=oACS, oType="latex")
+     hTab <- housePRO(fips=fipsc, ctyname=placeName, ACS=oACS, oType="latex")
      print(hTab)
  }
 ```
@@ -333,7 +344,7 @@ if(outStats){
 \FloatBarrier
 ```{r popHouse_OO, out.width=6, out.height=6, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outHouse){
-     OOTab <- OOHouse(fips=fips3,ctyname=placeName,ACS=oACS, oType="latex")
+     OOTab <- OOHouse(fips=fipsc,ctyname=placeName,ACS=oACS, oType="latex")
      print(OOTab)
  }
 ```
@@ -341,7 +352,7 @@ if(outStats){
 \FloatBarrier
 ```{r popHouse_RT, out.width=6, out.height=6, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outHouse){
-     RTTab <- RTHouse(fips=fips3,ctyname=placeName,ACS=oACS, oType="latex")
+     RTTab <- RTHouse(fips=fipsc,ctyname=placeName,ACS=oACS, oType="latex")
      print(RTTab)
         }
 ```
@@ -364,8 +375,8 @@ if(outStats){
 ```{r popComm_venn, fig.width=6, fig.height=6,  warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outComm){
     # Commuting 
-      popt1 <<- GenerateVenn(fips=fips3,ctyname=placeName,oType="latex")
-      grid.arrange(popt1$plot)
+     popt1 <<- GenerateVenn(fips=fipsc,level=level, ctyname=placeName,oType="latex")
+     grid.arrange(popt1$plot)
  }
 ```
 
@@ -387,7 +398,7 @@ if(outStats){
 \FloatBarrier
 ```{r popComm_jMig, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outComm){ 
-      popt2 <<- jobMigration(fips=fips3,ctyname=placeName,maxyr = oYr)
+      popt2 <<- jobMigration(fips=fipsc,ctyname=placeName,maxyr = oYr)
       print(popt2$plot)
        }
 ```
@@ -402,7 +413,7 @@ if(outStats){
 
 ```{r outEmply_msjobs, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outEmply) {
-       popei1 <<- ProfileDashboard::ms_jobs(fips=fips3,ctyname=placeName, maxyr = oYr)
+       popei1 <<- ProfileDashboard::ms_jobs(fips=fipsc,ctyname=placeName, maxyr = oYr)
        print(popei1$plot)
  }
 ```
@@ -411,7 +422,7 @@ if(outStats){
 
 ```{r outEmply_jind, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outEmply) {
-       popei2 <<- jobsByIndustry(fips=fips3,ctyname=placeName, curyr = oYr)
+       popei2 <<- jobsByIndustry(fips=fipsc,ctyname=placeName, curyr = oYr)
        print(popei2$plot)
  }
 ```
@@ -420,7 +431,7 @@ if(outStats){
 
 ```{r outEmply_base,  fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outEmply) {
-       popei3 <<- baseIndustries(fips=fips3,ctyname=placeName, curyr = oYr, oType="latex")
+       popei3 <<- baseIndustries(fips=fipsc,ctyname=placeName, curyr = oYr, oType="latex")
        print(popei3$plot)
  }
 ```
@@ -444,7 +455,7 @@ if(outStats){
 ```{r outEmplind_jobsPop, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outEmplind) {
    #Employment and Demographic Forecast Materials
-       popem1 <<- jobsPopForecast(fips=fips3,ctyname=placeName)
+       popem1 <<- jobsPopForecast(fips=fipsc,ctyname=placeName)
        print(popem1$plot)
  }
 ```
@@ -453,7 +464,7 @@ if(outStats){
 
 ```{r outEmplind_wages, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outEmplind) {
-      popem2 <<- weeklyWages(fips=fips3,ctyname=placeName)
+      popem2 <<- weeklyWages(fips=fipsc,ctyname=placeName)
       print(popem2$plot)
  }
 ```
@@ -462,7 +473,7 @@ if(outStats){
 
 ```{r outEmplind_resLF1, fig.width=6, fig.height=4, warning=FALSE, message=FALSE, echo=FALSE, results='asis'}
  if(outEmplind) {
-       popem3 <<- residentialLF(fips=fips3,ctyname=placeName)
+       popem3 <<- residentialLF(fips=fipsc,ctyname=placeName)
        print(popem3$plot1)
  }
 ```
