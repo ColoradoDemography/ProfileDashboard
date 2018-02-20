@@ -111,10 +111,10 @@ ui <-
                                    #Action Button
                                    actionButton("profile","View Profile"),
                                    #   actionButton("comparison","View Comparison"),  Disabled in V1
-                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')"),
-                                   downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),
-                                   tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
-                                   )
+                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") #,
+                                   #downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),  #Disabled in V1
+                                   # tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
+                                   #)
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( #Link to CSS...
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),
@@ -593,7 +593,7 @@ server <- function(session,input, output) {
         #Employment by Industry
         if("emplind" %in% input$outChk){
           #Generate tables, plots and text...
-          popei1 <<- ProfileDashboard::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+          popei1 <<- codemogLib::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
           popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
           popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
