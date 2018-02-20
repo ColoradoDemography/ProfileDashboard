@@ -586,7 +586,7 @@ server <- function(session,input, output) {
                               tabPanel("Sources and Downloads",popt4.info))
 
           #Append to List
-          popt.list <<- list(popt1.box,popt2.box,popt3.box,popt4.box)
+          popt.list <<- list(popt1.box,popt4.box,popt2.box,popt3.box)
           incProgress()
         }  #Commuting
 
