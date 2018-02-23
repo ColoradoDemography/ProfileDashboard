@@ -1,6 +1,6 @@
 #' Community Profile Dashboard
 #' @author  Adam Bickford, Colorado State Demography Office, November 2017-March 2018
-#' V 0.9 Final sections and PDF Output
+#' V 1.0 County-level version sent  for testing
 
 rm(list = ls())
 library(tidyverse, quietly=TRUE)
@@ -18,8 +18,8 @@ library(shiny, quietly=TRUE)
 library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
-library(gridExtra)
 library(rgdal)
+library(gridExtra)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -169,10 +169,10 @@ server <- function(session,input, output) {
       outUnit <- unique(as.list(CountyList[,3]))
       outComp <- c("Selected County Only", "Counties in Planning Region", "Custom List of Counties (Select Below)","State")
     }
-    #   if(input$level == "Municipalities/Places") {  Disabled in V1
-    #          outUnit <- unique(as.list(PlaceList[,3]))
-    #          outComp <- c("Selected Municipality/Place Only", "Similar Municipalities/Places", "County", "Custom List of Municipalities/Places (Select Below)", "State")
-    #                                              }
+    if(input$level == "Municipalities/Places") {  
+              outUnit <- unique(as.list(PlaceList[,3]))
+              outComp <- c("Selected Municipality/Place Only", "Similar Municipalities/Places", "County", "Custom List of Municipalities/Places (Select Below)", "State")
+                                                  }
 
     updateSelectInput(session, "unit", choices = outUnit)
     #    updateSelectInput(session, "comp", choices = outComp)
@@ -214,7 +214,7 @@ server <- function(session,input, output) {
           if(input$level == "Municipalities/Places"){
             CtyFips <- paste0("08",formatC(PlaceList[which(PlaceList$municipalityname == input$unit),1],digits=0, width=3, format="f",flag= "0"))
             PopCheck <- as.numeric(PlaceList[which(PlaceList$municipalityname == input$unit),5])
-            if(PopCheck > 200){
+            if(PopCheck[1] > 200){
               PlFilter= FALSE
             } else {
               PlFilter <- TRUE
@@ -224,7 +224,7 @@ server <- function(session,input, output) {
 
 
         #Generate profile UI objects
-
+        
         svals <- reactiveValues(a=NULL,b=NULL,c=NULL)
         placeName <- simpleCap(input$unit)
         ln1 <- tags$h1(placeName)
@@ -234,11 +234,13 @@ server <- function(session,input, output) {
           stats.text <- tags$h2("Basic Statistics")
           if(input$level == "Counties") {
             stats.tab1 <- statsTable1(cty=fipslist,place="",sYr=2010,eYr=2016,ACS=curACS,oType="html")
+            stats.map <- dashboardMAP(fipslist,"")
           }
           if(input$level == "Municipalities/Places") {
             stats.tab1 <- statsTable1(cty=CtyFips,place=fipslist,sYr=2010,eYr=2016,ACS=curACS,oType="html")
+            stats.map <- dashboardMAP(CtyFips,fipslist)
           }
-          stats.map <- dashboardMAP(fipslist,"")
+          
 
           Stats.info <- tags$div(class="dInfo","Individual plots and data may be downloaded by selecting the 'Sources and Downloads' tabl in each display box.",tags$br(),
                                  "Note: County data is displayed for municiaplities and places with fewer than 200 people.",tags$br(), tags$br(),
@@ -266,7 +268,7 @@ server <- function(session,input, output) {
           popf1  <<- popTable(substr(fipslist,3,5),placeName,1990,2016,oType="html")
           popf2 <<- county_timeseries(fips=substr(fipslist,3,5),endyear=2016,base=12)
           popf3 <<- popForecast(fips=as.numeric(substr(fipslist,3,5)), ctyname = placeName)
-          popf4 <<- cocPlot(fips=as.numeric(substr(fipslist,3,5)),ctyname=placeName,2016)
+          popf4 <<- cocPlot(fips=as.numeric(substr(fipslist,3,5)),ctyname=placeName,lyr=2016)
 
 
           #infobox Objects
@@ -278,21 +280,21 @@ server <- function(session,input, output) {
                                  downloadObjUI("popf1data"))
 
           popf2.info <- tags$div(boxContent(title= "Population Growth Data",
-                                            description = "The Population Growth Chart shows the growth the total population for a selected location.",
+                                            description = "The Population Growth Chart shows the growth of the total population for a selected location.",
                                             MSA= "F", stats = "F", table = "F",
                                             urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                  tags$br(), downloadObjUI("popf2plot"), tags$br(), tags$br(),
                                  downloadObjUI("popf2data"))
 
           popf3.info <- tags$div(boxContent(title= "Population Forecast",
-                                            description = "The Population Forecast plot shows the estimated population growth between 1990 and 2025 for the selected county.",
+                                            description = "The Population Forecast plot shows the estimated population growth between 2010 and 2025 for the selected county.",
                                             MSA= "F", stats = "F", table = "F",
                                             urlList = list(c("SDO Population Totals for Colorado Counties","https://demography.dola.colorado.gov/population/population-totals-counties/#population-totals-for-colorado-counties")) ),
                                  tags$br(), downloadObjUI("popf3plot"), tags$br(), tags$br(),
                                  downloadObjUI("popf3data"))
 
           popf4.info <- tags$div(boxContent(title= "Components of Change",
-                                            description = "The Components of Change chart shows the estimated births, deaths and net migration values for a selected place betwwen 1990 and the present.",
+                                            description = "The Components of Change chart shows the estimated births, deaths and net migration values for a selected place between 2010 and the present.",
                                             MSA= "F", stats = "F", table = "F",
                                             urlList=list(c("SDO Components of Change Estimates","https://demography.dola.colorado.gov/births-deaths-migration/data/components-change/"))),
                                  tags$br(), downloadObjUI("popf4plot"), tags$br(), tags$br(),
@@ -600,7 +602,7 @@ server <- function(session,input, output) {
         #Employment by Industry
         if("emplind" %in% input$outChk){
           #Generate tables, plots and text...
-          popei1 <<- codemogLib::ms_jobs(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
+          popei1 <<- jobsPlot(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
           popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
           popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
 
@@ -614,8 +616,9 @@ server <- function(session,input, output) {
                                   tags$br(), tags$br(),
                                   downloadObjUI("popei1data"))
 
-          popei2.info <- tags$div(boxContent(title= "Jobs by  Industry",
-                                             description= "The Share of Jobs by Industry Plot shows the distribution of employment by economic sector.",
+          popei2.info <- tags$div(boxContent(title= "Jobs by Sector / Economic Industry Mix",
+                                             description= "Comparing the share of jobs by industry to a larger area helps to get a better understanding of the industries that higher or lower employment concentrations.  The industry mix can also help inform the average weekly wages as industries such as retail trade or 
+                                             accommodation and food pay considerably lower wages than professional and technical services or mining.",
                                              MSA= "F", stats = "F", table = "F",
                                              urlList = list(c("SDO Base Industries Summary","https://drive.google.com/file/d/1Ag0JdOo8XATTBiNuh80BTiuqLV4Kv72T/view"),
                                                             c("Jobs by Sector (NAICS)","https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics"))),
@@ -626,12 +629,8 @@ server <- function(session,input, output) {
 
 
           popei3.info <- tags$div(boxContent(title= "Base Industries Plot",
-                                             description= "The Base Industries plot shows the economic activities that bring outside dollars
-                                             into a community and the additional jobs that result from the spending of those dollars on local resident
-                                             services. Industries that sell goods or services outside the local area are considered the base of the
-                                             economy; these 'Basic Industries' are responsible for existence of the local economy as they bring in
-                                             outside dollars to the community. Base industries also generate additional secondary jobs in the
-                                             economy that are classified as either 'Indirect Basic' or 'Local Resident Services.'",
+                                             description= "The Base Industries plot shows which industries drive the county economy by bringing in dollars from outside the area.  A county with a diversity of base industries with similar shares of employment will 
+                                                 generally be more resilient than one that is dominated by one large industry.",
                                              MSA= "T", stats = "F", table = "F",
                                              urlList = list(c("SDO Base Industries Summary","https://drive.google.com/file/d/1Ag0JdOo8XATTBiNuh80BTiuqLV4Kv72T/view"),
                                                             c("SDO Base industries Anaysis","https://demography.dola.colorado.gov/economy-labor-force/data/base-analysis/#base-industries-analysis"))),
