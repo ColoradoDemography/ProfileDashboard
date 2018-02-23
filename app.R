@@ -19,6 +19,7 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(gridExtra)
+library(rgdal)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -237,7 +238,7 @@ server <- function(session,input, output) {
           if(input$level == "Municipalities/Places") {
             stats.tab1 <- statsTable1(cty=CtyFips,place=fipslist,sYr=2010,eYr=2016,ACS=curACS,oType="html")
           }
-          stats.map <- cp_countymap(substr(fipslist,3,5))
+          stats.map <- dashboardMAP(fipslist,"")
 
           Stats.info <- tags$div(class="dInfo","Individual plots and data may be downloaded by selecting the 'Sources and Downloads' tabl in each display box.",tags$br(),
                                  "Note: County data is displayed for municiaplities and places with fewer than 200 people.",tags$br(), tags$br(),
