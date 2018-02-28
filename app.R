@@ -260,16 +260,19 @@ server <- function(input, output, session) {
           incProgress()
         }
         # Population Forecasts
-        ctyName <- simpleCap(PlaceList[which(PlaceList$placefips == as.numeric(substr(unique(fipslist),3,7))),6])
-        ctyNum <- substr(CtyFips,3,5)
         
+       
         if("popf" %in% input$outChk){
-          if(input$level == "Municipalities/Places") { 
+          if(input$level == "Municipalities/Places") {
+            ctyName <- simpleCap(PlaceList[which(PlaceList$placefips == as.numeric(substr(unique(fipslist),3,7))),6])
+            ctyNum <- substr(CtyFips,3,5)
               placeNum <- substr(unique(fipslist),3,7)
               placeName <-  PlaceList[which(PlaceList$placefips == as.numeric(placeNum)),3]
               popf1  <<- popTable(cty=ctyNum,ctyname=ctyName,place=placeNum,placename=placeName,1990,2016,oType="html")
           }
           if(input$level == "Counties") {
+            ctyName <- placeName
+            ctyNum <- substr(fipslist,3,5)
             popf1  <<- popTable(cty=ctyNum,ctyname=ctyName,place="",placename="",1990,2016,oType="html")
           }
           
