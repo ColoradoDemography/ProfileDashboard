@@ -263,6 +263,7 @@ server <- function(input, output, session) {
         
        
         if("popf" %in% input$outChk){
+          #Chart/Table Objects
           if(input$level == "Municipalities/Places") {
             ctyName <- simpleCap(PlaceList[which(PlaceList$placefips == as.numeric(substr(unique(fipslist),3,7))),6])
             ctyNum <- substr(CtyFips,3,5)
@@ -274,15 +275,11 @@ server <- function(input, output, session) {
             ctyName <- placeName
             ctyNum <- substr(fipslist,3,5)
             popf1  <<- popTable(cty=ctyNum,ctyname=ctyName,place="",placename="",1990,2016,oType="html")
+            popf2 <<- county_timeseries(fips=ctyNum,endyear=2016,base=12)
+            popf3 <<- popForecast(fips=as.numeric(ctyNum), ctyname = ctyName)
+            popf4 <<- cocPlot(fips=as.numeric(ctyNum),ctyname=ctyName,lyr=2016)
           }
           
-          #Chart/Table Objects
-
-          popf2 <<- county_timeseries(fips=ctyNum,endyear=2016,base=12)
-          popf3 <<- popForecast(fips=as.numeric(ctyNum), ctyname = ctyName)
-          popf4 <<- cocPlot(fips=as.numeric(ctyNum),ctyname=ctyName,lyr=2016)
- 
-
 
           #infobox Objects
           if(input$level == "Counties") {
