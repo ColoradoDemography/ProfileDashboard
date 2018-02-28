@@ -285,26 +285,26 @@ server <- function(input, output, session) {
           if(input$level == "Counties") {
           popf1.info <- tags$div(boxContent(title= "Population Growth Estimates",
                                             description = "The Population Growth Table compares population growth for a place to the State.",
-                                            MSA= "F", stats = "F", muni = "F", PlFilter = "TRUE", table = "T",
+                                            MSA= "F", stats = "F", table = "T",
                                             urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                  tags$br(),
                                  downloadObjUI("popf1data"))
 
           popf2.info <- tags$div(boxContent(title= "Population Growth Data",
                                             description = "The Population Growth Chart shows the growth of the total population for a selected location.",
-                                            MSA= "F", stats = "F", muni = "F", PlFilter = "TRUE", table = "F",
+                                            MSA= "F", stats = "F", table = "F",
                                             urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                  tags$br(), downloadObjUI("popf2plot"),  downloadObjUI("popf2data"))
 
           popf3.info <- tags$div(boxContent(title= "Population Forecast",
                                             description = "The Population Forecast plot shows the estimated population growth between 2010 and 2025 for the selected county.",
-                                            MSA= "F", stats = "F", muni = "F", PlFilter = "TRUE", table = "F",
+                                            MSA= "F", stats = "F", table = "F",
                                             urlList = list(c("SDO Population Totals for Colorado Counties","https://demography.dola.colorado.gov/population/population-totals-counties/#population-totals-for-colorado-counties")) ),
                                  tags$br(), downloadObjUI("popf3plot"), downloadObjUI("popf3data"))
 
           popf4.info <- tags$div(boxContent(title= "Components of Change",
                                             description = "The Components of Change chart shows the estimated births, deaths and net migration values for a selected place between 2010 and the present.",
-                                            MSA= "F", stats = "F", muni = "F", PlFilter = "TRUE", table = "F",
+                                            MSA= "F", stats = "F", table = "F",
                                             urlList=list(c("SDO Components of Change Estimates","https://demography.dola.colorado.gov/births-deaths-migration/data/components-change/"))),
                                  tags$br(), downloadObjUI("popf4plot"), downloadObjUI("popf4data"))
           }
