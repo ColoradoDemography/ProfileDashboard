@@ -86,8 +86,7 @@ ui <-
                  dashboardSidebar( width = 300,  useShinyjs(),
                                    # data level Drop down
                                    selectInput("level", "Select Data Level" ,
-                                               #  choices=c("Select a Data Level","Counties","Municipalities/Places","Planning Regions","State")  Disabled in V1
-                                               choices=c("Select a Data Level","Counties")  #Enabled in V1
+                                               choices=c("Select a Data Level","Counties","Municipalities/Places")  #Enabled in V1
                                    ),
 
                                    # profile Unit dropdown
@@ -145,7 +144,6 @@ ui <-
 server <- function(input, output, session) {
 
   # updates Dropdown boxes and selects data level and unit
-
   CountyList <- popPlace("Counties")
   PlaceList <- popPlace("Municipalities/Places")
 
@@ -205,20 +203,11 @@ server <- function(input, output, session) {
         #Building fipslist
         if(input$level == "Counties") {
           fipslist <<- listTofips(CountyList,input$level,input$unit)
-          PlFilter <- FALSE
+          PlFilter <- "F"
         } else {  #This is for all other levels, need to write aggergation functions for regions and states
           fipslist <<- listTofips(PlaceList,input$level,input$unit)
-          # checking place size for Municipalities/Places, if place size <= 200 report county information
-          if(input$level == "Municipalities/Places"){
-            CtyFips <- paste0("08",formatC(PlaceList[which(PlaceList$municipalityname == input$unit),1],digits=0, width=3, format="f",flag= "0"))
-            PopCheck <- as.numeric(PlaceList[which(PlaceList$municipalityname == input$unit),5])
-            if(PopCheck[1] > 200){
-              PlFilter= FALSE
-            } else {
-              PlFilter <- TRUE
-            } #else PLFilter
-          }
-        }
+         
+         }
 
 
         #Generate profile UI objects
@@ -226,6 +215,8 @@ server <- function(input, output, session) {
         svals <- reactiveValues(a=NULL,b=NULL,c=NULL)
         placeName <- simpleCap(input$unit)
         ln1 <- tags$h1(placeName)
+        #creating ids and output flags for multiple counties and small places
+        idList <- chkID(lvl=input$level,fipslist= fipslist,plName=placeName,ctyList=CountyList, plList=PlaceList)
 
         #stats; Basic Statistics
         if("stats" %in% input$outChk) {
@@ -265,46 +256,46 @@ server <- function(input, output, session) {
         if("popf" %in% input$outChk){
           #Chart/Table Objects
           if(input$level == "Municipalities/Places") {
-            ctyName <- simpleCap(PlaceList[which(PlaceList$placefips == as.numeric(substr(unique(fipslist),3,7))),6])
-            ctyNum <- substr(CtyFips,3,5)
-              placeNum <- substr(unique(fipslist),3,7)
-              placeName <-  PlaceList[which(PlaceList$placefips == as.numeric(placeNum)),3]
-              popf1  <<- popTable(cty=ctyNum,ctyname=ctyName,place=placeNum,placename=placeName,1990,2016,oType="html")
-          }
+             if(idList$PlFilter == "F") {
+               popf1  <<- popTable(cty=idList$ctyNum,ctyname=idList$ctyName,place=idList$plNum,placename=idList$plName,1990,2016,oType="html")
+               popf2 <<- pop_timeseries(fips=idList$plNum,endyear=2016,base=12)
+             } else {
+               popf1  <<- popTable(cty=idList$ctyNum,ctyname=idList$ctyName,place="",placename="",1990,2016,oType="html")
+               popf2 <<- pop_timeseries(fips=idList$ctyNum,endyear=2016,base=12)
+             }
+             }
           if(input$level == "Counties") {
-            ctyName <- placeName
-            ctyNum <- substr(fipslist,3,5)
-            popf1  <<- popTable(cty=ctyNum,ctyname=ctyName,place="",placename="",1990,2016,oType="html")
-            popf2 <<- county_timeseries(fips=ctyNum,endyear=2016,base=12)
-            popf3 <<- popForecast(fips=as.numeric(ctyNum), ctyname = ctyName)
-            popf4 <<- cocPlot(fips=as.numeric(ctyNum),ctyname=ctyName,lyr=2016)
+            popf1  <<- popTable(cty=idList$ctyNum,ctyname=idList$ctyName,place=idList$plNum,placename=idList$plName,1990,2016,oType="html")
+            popf2 <<- pop_timeseries(fips=idList$ctyNum,endyear=2016,base=12)
           }
           
+          popf3 <<- popForecast(fips=idList$ctyNum, ctyname = idList$ctyName)
+          popf4 <<- cocPlot(fips=idList$ctyNum,ctyname=idList$ctyName,lyr=2016)
 
           #infobox Objects
           if(input$level == "Counties") {
           popf1.info <- tags$div(boxContent(title= "Population Growth Estimates",
                                             description = "The Population Growth Table compares population growth for a place to the State.",
-                                            MSA= "F", stats = "F", table = "T",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                  tags$br(),
                                  downloadObjUI("popf1data"))
 
           popf2.info <- tags$div(boxContent(title= "Population Growth Data",
                                             description = "The Population Growth Chart shows the growth of the total population for a selected location.",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                  tags$br(), downloadObjUI("popf2plot"),  downloadObjUI("popf2data"))
 
           popf3.info <- tags$div(boxContent(title= "Population Forecast",
                                             description = "The Population Forecast plot shows the estimated population growth between 2010 and 2025 for the selected county.",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO Population Totals for Colorado Counties","https://demography.dola.colorado.gov/population/population-totals-counties/#population-totals-for-colorado-counties")) ),
                                  tags$br(), downloadObjUI("popf3plot"), downloadObjUI("popf3data"))
 
           popf4.info <- tags$div(boxContent(title= "Components of Change",
                                             description = "The Components of Change chart shows the estimated births, deaths and net migration values for a selected place between 2010 and the present.",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList=list(c("SDO Components of Change Estimates","https://demography.dola.colorado.gov/births-deaths-migration/data/components-change/"))),
                                  tags$br(), downloadObjUI("popf4plot"), downloadObjUI("popf4data"))
           }
@@ -312,26 +303,26 @@ server <- function(input, output, session) {
           if(input$level == "Municipalities/Places") {
             popf1.info <- tags$div(boxContent(title= "Population Growth Estimates",
                                               description = "The Population Growth Table compares population growth for a place to the State.",
-                                              MSA= "F", stats = "F", muni = "T", PlFilter = "TRUE", table = "T",
+                                              MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                               urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                    tags$br(),
                                    downloadObjUI("popf1data"))
             
             popf2.info <- tags$div(boxContent(title= "Population Growth Data",
                                               description = "The Population Growth Chart shows the growth of the total population for a selected location.",
-                                              MSA= "F", stats = "F", muni = "T", PlFilter = "TRUE", table = "F",
+                                              MSA= "F", stats = "F", muni = "T", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                               urlList = list(c("SDO Demographic Profiles -County","https://demography.dola.colorado.gov/population/data/profile-county/")) ),
                                    tags$br(), downloadObjUI("popf2plot"),  downloadObjUI("popf2data"))
             
             popf3.info <- tags$div(boxContent(title= "Population Forecast",
                                               description = "The Population Forecast plot shows the estimated population growth between 2010 and 2025 for the selected county.",
-                                              MSA= "F", stats = "F", muni = "T", PlFilter = "TRUE", table = "F",
+                                              MSA= "F", stats = "F", muni = "T", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                               urlList = list(c("SDO Population Totals for Colorado Counties","https://demography.dola.colorado.gov/population/population-totals-counties/#population-totals-for-colorado-counties")) ),
                                    tags$br(), downloadObjUI("popf3plot"), downloadObjUI("popf3data"))
             
             popf4.info <- tags$div(boxContent(title= "Components of Change",
                                               description = "The Components of Change chart shows the estimated births, deaths and net migration values for a selected place between 2010 and the present.",
-                                              MSA= "F", stats = "F", muni = "T", PlFilter = "TRUE", table = "F",
+                                              MSA= "F", stats = "F", muni = "T", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                               urlList=list(c("SDO Components of Change Estimates","https://demography.dola.colorado.gov/births-deaths-migration/data/components-change/"))),
                                    tags$br(), downloadObjUI("popf4plot"), downloadObjUI("popf4data"))
           }
@@ -359,16 +350,27 @@ server <- function(input, output, session) {
         #pop: Population Table, County Time Series, Population by Age, Median Age
         if("pop" %in% input$outChk){
           #Generate tables, plots and text...
-
-          popa1 <<- agePlotPRO(fips=as.numeric(substr(fipslist,3,5)), ctyname=placeName, yrs=2016)
-          popa2 <<- medianAgeTab(fips=substr(fipslist,3,5), ACS=curACS, ctyname=placeName,oType="html")
-          popa3 <<- ageForecastPRO(fips=as.numeric(substr(fipslist,3,5)),2010,2015,2025,base=12)
-          popa4 <<- migbyagePRO(fips=as.numeric(substr(fipslist,3,5)), ctyname = placeName)
+          if(input$level == "Municipalities/Places") {
+            if(idList$PlFilter == "F") {
+              popa1 <<- agePlotPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS, yrs=2016)
+              popa2 <<- medianAgeTab(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
+            } else {
+              popa1 <<- agePlotPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS="", yrs=2016)
+              popa2 <<- medianAgeTab(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
+            }
+          }
+          if(input$level == "Counties") {
+            popa1 <<- agePlotPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS="", yrs=2016)
+            popa2 <<- medianAgeTab(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
+          }
+          popa3 <<- ageForecastPRO(fips=as.numeric(idList$ctyNum),2010,2015,2025,base=12)
+          popa4 <<- migbyagePRO(fips=as.numeric(idList$ctyNum), ctyname = idList$ctyName)
 
           #Info Boxes
+          if(input$level == "Counties") {          
           popa1.info <- tags$div(boxContent(title= "Population by Age",
                                             description = "The Population by Age chart displays age categories a single year.",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO County Single-Year of Age Forecasts","https://demography.dola.colorado.gov/population/data/sya-county/"),
                                                            c("SDO Age Visualization Chart","https://demography.dola.colorado.gov/Age-Animation-Bars/")) ),
                                  tags$br(),
@@ -376,25 +378,56 @@ server <- function(input, output, session) {
 
           popa2.info <- tags$div(boxContent(title= "Median Age Data",
                                             description = "The Median Age table compares the median age by gender for a location to the state.",
-                                            MSA= "F", stats = "T", table = "T",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("American Community Survey American Fact Finder, Series B01002","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
                                  downloadObjUI("popa2data"))
 
           popa3.info <- tags$div(boxContent(title= "Population Forecast by Age",
                                             description = "The Population Forecast by Age Chart displays the age distribution between 2010 and 2025 .",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO County Single-Year of Age Forecasts","https://demography.dola.colorado.gov/population/data/sya-county/")) ),
                                  tags$br(),
                                  downloadObjUI("popa3plot"), downloadObjUI("popa3data"))
 
           popa4.info <- tags$div(boxContent(title= "Net Migration by Age",
                                             description = "The Net Migration by Age chart compares the net migration rate by age group between 2000 and 2010 for a selected place and the state ",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO Net Migration by Age Comparison","https://gis.dola.colorado.gov/apps/netmigration_dashboard/")) ),
                                  tags$br(),
                                  downloadObjUI("popa4plot"), downloadObjUI("popa4data"))
+          }
 
+          if(input$level == "Municipalities/Places") {          
+            popa1.info <- tags$div(boxContent(title= "Population by Age",
+                                              description = "The Population by Age chart displays age categories a single year.",
+                                              MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
+                                              urlList = list(c("American Community Survey American Fact Finder, Series B01001","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
+                                   tags$br(),
+                                   downloadObjUI("popa1plot"), downloadObjUI("popa1data"))
+            
+            popa2.info <- tags$div(boxContent(title= "Median Age Data",
+                                              description = "The Median Age table compares the median age by gender for a location to the state.",
+                                              MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
+                                              urlList = list(c("American Community Survey American Fact Finder, Series B01002","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
+                                   tags$br(),
+                                   downloadObjUI("popa2data"))
+            
+            popa3.info <- tags$div(boxContent(title= "Population Forecast by Age",
+                                              description = "The Population Forecast by Age Chart displays the age distribution between 2010 and 2025 .",
+                                              MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
+                                              urlList = list(c("SDO County Single-Year of Age Forecasts","https://demography.dola.colorado.gov/population/data/sya-county/")) ),
+                                   tags$br(),
+                                   downloadObjUI("popa3plot"), downloadObjUI("popa3data"))
+            
+            popa4.info <- tags$div(boxContent(title= "Net Migration by Age",
+                                              description = "The Net Migration by Age chart compares the net migration rate by age group between 2000 and 2010 for a selected place and the state ",
+                                              MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
+                                              urlList = list(c("SDO Net Migration by Age Comparison","https://gis.dola.colorado.gov/apps/netmigration_dashboard/")) ),
+                                   tags$br(),
+                                   downloadObjUI("popa4plot"), downloadObjUI("popa4data"))
+          }
+          
           # Bind to boxes
           popa1.box <- tabBox(width=6, height=400,
                               tabPanel("Table",renderPlot({popa1$plot},height=340)),
@@ -418,17 +451,32 @@ server <- function(input, output, session) {
 
         # Population Chatacteristics
         if("popc" %in% input$outChk){
-
           #Generate tables, plots and text...
-          popc1 <<- incomePRO(fips=substr(fipslist,3,5),ctyname=placeName, ACS=curACS)
-          popc2 <<- educPRO(fips=substr(fipslist,3,5), ctyname=placeName, ACS=curACS)
-          popc3 <<- raceTab1(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
-          popc4 <<- raceTab2(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
-
+          if(input$level == "Municipalities/Places") {
+            if(idList$PlFilter == "F") {
+              popc1 <<- incomePRO(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS)
+              popc2 <<- educPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS)
+              popc3 <<- raceTab1(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
+              popc4 <<- raceTab2(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
+            } else {
+              popc1 <<- incomePRO(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS)
+              popc2 <<- educPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS)
+              popc3 <<- raceTab1(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
+              popc4 <<- raceTab2(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
+            }
+          }
+          if(input$level == "Counties") {
+            popc1 <<- incomePRO(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS)
+            popc2 <<- educPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS)
+            popc3 <<- raceTab1(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
+            popc4 <<- raceTab2(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
+          }
+         
+          
           #Contents of Information Tabs
           popc1.info <- tags$div(boxContent(title= "Household Income",
                                             description = "The Household Income Disctibution Plot compares the distribution of household income for a selected location to the state.",
-                                            MSA= "F", stats = "T", table = "F",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO American Community Survey API","http://coloradodemography.github.io/CensusAPI/"),
                                                           c("American Community Survey American Fact Finder, Series B19001","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
@@ -436,7 +484,7 @@ server <- function(input, output, session) {
 
           popc2.info <- tags$div(boxContent(title= "Education Attainment",
                                             description= "The Educational Attainment Plot compares the categories of educational attaiment for adults aged 25 and older for a selected location to the State.",
-                                            MSA= "F", stats = "T", table = "F",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO American Community Survey API","http://coloradodemography.github.io/CensusAPI/"),
                                                            c("American Community Survey American Fact Finder, Series B15003","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
@@ -445,7 +493,7 @@ server <- function(input, output, session) {
 
           popc3.info <- tags$div(boxContent(title= "Racial Identification Trend",
                                             description= "The Race Trend Table shows changes in the distribution of racial idenification since the 2000 Census.",
-                                            MSA= "F", stats = "F", table = "T",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("SDO American Community Survey API","http://coloradodemography.github.io/CensusAPI/"),
                                                            c("American Community Survey American Fact Finder, Series B03002","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
@@ -453,7 +501,7 @@ server <- function(input, output, session) {
 
           popc4.info <- tags$div(boxContent(title= "Racial Identification Comparison",
                                             description= "The Race Comparison Table compares the distribution of racial idenification of a place to the State.",
-                                            MSA= "F", stats = "T", table = "T",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("SDO American Community Survey API","http://coloradodemography.github.io/CensusAPI/"),
                                                            c("American Community Survey American Fact Finder, series B03002","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
@@ -482,25 +530,43 @@ server <- function(input, output, session) {
 
         # Housing
         if("housing" %in% input$outChk){
-
-          #Generate tables, plots and text...
-          poph1 <<- houseEstPRO(fips=substr(fipslist,3,5),ctyname=placeName,curYr=curYr)
-          poph2 <<- housePRO(fips=substr(fipslist,3,5), ctyname=placeName, ACS=curACS,oType="html")
-          poph3 <<- OOHouse(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
-          poph4 <<- RTHouse(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
-          poph5 <<- HouseVal(fips=substr(fipslist,3,5),ctyname=placeName,ACS=curACS,oType="html")
+          if(input$level == "Municipalities/Places") {
+            #Generate tables, plots and text...
+            poph1 <<- houseEstPRO(fips=idList$ctyNum,ctyname=idList$ctyName,curYr=curYr)
+            if(idList$PlFilter == "F") {
+              poph2 <<- housePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName, ACS=curACS,oType="html")
+              poph3 <<- OOHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
+              poph4 <<- RTHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
+              poph5 <<- HouseVal(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
+              
+            } else {
+              poph2 <<- housePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="", ACS=curACS,oType="html")
+              poph3 <<- OOHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="",ACS=curACS,oType="html")
+              poph4 <<- RTHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="",ACS=curACS,oType="html")
+              poph5 <<- HouseVal(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="",ACS=curACS,oType="html")
+              
+            }
+          }
+         if(input$level == "Counties") {
+            poph1 <<- houseEstPRO(fips=idList$ctyNum,ctyname=idList$ctyName,curYr=curYr)
+            poph2 <<- housePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName, ACS=curACS,oType="html")
+            poph3 <<- OOHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
+            poph4 <<- RTHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
+            poph5 <<- HouseVal(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
+            
+         }
 
           #Contents of Information Tabs
           poph1.info <- tags$div(boxContent(title= "Household Projection",
                                             description = "The household projection displays the estimated number of households between 2010 and 2050.",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO Household Projections --County","https://demography.dola.colorado.gov/housing-and-households/data/household-projections/")) ),
                                  tags$br(),
                                  downloadObjUI("poph1plot"),  downloadObjUI("poph1data"))
 
           poph2.info <- tags$div(boxContent(title= "Housing Type Table",
-                                            description= "The Housing Type Table compares the categories of housing types fro a selected place to the State.",
-                                            MSA= "F", stats = "T",  table = "T",
+                                            description= "The Housing Type Table compares the categories of housing types for a selected place to the State.",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("SDO Housing Time Series","https://demography.dola.colorado.gov/population/data/muni-pop-housing/"),
                                                            c("American Community Survey American Fact Finder, Series B25001, B25003, and B25004","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
@@ -509,27 +575,27 @@ server <- function(input, output, session) {
 
           poph3.info <- tags$div(boxContent(title= "Characteristics of Owner-Occupied Housing",
                                             description= "The Owner-Occupied Housing Table displays the characteristics of owner-occupied housing in a selected place.",
-                                            MSA= "F", stats = "F", table = "T",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("American Community Survey American Fact Finder, Series B25010, B25032, B25033, and B25037","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
                                  downloadObjUI("poph3data"))
 
           poph4.info <- tags$div(boxContent(title= "Characteristics of Rental Housing",
                                             description= "The Rental Housing Table displays the characteristics of rental housing in a selected place.",
-                                            MSA= "F", stats = "F",table = "T",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("American Community Survey American Fact Finder, Series B25010, B25032, B25033, and B25037","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
                                  downloadObjUI("poph4data"))
           poph5.info <- tags$div(boxContent(title= "Comparative Owner-Occupied Housing Values",
                                             description= "The Comparative Housing Table compares the economic characteristics of  owner-occupied and rental housing in a selected place to the State.",
-                                            MSA= "F", stats = "T",table = "T",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("American Community Survey American Fact Finder, Series B25077 and B25092","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
                                  downloadObjUI("poph5data"))
           
           poph6.info <- tags$div(boxContent(title= "Comparative Rental Housing Values",
                                             description= "The Comparative Housing Table compares the economic characteristics of  owner-occupied and rental housing in a selected place to the State.",
-                                            MSA= "F", stats = "T",table = "T",
+                                            MSA= "F", stats = "T", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("American Community Survey American Fact Finder, Series B25066 and B25071","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                  tags$br(),
                                  downloadObjUI("poph6data"))
@@ -566,26 +632,26 @@ server <- function(input, output, session) {
 
           #Generate tables, plots and text...
           if(input$level == "Counties") {
-            popt1 <<- GenerateVenn(fips=substr(fipslist,3,5),level=input$level,ctyname=placeName,oType="html")
+            popt1 <<- GenerateVenn(fips=idList$ctyNum,level=input$level,ctyname=idList$ctyName,oType="html")
           }
           if(input$level == "Municipalities/Places") {
-            popt1 <<- GenerateVenn(fips=substr(fipslist,3,7),level=input$level,ctyname=placeName,oType="html")
+            popt1 <<- GenerateVenn(fips=idList$plNum,level=input$level,idList$plName,oType="html")
           }
 
 
-          popt2 <<- jobMigration(fips=substr(fipslist,3,5),ctyname=placeName,maxyr = curYr)
+          popt2 <<- jobMigration(fips=idList$ctyNum,ctyname=idList$ctyName,maxyr = curYr)
 
           #Contents of Information Tabs
           popt1.info <- tags$div(boxContent(title= "Commuting Patterns Plot",
                                             description = "The Communting Patterns plot shows the number of people working and living in a specified location.",
-                                            MSA= "F", stats = "F",  table = "F",
+                                            MSA= "T", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("U.s. Census Bureau On the Map Data","https://onthemap.ces.census.gov/")) ),
                                  tags$br(),
                                  downloadObjUI("popt1plot"))
 
           popt2.info <- tags$div(boxContent(title= "Work Outside Table",
                                             description= "The work outside table shows the top ten work locations for prople living in an area but working somewhere else.",
-                                            MSA= "F", stats = "F", table = "T",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("U.s. Census Bureau On the Map Data","https://onthemap.ces.census.gov/")) ),
                                  tags$br(),
                                  downloadObjUI("popt2data"))
@@ -593,14 +659,14 @@ server <- function(input, output, session) {
 
           popt3.info <- tags$div(boxContent(title= "Live Outside Table",
                                             description= "The live outside table shows the top ten residential locations for people working in an area but living somewhere else.",
-                                            MSA= "F", stats = "F", table = "T",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("U.s. Census Bureau On the Map Data","https://onthemap.ces.census.gov/")) ),
                                  tags$br(),
                                  downloadObjUI("popt3data"))
 
           popt4.info <- tags$div(boxContent(title= "Jobs and Net Migration Plot",
                                             description= "The jobs and net migration plot shows the trend between jobs and net migration for a selected place.",
-                                            MSA= "F", stats = "F", table = "F",
+                                            MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                             urlList = list(c("SDO Net Migration by Age Comparison","https://gis.dola.colorado.gov/apps/netmigration_dashboard/"),
                                                            c("Bureau of Economic Analysis Jobs Data","https://www.bea.gov/index.htm"))),
                                  tags$br(),
@@ -636,7 +702,7 @@ server <- function(input, output, session) {
           #Contents of Information Tabs
           popei1.info <- tags$div(boxContent(title= "Estimated Jobs",
                                              description = "The Jobs Estimate Plot shows the estimated number of jobs to 2040.",
-                                             MSA= "F", stats = "F", table = "F",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("Jobs by Sector (NAICS)","https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics"))),
                                   tags$br(),
                                   downloadObjUI("popei1plot"),  downloadObjUI("popei1data"))
@@ -644,7 +710,7 @@ server <- function(input, output, session) {
           popei2.info <- tags$div(boxContent(title= "Jobs by Sector / Economic Industry Mix",
                                              description= "Comparing the share of jobs by industry to a larger area helps to get a better understanding of the industries that higher or lower employment concentrations.  The industry mix can also help inform the average weekly wages as industries such as retail trade or 
                                              accommodation and food pay considerably lower wages than professional and technical services or mining.",
-                                             MSA= "F", stats = "F", table = "F",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("SDO Base Industries Summary","https://drive.google.com/file/d/1Ag0JdOo8XATTBiNuh80BTiuqLV4Kv72T/view"),
                                                             c("Jobs by Sector (NAICS)","https://demography.dola.colorado.gov/economy-labor-force/data/jobs-by-sector/#jobs-by-sector-naics"))),
                                   tags$br(),
@@ -656,7 +722,7 @@ server <- function(input, output, session) {
           popei3.info <- tags$div(boxContent(title= "Base Industries Plot",
                                              description= "The Base Industries plot shows which industries drive the county economy by bringing in dollars from outside the area.  A county with a diversity of base industries with similar shares of employment will 
                                                  generally be more resilient than one that is dominated by one large industry.",
-                                             MSA= "T", stats = "F", table = "F",
+                                             MSA= "T", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("SDO Base Industries Summary","https://drive.google.com/file/d/1Ag0JdOo8XATTBiNuh80BTiuqLV4Kv72T/view"),
                                                             c("SDO Base industries Anaysis","https://demography.dola.colorado.gov/economy-labor-force/data/base-analysis/#base-industries-analysis"))),
                                   tags$br(),
@@ -664,7 +730,7 @@ server <- function(input, output, session) {
 
           popei4.info <- tags$div(boxContent(title= "Base Industries Table",
                                              description= "The Base Industries Table summarizes the number of jobs in indirect basic employment, direct basic employment and local services sectors.",
-                                             MSA= "T", stats = "F",                                          table = "T",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                              urlList = list(c("SDO Base Industries Summary","https://drive.google.com/file/d/1Ag0JdOo8XATTBiNuh80BTiuqLV4Kv72T/view"),
                                                             c("SDO Base Industries Anaysis","https://demography.dola.colorado.gov/economy-labor-force/data/base-analysis/#base-industries-analysis"))),
                                   tags$br(),
@@ -699,7 +765,7 @@ server <- function(input, output, session) {
           #Contents of Information Tabs
           popem1.info <- tags$div(boxContent(title= "Jobs and Population Forecast Plot",
                                              description = "The Jobs and Population Forecast Plot displays the growth rate in local jpbs and population.",
-                                             MSA= "T", stats = "F",table = "F",
+                                             MSA= "F", stats = "F", muni = "T", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("SDO Economic Forecasts"," https://demography.dola.colorado.gov/economy-labor-force/economic-forecasts/#economic-forecasts"),
                                                             c("SDO Jobs Forecasts","https://demography.dola.colorado.gov/economy-labor-force/data/labor-force/#labor-force-participation"))),
                                   tags$br(),
@@ -707,7 +773,7 @@ server <- function(input, output, session) {
 
           popem2.info <- tags$div(boxContent(title= "Average Weekly wages",
                                              description = "The Average Weekly Wages plot shows the trend in average wages from 2010 to the present for a selected place and the state.",
-                                             MSA= "F", stats = "F", table = "F",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("Department of Labor and Employment Quarterly Census of Employment and Wages","https://www.colmigateway.com/gsipub/index.asp?docid=372") )),
                                   tags$br(),
                                   downloadObjUI("popem2plot"),  downloadObjUI("popem2data"))
@@ -715,14 +781,14 @@ server <- function(input, output, session) {
 
           popem3.info <- tags$div(boxContent(title= "Residential Labor Force Participation Line Plot",
                                              description = "The residential Labor Force Line plot shows the trend in total labor gorce participation from 2010 to the present for a selected place and the state.",
-                                             MSA= "F", stats = "F",table = "F",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("SDO Labor Force Participation Data","https://demography.dola.colorado.gov/economy-labor-force/data/labor-force/#labor-force-participation"))),
                                   tags$br(),
                                   downloadObjUI("popem3plot"), downloadObjUI("popem3data"))
 
           popem4.info <- tags$div(boxContent(title= "Residential Labor Force Participation Bar Plot",
                                              description = "The residential Labor Force Bar Plot compares the percentage of persons age 16 and older in the labor force for a selected place to the percentage in the state.",
-                                             MSA= "F", stats = "F",table = "F",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("SDO Labor Force Participation Data","https://demography.dola.colorado.gov/economy-labor-force/data/labor-force/#labor-force-participation"))),
                                   tags$br(),
                                   downloadObjUI("popem4plot"),  downloadObjUI("popem4data"))
