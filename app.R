@@ -222,12 +222,12 @@ server <- function(input, output, session) {
         if("stats" %in% input$outChk) {
           stats.text <- tags$h2("Basic Statistics")
           if(input$level == "Counties") {
-            stats.tab1 <- statsTable1(cty=fipslist,place="",sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(fipslist,"")
+            stats.tab1 <- statsTable1(cty=idList$ctyNum,ctyname=idList$ctyName,place="",placename="",sYr=2010,eYr=2016,ACS=curACS,oType="html")
+            stats.map <- dashboardMAP(idList$ctyNum,"",placelist=PlaceList)
           }
           if(input$level == "Municipalities/Places") {
-            stats.tab1 <- statsTable1(cty=CtyFips,place=fipslist,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(CtyFips,fipslist)
+            stats.tab1 <- statsTable1(cty=idList$ctyNum,ctyname=idList$ctyName,place=idList$plNum,placename=idList$plName,sYr=2010,eYr=2016,ACS=curACS,oType="html")
+            stats.map <- dashboardMAP(idList$ctyNum,fipslist,placelist=PlaceList)
           }
           
 
@@ -695,9 +695,9 @@ server <- function(input, output, session) {
         #Employment by Industry
         if("emplind" %in% input$outChk){
           #Generate tables, plots and text...
-          popei1 <<- jobsPlot(fips=substr(fipslist,3,5),ctyname=placeName, maxyr = curYr)
-          popei2 <<- jobsByIndustry(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr)
-          popei3 <<- baseIndustries(fips=substr(fipslist,3,5),ctyname=placeName, curyr = curYr, oType="html")
+          popei1 <<- jobsPlot(fips=idList$ctyNum,ctyname=idList$ctyName, maxyr = curYr)
+          popei2 <<- jobsByIndustry(fips=idList$ctyNum,ctyname=idList$ctyName, curyr = curYr)
+          popei3 <<- baseIndustries(fips=idList$ctyNum,ctyname=idList$ctyName, curyr = curYr, oType="html")
 
           #Contents of Information Tabs
           popei1.info <- tags$div(boxContent(title= "Estimated Jobs",
@@ -757,9 +757,9 @@ server <- function(input, output, session) {
         #Employment and Demographic Forecast
         if("emply" %in% input$outChk){
           #Generate tables, plots and text...
-          popem1 <<- jobsPopForecast(fips=substr(fipslist,3,5),ctyname=placeName)
-          popem2 <<- weeklyWages(fips=substr(fipslist,3,5),ctyname=placeName)
-          popem3 <<- residentialLF(fips=substr(fipslist,3,5),ctyname=placeName)
+          popem1 <<- jobsPopForecast(fips=idList$ctyNum,ctyname=idList$ctyName)
+          popem2 <<- weeklyWages(fips=idList$ctyNum,ctyname=idList$ctyName)
+          popem3 <<- residentialLF(fips=idList$ctyNum,ctyname=idList$ctyName)
 
 
           #Contents of Information Tabs
