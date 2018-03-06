@@ -75,13 +75,16 @@ residentialLF <- function(fips, ctyname, base=10){
   # Building Line Chart
   pltTitle <- "Forecast Resident Labor Force and\nPopulation, Age 16 +"
 
+   minval <- min(f.LFPlaceSum$LForce)
+   maxval <- max(f.LFPlaceSum$Pop16P)
+   yBrk <- pretty(minval:maxval, n=5)
 
   LFLine <-  ggplot(data=f.LFPlaceSum) +
     geom_line(aes(x=population_year, y=Pop16P, colour= "Population 16 +"), size=1.50) +
-    geom_line(aes(x=population_year, y=LForce,color="Labor Force Participation"), size=1.50) +
-    scale_colour_manual(" ", values=c("Labor Force Participation" = "#6EC4E8", "Population 16 +" = "#00953A")) +
-    scale_x_continuous(breaks=seq(2010,2040, 5)) +
-    scale_y_continuous(label=comma)+
+    geom_line(aes(x=population_year, y=LForce,color="Labor Force"), size=1.50) +
+    scale_colour_manual(" ", values=c("Labor Force" = "#6EC4E8", "Population 16 +" = "#00953A")) +
+    scale_x_continuous(breaks=seq(2000,2040, 5)) +
+    scale_y_continuous(limits=c(minval,maxval), breaks=yBrk, label=comma)+
     theme_codemog(base_size=base)+
     labs(title = pltTitle,
          subtitle = ctyname,
@@ -91,6 +94,7 @@ residentialLF <- function(fips, ctyname, base=10){
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "bottom")
 
 
@@ -109,6 +113,7 @@ residentialLF <- function(fips, ctyname, base=10){
   LFBar <- f.LFBar %>%
     ggplot(aes(x=year10, y=PctPart, color=geoname))+
     geom_line(size=1.50) +
+    scale_x_continuous(breaks=seq(2000,2040, 5)) +
     scale_y_continuous(limits= c(minPart,maxPart),label=percent, expand = c(0, 0))+
     scale_color_manual(values=c("#6EC4E8","#00953A"), name="Geography") +
     theme_codemog(base_size=base)+
@@ -120,6 +125,7 @@ residentialLF <- function(fips, ctyname, base=10){
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "bottom")
 
   # preparing datasets

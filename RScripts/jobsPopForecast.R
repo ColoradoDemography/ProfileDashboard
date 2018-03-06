@@ -1,5 +1,5 @@
 #' jobsPopForecast Produces a plot and table showing changes in forecasted jobs and population
-#'  for the period from 2010 to 2035
+#'  for the period from 2000 to 2035
 #'
 #'   This includes code to output data for the Denver-Boulder MSA when Adams, Arapahoe, Boulder,
 #'     Broomfield, Denver, Douglas, or Jefferson County are selected.
@@ -67,17 +67,20 @@ jobsPopForecast <- function(fips, ctyname, base=10){
   names(y) <- c("year","type","people")
 
   f.plotdata <- rbind(x,y)
-  f.plotdata <- f.plotdata[which(f.plotdata$year >= 2010 & f.plotdata$year <= 2040),]
+  f.plotdata <- f.plotdata[which(f.plotdata$year >= 2000 & f.plotdata$year <= 2040),]
   f.plotdata$type <- factor(f.plotdata$type, c("Jobs","Population"))
 
   pltTitle <- paste0("Forecast Change in Jobs and Population\n",as.character(min(f.plotdata$year))," to ",as.character(max(f.plotdata$year)))
+
+  axs <- setAxis(f.plotdata$people)
+
 
   Plot <- f.plotdata %>%
     ggplot(aes(x=year, y=people, color=type))+
     geom_line(size= 1.5)+
     scale_colour_manual("Estimate", values=c("#6EC4E8", "#00953A")) +
-    scale_y_continuous(label=comma)+
-    scale_x_continuous(breaks=seq(2010,2035,5),expand = c(0, 0)) +
+    scale_y_continuous(limits=c(axs$minBrk,axs$maxBrk), breaks=axs$yBrk, label=comma)+
+    scale_x_continuous(breaks=seq(2000,2040,5),expand = c(0, 0)) +
     theme_codemog(base_size=base)+
     labs(title = pltTitle,
          subtitle = ctyname,
@@ -87,6 +90,7 @@ jobsPopForecast <- function(fips, ctyname, base=10){
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "bottom")
 
 
@@ -94,7 +98,7 @@ jobsPopForecast <- function(fips, ctyname, base=10){
   f.forecastdata <- merge(x,y,by="year")
   f.forecastdata$geoname <- ctyname
   f.forecastdata <- f.forecastdata[,c(1,6,3,5)]
-  f.forecastdata <- f.forecastdata[which(f.forecastdata$year >= 2010 & f.forecastdata$year <= 2040),]
+  f.forecastdata <- f.forecastdata[which(f.forecastdata$year >= 2000 & f.forecastdata$year <= 2040),]
   names(f.forecastdata) <- c("Year","Place","Jobs","Population")
   f.forecastdata$Jobs <- format(f.forecastdata$Jobs,big.mark=",")
   f.forecastdata$Population <- format(f.forecastdata$Population,big.mark=",")

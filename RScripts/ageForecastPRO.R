@@ -5,7 +5,7 @@
 #'
 #' Uses the data from the State Demography Office package codemog to
 #' create a graph showing projected population  changes by Age for each Colorado county from
-#' 2010 to 2025.
+#' 2000 to 2025.
 #' The chart is modified from the original.  Now, we show three bars, one for each series.
 #'
 #' @param fips is the fips code for the county being examined
@@ -29,27 +29,20 @@ ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
 
 
   barCol <- c("#82BC00", "#009ADD", "#5C666F")
-  pltTitle <- paste0("Age Forecast")
-  subTitle <- paste0(as.character(d[1,2]), " County: Population by Age: ",stYr," to ",eYr )
+  pltTitle <- paste0("Age Forecast: ",stYr," to ",eYr)
+  subTitle <- paste0(as.character(d[1,2]), " County")
   names(d)[3] <- "Year"
   d$Year <- as.factor(d$Year)
   d$Year <- factor(d$Year, levels=yrs)
 
  #Setting MaxValue
-  maxVal <- ifelse(max(d$totalpopulation) < 1000,2500,
-            ifelse(max(d$totalpopulation) < 2000,3500,
-            ifelse(max(d$totalpopulation) < 3000,4500,
-            ifelse(max(d$totalpopulation) < 4000,6500,
-            ifelse(max(d$totalpopulation) < 5000,7500,
-            ifelse(max(d$totalpopulation) < 10000,12500,
-            ifelse(max(d$totalpopulation) < 15000,17500,
-            ifelse(max(d$totalpopulation) < 25000,26500,
-            ifelse(max(d$totalpopulation) < 50000,75000, max(d$totalpopulation) + 26000)))))))))
+
+ axs <- setAxis(d$totalpopulation)
 
   p <- d %>%
     ggplot(aes(x=agecat, y=totalpopulation, fill=Year))+
     geom_bar(stat="identity",color="black", position = position_dodge()) +
-    scale_y_continuous(limits=c(0,maxVal),label=comma, expand = c(0, 0))+
+    scale_y_continuous(limits=c(axs$minBrk,axs$maxBrk), breaks= axs$yBrk, label=comma, expand = c(0, 0))+
     scale_fill_manual(values=barCol) +
     theme_codemog(base_size=base)+
     theme(axis.text.x=element_text(angle=45, hjust=1))+
@@ -61,6 +54,7 @@ ageForecastPRO=function(fips, stYr, mYr, eYr, base=12, agegroup="ten"){
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "bottom")
 
   #Regrouping Data

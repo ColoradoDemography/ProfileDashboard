@@ -79,15 +79,19 @@ jobMigration <- function(fips, ctyname, maxyr, base=10){
 
   # Generating Plot
   maxYr <- as.numeric(max(f.pltdata$year5))
-  minmigr <- if_else(min(f.pltdata$avgmigr) < 0, as.numeric(min(f.pltdata$avgmigr)),0)
-  maxjobs <- 1000*ceiling(max(f.pltdata$avgjobs)/1000)
-  chartUnit <- ceiling(abs(abs(maxjobs)-abs(minmigr))/5)
+ #Setting y axis 
+  f.mig <- as.data.frame(f.pltdata$avgmigr)
+  names(f.mig)[1] <- "val"
+  f.job <- as.data.frame(f.pltdata$avgjobs)
+  names(f.job)[1] <- "val"
+  f.ylim <- rbind(f.mig,f.job)
+  
 
   migrPlot <- ggplot(f.pltdata) + geom_bar(aes(x=year5, y=avgjobs,color="Jobs"), stat="identity", fill= "#d8c772") +
     geom_line( aes(x=year5, y=avgmigr, color="Net Migration"), size=1.75) +
     geom_hline(yintercept=0, size=1.05) +
     scale_x_continuous(breaks=seq(1985,maxYr, by=5)) +
-    scale_y_continuous(labels=scales::comma) +
+    scale_y_continuous(limits=c(min(f.ylim$val),max(f.ylim$val)), labels=scales::comma) +
     scale_colour_manual(" ", values=c("Jobs" = "#d8c772", "Net Migration" = "#00953A")) +
     scale_fill_manual("",values="#00953A") +
 
@@ -101,6 +105,7 @@ jobMigration <- function(fips, ctyname, maxyr, base=10){
           panel.grid.major = element_line(colour = "gray80"),
           legend.key=element_blank(),
           legend.title=element_blank(),
+          axis.text = element_text(size=12),
           legend.position = "bottom", legend.box="horizontal")
 
 

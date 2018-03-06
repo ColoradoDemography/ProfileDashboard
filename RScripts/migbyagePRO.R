@@ -67,6 +67,7 @@ migbyagePRO <- function(fips, ctyname, base=10) {
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "bottom")
 
 

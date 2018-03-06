@@ -16,10 +16,18 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
   if(fips %in% c("001", "005", "013", "014", "031", "035", "059")) {
     fips = "500"
     ctyname = "Denver-Boulder MSA"
+    fipslist = c(1, 5, 13, 14, 31, 35, 59)
+  } else {
+    fipslist = as.numeric(fips)
   }
 
   jobsSQL <- paste0("SELECT * FROM estimates.base_analysis WHERE fips = '",fips, "';")
-
+  LFSQLPL <- paste0("SELECT * FROM estimates.labor_force_participation WHERE area_code in (")
+  for(i in 1:length(fipslist)){
+    LFSQLPL <- paste0(LFSQLPL,fipslist[i], ", ")
+  }
+  LFSQLPL <- substr(LFSQLPL,1,nchar(LFSQLPL)-2)
+  LFSQLPL <- paste0(LFSQLPL, ");")
 
 
   pw <- {
@@ -38,13 +46,24 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
   # Read data files
 
   f.jobsBase <- dbGetQuery(con, jobsSQL)
-
+  f.LFPlace <- dbGetQuery(con, LFSQLPL)
   #closing the connections
   dbDisconnect(con)
   dbUnloadDriver(drv)
   rm(con)
   rm(drv)
 
+  # Adding Population Age 16 + and total Population for Table
+
+  f.LFPlace <- f.LFPlace[which(f.LFPlace$population_year == curyr),c(1:6,8)]
+
+  f.LFPlaceSum <- f.LFPlace %>%
+    summarize(Pop16P = comma(ceiling(sum(cni_pop_16pl))))
+
+  f.LFPlaceT <- as.data.frame(t(f.LFPlaceSum))
+  f.LFPlaceT$Type <- "Total Population, 16+"
+  f.LFPlaceT$pct <- " "
+  f.LFPlaceT <-  f.LFPlaceT[,c(2,1,3)]
 
   # convert datasets to long
 
@@ -117,6 +136,7 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
           axis.text.x  = element_text(angle=90, vjust=-0.5),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "none")
 
 
@@ -134,7 +154,12 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
   f.jobsBaseTab$pct <- percent((f.jobsBaseTab$jobs/totalEmp)*100)
   f.jobsBaseTab$jobs <- format(round(f.jobsBaseTab$jobs,digits=0),big.mark=",")
 
+  #Generating Table
   m.jobs <-   as.matrix(f.jobsBaseTab[order(f.jobsBaseTab$pos),c(5,6,8)])
+  m.tot <- as.matrix(f.LFPlaceT)
+
+  m.jobs <- rbind(m.jobs,m.tot)
+
   names_spaced <- c("Employment Type","Number of Jobs","Percentage")
 
   #Table Output
@@ -146,7 +171,7 @@ baseIndustries <- function(fips, ctyname, curyr, oType,base=10){
             caption=paste0("Jobs by Sector: ",ctyname, ", ",curyr),
             col.names = names_spaced,
             escape = FALSE)  %>%
-      kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
+      kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 12) %>%
       row_spec(0, align = "c") %>%
       column_spec(1, width = "2in") %>%
       column_spec(2, width = "0.75in") %>%

@@ -8,6 +8,9 @@
 #' @export
 
 downloadObj <- function(input, output, session, place, oname, dobj) {
+
+
+
   if(nchar(oname) == 9) {
     dname <- substr(oname,1,5)
     dtype <- substr(oname,6,9)

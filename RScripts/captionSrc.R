@@ -17,7 +17,7 @@ captionSrc <- function(type, dataSrc) {
     srcStr <- paste0("Source: State Demography Office and U.S. Bureau of Economic Analysis ", dateStr)
   }
   if(type == "LODES") {
-    srcStr <- paste0("Source: U.S. Census Bureau LEHD Origin-Destination Employment Statistics (LODES) ", dateStr)
+    srcStr <- paste0("Source: U.S. Census Bureau On the Map ", dateStr)
   }
   if(type == "QCEW") {
     srcStr <- paste0("Source: Department of Labor and Employment (QCEW) ", dateStr)

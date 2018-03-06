@@ -1,21 +1,30 @@
 #' RTHouse Summary table for Rental Housing
 #'
-#' @param fips The FIPS of the Place or County to use for the graph
-#' @param ctyname The place Name
-#' @param ACS  The American Community Survey Vintage
-#' @param oType Output Type html or latex
-#' @param state defaults to Colorado
-#' @return kable formatted table and data file
+#' @param ctyfips is the fips code for the selected county
+#' @param ctyname is the name of the selected county
+#' @param placefips is the fips code for the selected municipality
+#' @param placename is the name of the selected municipality
+#' @param ACS Specifies the ACS data set to be used, reads curACS from Shiny program
+#' @param oType output type html table or latex table
+#' @return kable formatted  table and data file
 #' @export
 #'
 
-RTHouse=function(fips, ctyname, ACS, oType, state="08"){
-
+RTHouse=function(ctyfips,ctyname, placefips, placename, ACS, oType, state="08"){
+if(nchar(placefips) == 0) {
   # Raw Place data
-  f.b25033 <- codemog_api(data="b25033", db=ACS, geonum=paste0("1", state, fips),meta="no") # Population by housing type
-  f.b25032 <- codemog_api(data="b25032", db=ACS, geonum=paste0("1", state, fips),meta="no") # Units in Structure
-  f.b25037 <- codemog_api(data="b25037", db=ACS, geonum=paste0("1", state, fips),meta="no") # Year Built
-  f.b25010 <- codemog_api(data="b25010", db=ACS, geonum=paste0("1", state, fips),meta="no") # Persons per Household
+  f.b25033 <- codemog_api(data="b25033", db=ACS, geonum=paste0("1", state, ctyfips),meta="no") # Population by housing type
+  f.b25032 <- codemog_api(data="b25032", db=ACS, geonum=paste0("1", state, ctyfips),meta="no") # Units in Structure
+  f.b25037 <- codemog_api(data="b25037", db=ACS, geonum=paste0("1", state, ctyfips),meta="no") # Year Built
+  f.b25010 <- codemog_api(data="b25010", db=ACS, geonum=paste0("1", state, ctyfips),meta="no") # Persons per Household
+}  else {
+  # Raw Place data
+  f.b25033 <- codemog_api(data="b25033", db=ACS, geonum=paste0("1", state, placefips),meta="no") # Population by housing type
+  f.b25032 <- codemog_api(data="b25032", db=ACS, geonum=paste0("1", state, placefips),meta="no") # Units in Structure
+  f.b25037 <- codemog_api(data="b25037", db=ACS, geonum=paste0("1", state, placefips),meta="no") # Year Built
+  f.b25010 <- codemog_api(data="b25010", db=ACS, geonum=paste0("1", state, placefips),meta="no") # Persons per Household
+  
+  }
 
 
   f.AcsPl <- cbind(f.b25033[,c(1,15:20)], f.b25032[,c(20:30)],f.b25037[,c(1,10)],f.b25010[,c(1,10)])
@@ -124,12 +133,19 @@ RTHouse=function(fips, ctyname, ACS, oType, state="08"){
   #Column Names
   names_spaced <- c("Variable","Value","Percent","Value","Percent")
   #Span Header
-
+if(nchar(placefips) == 0) {
   # create vector with colspan
   tblHead1 <- c(" " = 1, ctyname = 4)
 
   # set vector names
   names(tblHead1) <- c(" ", ctyname)
+} else {
+  # create vector with colspan
+  tblHead1 <- c(" " = 1, placename = 4)
+  
+  # set vector names
+  names(tblHead1) <- c(" ", placename) 
+}
 
   tblHead2 <- c(" " = 1, "People" = 2, "Units" = 2)
   names(tblHead2) <- c(" ","People","Units")

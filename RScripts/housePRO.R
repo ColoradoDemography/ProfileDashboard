@@ -3,21 +3,31 @@
 #'
 #'  This function compares housing occupancy and vacancy rates for a place to the state
 #'
-#' @param fips The FIPS of the Place or County to use for the graph
-#' @param ctyname The place Name
-#' @param ACS  The American Community Survey Vintage
-#' @param oType  Output type, html or latex
-#' @param state Defaults to Colorado
-#' @return kable formatted table and data file
+#' @param ctyfips is the fips code for the selected county
+#' @param ctyname is the name of the selected county
+#' @param placefips is the fips code for the selected municipality
+#' @param placename is the name of the selected municipality
+#' @param ACS Specifies the ACS data set to be used, reads curACS from Shiny program
+#' @param oType output type html table or latex table
+#' @return kable formatted  table and data file
 #' @export
 #'
 
-housePRO=function(fips, ctyname, ACS, oType, state="08"){
+housePRO=function(ctyfips,ctyname, placefips, placename, ACS,oType="html"){
+state <- "08"
 
-  # Building ACS Place data table
-  f.b25001 <- codemog_api(data="b25001", db=ACS, geonum=paste("1", state, fips, sep=""),meta="no")
-  f.b25003 <- codemog_api(data="b25003", db=ACS, geonum=paste("1", state, fips, sep=""),meta="no")
-  f.b25004 <- codemog_api(data="b25004", db=ACS, geonum=paste("1", state, fips, sep=""),meta="no")
+  if(nchar(placefips) == 0) {
+    # Building ACS county data table
+    f.b25001 <- codemog_api(data="b25001", db=ACS, geonum=paste("1", state, ctyfips, sep=""),meta="no")
+    f.b25003 <- codemog_api(data="b25003", db=ACS, geonum=paste("1", state, ctyfips, sep=""),meta="no")
+    f.b25004 <- codemog_api(data="b25004", db=ACS, geonum=paste("1", state, ctyfips, sep=""),meta="no")
+  } else {
+    # Building ACS Place data table
+    f.b25001 <- codemog_api(data="b25001", db=ACS, geonum=paste("1", state, placefips, sep=""),meta="no")
+    f.b25003 <- codemog_api(data="b25003", db=ACS, geonum=paste("1", state, placefips, sep=""),meta="no")
+    f.b25004 <- codemog_api(data="b25004", db=ACS, geonum=paste("1", state, placefips, sep=""),meta="no")
+  }
+
 
   f.AcsPl <- cbind(f.b25001[,c(1,8)], f.b25003[,8:10],f.b25004[,8:15])
 
@@ -29,6 +39,8 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
 
   f.AcsPlace <- f.AcsPl[,c(1:6,11,14)] %>%
     gather(var, ACS, Total:Other, -geoname)
+  
+  
 
 
   #Finalizing place table
@@ -68,11 +80,20 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
   names_spaced <- c("Housing Type","Count","Percent")
   #Span Header
 
+  if(nchar(placefips) == 0) {
   # create vector with colspan
   tblHead1 <- c(" " = 1, ctyname = 2)
 
   # set vector names
   names(tblHead1) <- c(" ", ctyname)
+  } else {
+    # create vector with colspan
+    tblHead1 <- c(" " = 1, placename = 2)
+    
+    # set vector names
+    names(tblHead1) <- c(" ", placename)
+    
+  }
 
   if(oType == "html") {
   Housing_tab <- m.House %>%
@@ -82,7 +103,7 @@ housePRO=function(fips, ctyname, ACS, oType, state="08"){
           caption="Housing Units",
           col.names = names_spaced,
           escape = FALSE)  %>%
-    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 11) %>%
+    kable_styling(bootstrap_options = "condensed",full_width = F,font_size = 12) %>%
     row_spec(0, align = "c") %>%
     column_spec(1, width = "3.5in") %>%
     column_spec(2, width ="0.5in") %>%

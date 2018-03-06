@@ -11,7 +11,7 @@ tabTitle <-function(item) {
                      "pop" ="Age",
                      "popc"= "Income, Race and Education",
                      "housing" = "Housing and Households",
-                     "comm" = "Commuting",
+                     "comm" = "Commuting and Job Growth",
                      "emplind" = "Employment by Industry",
                      "emply" = "Employment Forecast and Wage Information")
   return(outTitle)

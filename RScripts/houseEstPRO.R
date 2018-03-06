@@ -43,9 +43,11 @@ houseEstPRO <- function(fips, ctyname,curYr, base=10) {
   f.hhPlace$datatype <- ifelse(f.hhPlace$year <= curYr, "Estimate", "Forecast")
   f.hhPlace$datatype <- factor(f.hhPlace$datatype, levels=c("Estimate","Forecast"))
 
-  pltTitle <- "Total Estimated Households: 2010-2050"
+  pltTitle <- "Total Household Projection: 2010-2050"
   subTitle <- ctyname
   srcTitle <- "Source: State Demography Office"
+
+  axs <- setAxis(f.hhPlace$total_households)
 
   p <- f.hhPlace%>%
     ggplot(aes(x=year, y=total_households, group=datatype))+
@@ -53,13 +55,13 @@ houseEstPRO <- function(fips, ctyname,curYr, base=10) {
     labs(x="Year", y="Housing Units", title=pltTitle,
          subtitle = ctyname,
          caption = captionSrc("SDO",""))+
-
     scale_x_continuous(breaks=seq(2010, 2050, 5)) +
-    scale_y_continuous(label=comma)+
+    scale_y_continuous(limits=c(axs$minBrk,axs$maxBrk), breaks=axs$yBrk, label=comma)+
     theme_codemog(base_size=base)+
     theme(plot.title = element_text(hjust = 0.5, size=18),
           panel.background = element_rect(fill = "white", colour = "gray50"),
           panel.grid.major = element_line(colour = "gray80"),
+          axis.text = element_text(size=12),
           legend.position= "bottom",legend.title=element_blank())
 
 
