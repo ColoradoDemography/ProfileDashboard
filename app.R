@@ -203,7 +203,6 @@ server <- function(input, output, session) {
         #Building fipslist
         if(input$level == "Counties") {
           fipslist <<- listTofips(CountyList,input$level,input$unit)
-          PlFilter <- "F"
         } else {  #This is for all other levels, need to write aggergation functions for regions and states
           fipslist <<- listTofips(PlaceList,input$level,input$unit)
          
@@ -453,23 +452,16 @@ server <- function(input, output, session) {
         if("popc" %in% input$outChk){
           #Generate tables, plots and text...
           if(input$level == "Municipalities/Places") {
-            if(idList$PlFilter == "F") {
-              popc1 <<- incomePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS)
-              popc2 <<- educPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS)
-              popc3 <<- raceTab1(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
-              popc4 <<- raceTab2(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
-            } else {
-              popc1 <<- incomePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS)
-              popc2 <<- educPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS)
-              popc3 <<- raceTab1(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
-              popc4 <<- raceTab2(ctyfips=idList$ctyNum,ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
-            }
+              popc1 <<- incomePRO(listID=idList, ACS=curACS)
+              popc2 <<- educPRO(listID=idList, ACS=curACS)
+              popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
+              popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
           }
           if(input$level == "Counties") {
-            popc1 <<- incomePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS)
-            popc2 <<- educPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS)
-            popc3 <<- raceTab1(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
-            popc4 <<- raceTab2(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
+            popc1 <<- incomePRO(listID=idList, ACS=curACS)
+            popc2 <<- educPRO(listID=idList, ACS=curACS)
+            popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
+            popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
           }
          
           
