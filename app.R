@@ -453,15 +453,15 @@ server <- function(input, output, session) {
           #Generate tables, plots and text...
           if(input$level == "Municipalities/Places") {
               popc1 <<- incomePRO(listID=idList, ACS=curACS)
-           #   popc2 <<- educPRO(listID=idList, ACS=curACS)
-           #   popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
-           #   popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
+              popc2 <<- educPRO(listID=idList, ACS=curACS)
+              popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
+              popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
           }
           if(input$level == "Counties") {
             popc1 <<- incomePRO(listID=idList, ACS=curACS)
-           # popc2 <<- educPRO(listID=idList, ACS=curACS)
-           # popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
-           # popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
+            popc2 <<- educPRO(listID=idList, ACS=curACS)
+            popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
+            popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
           }
          
           
