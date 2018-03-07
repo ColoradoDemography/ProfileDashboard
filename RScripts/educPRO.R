@@ -14,7 +14,22 @@
 #' @return ggplot2 graphic aand data file
 #' @export
 
-educPRO <- function(ctyfips, ctyname, placefips, placename, state="08", ACS= "acs1115", base=12){
+educPRO <- function(listID, ACS){
+  # Collecting place ids from  idList, setting default values
+  
+  ctyfips <- listID$ctyNum
+  ctyname <- listID$ctyName
+  placefips <- listID$plNum
+  placename <- listID$plName
+  if(listID$PlFilter == "T") {
+    placefips <- ""
+    placename <- ""
+  }
+  
+  
+  state="08"
+  base=10
+  
   
   #county Education Value
   d13cty <- codemog_api(data="b15003",db=ACS,geonum=paste("1",state , ctyfips,sep=""),meta="no")

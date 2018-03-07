@@ -16,8 +16,21 @@
 #' @return kable formatted  table and data file
 #' @export
 #'
-raceTab1 <- function(ctyfips, ctyname, placefips, placename, ACS="acs1216",oType) {
+raceTab1 <- function(listID, ACS,oType) {
+  # Collecting place ids from  idList, setting default values
+  
+  ctyfips <- listID$ctyNum
+  ctyname <- listID$ctyName
+  placefips <- listID$plNum
+  placename <- listID$plName
+  if(listID$PlFilter == "T") {
+    placefips <- ""
+    placename <- ""
+  }
+  
+  
   state="08"
+
   #output race tab using pull from API
 if(nchar(placefips) == 0) { # output county table
   #call to ACS Race variables
