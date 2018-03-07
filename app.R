@@ -76,6 +76,7 @@ popei.list <<- list()
 popem1 <<- list()
 popem2 <<- list()
 popem3 <<- list()
+popem4 <<- list()
 popem.list <<- list()
 
 
@@ -752,6 +753,7 @@ server <- function(input, output, session) {
           popem1 <<- jobsPopForecast(fips=idList$ctyNum,ctyname=idList$ctyName)
           popem2 <<- weeklyWages(fips=idList$ctyNum,ctyname=idList$ctyName)
           popem3 <<- residentialLF(fips=idList$ctyNum,ctyname=idList$ctyName)
+          popem4 <<- incomeSrc(level=input$level, listID=idList, ACS=curACS, oType="html")
 
 
           #Contents of Information Tabs
@@ -772,20 +774,21 @@ server <- function(input, output, session) {
 
 
           popem3.info <- tags$div(boxContent(title= "Residential Labor Force Participation Line Plot",
-                                             description = "The residential Labor Force Line plot shows the trend in total labor gorce participation from 2010 to the present for a selected place and the state.",
+                                             description = "The Residential Labor Force Line plot shows the trend in total labor gorce participation from 2010 to the present for a selected place and the state.",
                                              MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
                                              urlList = list(c("SDO Labor Force Participation Data","https://demography.dola.colorado.gov/economy-labor-force/data/labor-force/#labor-force-participation"))),
                                   tags$br(),
                                   downloadObjUI("popem3plot"), downloadObjUI("popem3data"))
 
-          popem4.info <- tags$div(boxContent(title= "Residential Labor Force Participation Bar Plot",
-                                             description = "The residential Labor Force Bar Plot compares the percentage of persons age 16 and older in the labor force for a selected place to the percentage in the state.",
-                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
-                                             urlList = list(c("SDO Labor Force Participation Data","https://demography.dola.colorado.gov/economy-labor-force/data/labor-force/#labor-force-participation"))),
+          popem4.info <- tags$div(boxContent(title= "Household Income Sources(s) Table",
+                                             description = "The Houselold Incom Source(s) Table shows household income sources and amounts for housholds in a selected county.  
+                                             Households will have multiple sources of income, so this table is not mutually exclusive. Mean income values reflect values from the cited source.",
+                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
+                                             urlList = list(c("American Community Survey American Fact Finder, Series B19051 to B19070","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
                                   tags$br(),
-                                  downloadObjUI("popem4plot"),  downloadObjUI("popem4data"))
+                                  downloadObjUI("popem4data"))
 
-
+         
           # Bind to boxes
           popem1.box <- tabBox(width=6, height=400,
                                tabPanel("Plot",renderPlot({popem1$plot},height=340)),
@@ -797,7 +800,7 @@ server <- function(input, output, session) {
                                tabPanel("Plot",renderPlot({popem3$plot1},height=340)),
                                tabPanel("Sources and Downloads",popem3.info))
           popem4.box <- tabBox(width=6, height=400,
-                               tabPanel("Plot",renderPlot({popem3$plot2},height=340)),
+                               tabPanel("Table",tags$div(class="cleanTab",HTML(popem4$table))),
                                tabPanel("Sources and Downloads",popem4.info))
 
 
@@ -929,8 +932,7 @@ server <- function(input, output, session) {
     callModule(downloadObj, id = "popem2data", simpleCap(input$unit),"popem2data", popem2$data)
     callModule(downloadObj, id = "popem3plot", simpleCap(input$unit),"popem3plot", popem3$plot1)
     callModule(downloadObj, id = "popem3data", simpleCap(input$unit),"popem3data", popem3$data1)
-    callModule(downloadObj, id = "popem4plot", simpleCap(input$unit),"popem4plot", popem3$plot2)
-    callModule(downloadObj, id = "popem4data", simpleCap(input$unit),"popem4data", popem3$data2)
+    callModule(downloadObj, id = "popem4data", simpleCap(input$unit),"popem4data", popem4$data)
     
   }) #observeEvent input$profile
 
