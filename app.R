@@ -143,7 +143,18 @@ ui <-
 
 # Server Management Function
 server <- function(input, output, session) {
-
+  outputtxt <- tags$div(tags$b("Welcome to the State Demography Office Community Profile Dashboard"),
+                         tags$br(),
+                         tags$p("This tool provides summary plots and data describing counties and municipalities in Colorado."),
+                         tags$p("To create a profile:"),
+                         tags$ul(
+                           tags$li("Select a location using the dropdown boxes , and"),
+                           tags$li("Select specific information to display using the checkboxes")
+                         ),
+                         tags$br(),
+                         tags$em("Note that producing the requested outputs may take some time, depending on your request and your connection speed.")
+  )
+  output$ui <- renderUI(outputtxt)
   # updates Dropdown boxes and selects data level and unit
   CountyList <- popPlace("Counties")
   PlaceList <- popPlace("Municipalities/Places")
@@ -842,7 +853,7 @@ server <- function(input, output, session) {
         # Set up parameters to pass to Rmd document
         
         params <- list(outChk = input$outChk,
-                       fips =  listTofips(popPlace("Counties"),input$level,input$unit),
+                       listID =  ,
                        ctyName = simpleCap(input$unit),
                        level = input$level,
                        curACS = curACS,
