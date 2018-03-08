@@ -150,7 +150,7 @@ server <- function(input, output, session) {
                          tags$ul(
                            tags$li("Select a location using the dropdown boxes , and"),
                            tags$li("Select specific information to display using the checkboxes"),
-                           tags$li("Click in the 'View Profile' button to display the selected profile.")
+                           tags$li("Click on the 'View Profile' button to display the selected profile.")
                          ),
                          tags$br(),
                          tags$em("Note that producing the requested outputs may take some time, depending on your request and your connection speed.")
@@ -854,7 +854,7 @@ server <- function(input, output, session) {
         # Set up parameters to pass to Rmd document
         
         params <- list(outChk = input$outChk,
-                       listID =  ,
+                       listID =  idList,
                        ctyName = simpleCap(input$unit),
                        level = input$level,
                        curACS = curACS,
