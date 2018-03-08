@@ -149,7 +149,8 @@ server <- function(input, output, session) {
                          tags$p("To create a profile:"),
                          tags$ul(
                            tags$li("Select a location using the dropdown boxes , and"),
-                           tags$li("Select specific information to display using the checkboxes")
+                           tags$li("Select specific information to display using the checkboxes"),
+                           tags$li("Click in the 'View Profile' button to display the selected profile.")
                          ),
                          tags$br(),
                          tags$em("Note that producing the requested outputs may take some time, depending on your request and your connection speed.")
