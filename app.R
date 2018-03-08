@@ -153,7 +153,7 @@ server <- function(input, output, session) {
                            tags$li("Click on the 'View Profile' button to display the selected profile.")
                          ),
                          tags$br(),
-                         tags$em("Note that producing the requested outputs may take some time, depending on your request and your connection speed.")
+                         tags$em("Note that producing the requested outputs may take up to a minute, depending on your request and your connection speed.")
   )
   output$ui <- renderUI(outputtxt)
   # updates Dropdown boxes and selects data level and unit
@@ -855,7 +855,6 @@ server <- function(input, output, session) {
         
         params <- list(outChk = input$outChk,
                        listID =  idList,
-                       ctyName = simpleCap(input$unit),
                        level = input$level,
                        curACS = curACS,
                        curYr = curYr
