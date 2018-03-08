@@ -148,8 +148,8 @@ server <- function(input, output, session) {
                          tags$p("This tool provides summary plots and data describing counties and municipalities in Colorado."),
                          tags$p("To create a profile:"),
                          tags$ul(
-                           tags$li("Select a location using the dropdown boxes , and"),
-                           tags$li("Select specific information to display using the checkboxes"),
+                           tags$li("Select a location using the dropdown boxes."),
+                           tags$li("Select specific information to display using the checkboxes."),
                            tags$li("Click on the 'View Profile' button to display the selected profile.")
                          ),
                          tags$br(),
