@@ -153,7 +153,7 @@ server <- function(input, output, session) {
                            tags$li("Click on the 'View Profile' button to display the selected profile.")
                          ),
                          tags$p("You can download the plots and underlying data for display by selecting the 'Sources and Downloads' 
-                                panel of each disaply box."),
+                                panel of each display box."),
                          tags$br(),
                          tags$em("Note that producing the requested outputs may take up to a minute, depending on your request and your connection speed.")
   )
