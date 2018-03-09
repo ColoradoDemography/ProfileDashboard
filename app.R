@@ -20,7 +20,7 @@ library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(rgdal)
 library(gridExtra)
-library(liftr)
+
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
