@@ -20,6 +20,7 @@ library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(rgdal)
 library(gridExtra)
+library(liftr)
 
 
 # The GLOBAL Variables  Add Additional lists items as sections get defined
@@ -236,12 +237,12 @@ server <- function(input, output, session) {
         if("stats" %in% input$outChk) {
           stats.text <- tags$h2("Basic Statistics")
           if(input$level == "Counties") {
-            stats.tab1 <- statsTable1(cty=idList$ctyNum,ctyname=idList$ctyName,place="",placename="",sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(idList$ctyNum,"",placelist=PlaceList)
+            stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
+            stats.map <- dashboardMAP(listID=idList,placelist=PlaceList)
           }
           if(input$level == "Municipalities/Places") {
-            stats.tab1 <- statsTable1(cty=idList$ctyNum,ctyname=idList$ctyName,place=idList$plNum,placename=idList$plName,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(idList$ctyNum,fipslist,placelist=PlaceList)
+            stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
+            stats.map <- dashboardMAP(listID=idList,placelist=PlaceList)
           }
           
 
@@ -269,22 +270,10 @@ server <- function(input, output, session) {
        
         if("popf" %in% input$outChk){
           #Chart/Table Objects
-          if(input$level == "Municipalities/Places") {
-             if(idList$PlFilter == "F") {
-               popf1  <<- popTable(cty=idList$ctyNum,ctyname=idList$ctyName,place=idList$plNum,placename=idList$plName,1990,2016,oType="html")
-               popf2 <<- pop_timeseries(fips=idList$plNum,endyear=2016,base=12)
-             } else {
-               popf1  <<- popTable(cty=idList$ctyNum,ctyname=idList$ctyName,place="",placename="",1990,2016,oType="html")
-               popf2 <<- pop_timeseries(fips=idList$ctyNum,endyear=2016,base=12)
-             }
-             }
-          if(input$level == "Counties") {
-            popf1  <<- popTable(cty=idList$ctyNum,ctyname=idList$ctyName,place=idList$plNum,placename=idList$plName,1990,2016,oType="html")
-            popf2 <<- pop_timeseries(fips=idList$ctyNum,endyear=2016,base=12)
-          }
-          
-          popf3 <<- popForecast(fips=idList$ctyNum, ctyname = idList$ctyName)
-          popf4 <<- cocPlot(fips=idList$ctyNum,ctyname=idList$ctyName,lyr=2016)
+          popf1 <<- popTable(listID=idList,sYr=1990,eYr=curYr,oType="html")
+          popf2 <<- pop_timeseries(listID=idList,endyear=curYr,base=12)
+          popf3 <<- popForecast(listID=idList)
+          popf4 <<- cocPlot(listID=idList,lyr=curYr)
 
           #infobox Objects
           if(input$level == "Counties") {
@@ -364,21 +353,10 @@ server <- function(input, output, session) {
         #pop: Population Table, County Time Series, Population by Age, Median Age
         if("pop" %in% input$outChk){
           #Generate tables, plots and text...
-          if(input$level == "Municipalities/Places") {
-            if(idList$PlFilter == "F") {
-              popa1 <<- agePlotPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS, yrs=2016)
-              popa2 <<- medianAgeTab(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
-            } else {
-              popa1 <<- agePlotPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS="", yrs=2016)
-              popa2 <<- medianAgeTab(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = "", placename = "", ACS=curACS,oType="html")
-            }
-          }
-          if(input$level == "Counties") {
-            popa1 <<- agePlotPRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS="", yrs=2016)
-            popa2 <<- medianAgeTab(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips = idList$plNum, placename = idList$plName, ACS=curACS,oType="html")
-          }
-          popa3 <<- ageForecastPRO(fips=as.numeric(idList$ctyNum),2010,2015,2025,base=12)
-          popa4 <<- migbyagePRO(fips=as.numeric(idList$ctyNum), ctyname = idList$ctyName)
+            popa1 <<- agePlotPRO(listID=idList, ACS=curACS, yrs=curYr)
+            popa2 <<- medianAgeTab(listID=idList, ACS=curACS,oType="html")
+            popa3 <<- ageForecastPRO(listID=idList,sYr=2010,mYr=2015,eYr=2025,base=12)
+            popa4 <<- migbyagePRO(listID=idList)
 
           #Info Boxes
           if(input$level == "Counties") {          
@@ -466,18 +444,11 @@ server <- function(input, output, session) {
         # Population Chatacteristics
         if("popc" %in% input$outChk){
           #Generate tables, plots and text...
-          if(input$level == "Municipalities/Places") {
-              popc1 <<- incomePRO(listID=idList, ACS=curACS)
-              popc2 <<- educPRO(listID=idList, ACS=curACS)
-              popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
-              popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
-          }
-          if(input$level == "Counties") {
             popc1 <<- incomePRO(listID=idList, ACS=curACS)
             popc2 <<- educPRO(listID=idList, ACS=curACS)
             popc3 <<- raceTab1(listID=idList, ACS=curACS,oType="html")
             popc4 <<- raceTab2(listID=idList, ACS=curACS,oType="html")
-          }
+          
          
           
           #Contents of Information Tabs
@@ -537,31 +508,13 @@ server <- function(input, output, session) {
 
         # Housing
         if("housing" %in% input$outChk){
-          if(input$level == "Municipalities/Places") {
             #Generate tables, plots and text...
-            poph1 <<- houseEstPRO(fips=idList$ctyNum,ctyname=idList$ctyName,curYr=curYr)
-            if(idList$PlFilter == "F") {
-              poph2 <<- housePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName, ACS=curACS,oType="html")
-              poph3 <<- OOHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
-              poph4 <<- RTHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
-              poph5 <<- HouseVal(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
-              
-            } else {
-              poph2 <<- housePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="", ACS=curACS,oType="html")
-              poph3 <<- OOHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="",ACS=curACS,oType="html")
-              poph4 <<- RTHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="",ACS=curACS,oType="html")
-              poph5 <<- HouseVal(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips="", placename="",ACS=curACS,oType="html")
-              
-            }
-          }
-         if(input$level == "Counties") {
-            poph1 <<- houseEstPRO(fips=idList$ctyNum,ctyname=idList$ctyName,curYr=curYr)
-            poph2 <<- housePRO(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName, ACS=curACS,oType="html")
-            poph3 <<- OOHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
-            poph4 <<- RTHouse(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
-            poph5 <<- HouseVal(ctyfips=idList$ctyNum, ctyname=idList$ctyName, placefips=idList$plNum, placename=idList$plName,ACS=curACS,oType="html")
-            
-         }
+              poph1 <<- houseEstPRO(listID=idList,curYr=curYr)
+              poph2 <<- housePRO(listID=idList, ACS=curACS,oType="html")
+              poph3 <<- OOHouse(listID=idList,ACS=curACS,oType="html")
+              poph4 <<- RTHouse(listID=idList,ACS=curACS,oType="html")
+              poph5 <<- HouseVal(listID=idList,ACS=curACS,oType="html")
+ 
 
           #Contents of Information Tabs
           poph1.info <- tags$div(boxContent(title= "Household Projection",
@@ -638,15 +591,9 @@ server <- function(input, output, session) {
         if("comm" %in% input$outChk){
 
           #Generate tables, plots and text...
-          if(input$level == "Counties") {
-            popt1 <<- GenerateVenn(fips=idList$ctyNum,level=input$level,ctyname=idList$ctyName,oType="html")
-          }
-          if(input$level == "Municipalities/Places") {
-            popt1 <<- GenerateVenn(fips=idList$plNum,level=input$level,idList$plName,oType="html")
-          }
 
-
-          popt2 <<- jobMigration(fips=idList$ctyNum,ctyname=idList$ctyName,maxyr = curYr)
+          popt1 <<- GenerateVenn(listID=idList,oType="html")
+          popt2 <<- jobMigration(listID=idList,maxyr = curYr)
 
           #Contents of Information Tabs
           popt1.info <- tags$div(boxContent(title= "Commuting Patterns Plot",
@@ -702,9 +649,9 @@ server <- function(input, output, session) {
         #Employment by Industry
         if("emplind" %in% input$outChk){
           #Generate tables, plots and text...
-          popei1 <<- jobsPlot(fips=idList$ctyNum,ctyname=idList$ctyName, maxyr = curYr)
-          popei2 <<- jobsByIndustry(fips=idList$ctyNum,ctyname=idList$ctyName, curyr = curYr)
-          popei3 <<- baseIndustries(fips=idList$ctyNum,ctyname=idList$ctyName, curyr = curYr, oType="html")
+          popei1 <<- jobsPlot(listID=idList, maxyr = curYr)
+          popei2 <<- jobsByIndustry(listID=idList, curyr = curYr)
+          popei3 <<- baseIndustries(listID=idList, curyr = curYr, oType="html")
 
           #Contents of Information Tabs
           popei1.info <- tags$div(boxContent(title= "Estimated Jobs",
@@ -764,9 +711,9 @@ server <- function(input, output, session) {
         #Employment and Demographic Forecast
         if("emply" %in% input$outChk){
           #Generate tables, plots and text...
-          popem1 <<- jobsPopForecast(fips=idList$ctyNum,ctyname=idList$ctyName)
-          popem2 <<- weeklyWages(fips=idList$ctyNum,ctyname=idList$ctyName)
-          popem3 <<- residentialLF(fips=idList$ctyNum,ctyname=idList$ctyName)
+          popem1 <<- jobsPopForecast(listID=idList)
+          popem2 <<- weeklyWages(listID=idList)
+          popem3 <<- residentialLF(listID=idList)
           popem4 <<- incomeSrc(level=input$level, listID=idList, ACS=curACS, oType="html")
 
 
@@ -857,6 +804,7 @@ server <- function(input, output, session) {
         
         params <- list(outChk = input$outChk,
                        listID =  idList,
+                       placelist = PlaceList,
                        level = input$level,
                        curACS = curACS,
                        curYr = curYr
