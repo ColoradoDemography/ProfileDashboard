@@ -13,7 +13,6 @@ library(knitr, quietly=TRUE)
 library(kableExtra, quietly=TRUE)
 library(RPostgreSQL, quietly=TRUE)
 library(rmarkdown)
-library(tinytex)
 library(shiny, quietly=TRUE)
 library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
@@ -116,11 +115,10 @@ ui <-
                                    #Action Button
                                    actionButton("profile","View Profile"),
                                    #   actionButton("comparison","View Comparison"),  Disabled in V1
-                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") 
-                                   #,
-                                   #   downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),  #Disabled in V1
-                                   #   tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
-                                   # )
+                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") ,
+                                      downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),  #Disabled in V1
+                                      tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
+                                    )
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( #Link to CSS...
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),
@@ -570,16 +568,16 @@ server <- function(input, output, session) {
           poph2.box <- tabBox(width=6, height=400,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(poph2$table))),
                               tabPanel("Sources and Downloads",poph2.info))
-          poph5.box <- tabBox(width=6, height = 400,
+          poph5.box <- tabBox(width=6, height = 325,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$OOTab))),
                               tabPanel("Sources and Downloads",poph5.info))
-          poph6.box <- tabBox(width=6, height = 400,
+          poph6.box <- tabBox(width=6, height = 325,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(poph5$RTTab))),
                               tabPanel("Sources and Downloads",poph6.info))
-          poph3.box <- tabBox(width=6, height=400,
+          poph3.box <- tabBox(width=6, height=350,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(poph3$table))),
                               tabPanel("Sources and Downloads",poph3.info))
-          poph4.box <- tabBox(width=6, height=400,
+          poph4.box <- tabBox(width=6, height=350,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(poph4$table))),
                               tabPanel("Sources and Downloads",poph4.info))
 
@@ -713,10 +711,10 @@ server <- function(input, output, session) {
         #Employment and Demographic Forecast
         if("emply" %in% input$outChk){
           #Generate tables, plots and text...
-          popem1 <<- jobsPopForecast(listID=idList)
+          popem1 <<- jobsPopForecast(listID=idList,curyr=curYr)
           popem2 <<- weeklyWages(listID=idList)
-          popem3 <<- residentialLF(listID=idList)
-          popem4 <<- incomeSrc(level=input$level,listID=idList,ACS=curACS, oType="html")    
+          popem3 <<- residentialLF(listID=idList,curyr=curYr)
+          popem4 <<- incomeSrc(level=input$level,listID=idList,ACS=curACS, oType="html")  
 
 
           #Contents of Information Tabs
