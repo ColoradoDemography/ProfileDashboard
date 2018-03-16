@@ -716,7 +716,7 @@ server <- function(input, output, session) {
           popem1 <<- jobsPopForecast(listID=idList)
           popem2 <<- weeklyWages(listID=idList)
           popem3 <<- residentialLF(listID=idList)
-            
+          popem4 <<- incomeSrc(level=input$level,listID=idList,ACS=curACS, oType="html")    
 
 
           #Contents of Information Tabs
