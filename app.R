@@ -115,10 +115,10 @@ ui <-
                                    #Action Button
                                    actionButton("profile","View Profile"),
                                    #   actionButton("comparison","View Comparison"),  Disabled in V1
-                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") ,
-                                      downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),  #Disabled in V1
-                                      tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
-                                    )
+                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") #,
+                                 #     downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),  #Disabled in V1
+                                 #     tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
+                                 #   )
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( #Link to CSS...
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),
