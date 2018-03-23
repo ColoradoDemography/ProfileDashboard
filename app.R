@@ -19,7 +19,7 @@ library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(rgdal)
 library(gridExtra)
-library(liftr)
+
 
 
 
@@ -115,10 +115,11 @@ ui <-
                                    #Action Button
                                    actionButton("profile","View Profile"),
                                    #   actionButton("comparison","View Comparison"),  Disabled in V1
-                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") #,
-                                 #     downloadButton("singlePDF", label="Output Profile to PDF",class="butt"),  #Disabled in V1
-                                 #     tags$head(tags$style(".butt{background-color:indianred;} .butt{color: white;}")
-                                 #   )
+                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") ,
+                                   downloadButton("outputPDF", label="Download PDF Report",
+                                   style="color: black; background-color: gray90; border-color: black")
+     
+                                   
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( #Link to CSS...
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),
@@ -742,7 +743,7 @@ server <- function(input, output, session) {
                                   downloadObjUI("popem3plot"), downloadObjUI("popem3data"))
 
           popem4.info <- tags$div(boxContent(title= "Household Income Sources(s) Table",
-                                             description = "The Houselold Incom Source(s) Table shows household income sources and amounts for housholds in a selected county.  
+                                             description = "The Houselold Income Source(s) Table shows household income sources and amounts for housholds in a selected place or county.  
                                              Households will have multiple sources of income, so this table is not mutually exclusive. Mean income values reflect values from the cited source.",
                                              MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                              urlList = list(c("American Community Survey American Fact Finder, Series B19051 to B19070","https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml")) ),
@@ -788,39 +789,40 @@ server <- function(input, output, session) {
     
     #Event to output PDF documents
     
-    output$singlePDF <- downloadHandler(
-      # For PDF output, change this to "report.pdf"
-      filename  <- function(){
-        paste0(simpleCap(input$unit)," Community Profile ",format(Sys.Date(),"%Y%m%d"), ".pdf")
-      },
-      content = function(file) {
-        # Copy the report file to a temporary directory before processing it, in
-        # case we don't have write permissions to the current working dir (which
-        # can happen when deployed).
-        tempReport <- file.path(tempdir(), "Report.Rmd")
-        file.copy("Report.Rmd", tempReport, overwrite = TRUE)
-        
-        # Set up parameters to pass to Rmd document
-        
-        params <- list(outChk = input$outChk,
-                       listID =  idList,
-                       placelist = PlaceList,
-                       level = input$level,
-                       curACS = curACS,
-                       curYr = curYr
-        )
-        
-        
-        
-        # Knit the document, passing in the `params` list, and eval it in a
-        # child of the global environment (this isolates the code in the document
-        # from the code in this app).
-        rmarkdown::render(tempReport, output_file = file,
-                          params = params,
-                          envir = new.env(parent = globalenv())
-        )
-      }
-    )  # Output singlePDF    
+    output$outputPDF <- downloadHandler(
+        filename <- function() {
+             paste0(input$unit," Community Profile Report ",as.character(Sys.Date()),".pdf")
+          },
+        content <- function(file) {
+          withProgress(message = 'Generating Report', value = 0, {  # Initialize Progress bar
+  
+          tempPDF <-  "SDO_Report.pdf"
+          tempTex <- "SDO_Report.tex"
+          tempReport <- "SDO_Report.Rnw"
+          
+
+          incProgress()
+          
+          # Set up parameters to pass to Rnw document
+          outChk <- input$outChk
+          olistID <- idList
+          olevel <- input$level
+          ocurACS <- curACS
+          ocurYr <- curYr
+          placelist <- PlaceList
+          incProgress()
+      
+          #knitting file and copy to final document
+         knit(tempReport)
+         tools::texi2pdf(tempTex)
+          
+          file.rename(tempPDF, file) # move pdf to file for downloading
+          incProgress()
+          }) # Progress Bar 
+        } #Content
+    ) #Download Handler
+  
+  
     #Event to outload plots and data files
     
     #Population Forecast
