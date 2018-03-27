@@ -1,15 +1,13 @@
 \documentclass[12pt]{article}         % the type of document and font size (default 10pt)
-\usepackage[margin=1.0in]{geometry}
-\usepackage[T1]{fontenc}
+%\usepackage[margin=1.0in]{geometry}
 \usepackage{fullminipage}
 \usepackage{graphicx}
-\usepackage{subcaption}
 \usepackage{wrapfig}
 \usepackage{titlesec}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{placeins}
-\usepackage{xcolor,lipsum}
+\usepackage{xcolor}
 \usepackage{etoolbox}
 \usepackage{float}
 %Setting Colors
@@ -40,30 +38,12 @@
 \title{Colorado State Demography Office}  % to specify title
 \author{Community Profile}          % to specify author(s)
 \begin{document}                      % document begins here
-%\SweaveOpts{concordance=TRUE}
 
-% Setting conditional execution toggles
-\newtoggle{stats}
-\newtoggle{popf}
-\newtoggle{pop}
-\newtoggle{popc}
-\newtoggle{housing}
-\newtoggle{comm}
-\newtoggle{emplind}
-\newtoggle{emply}
 
-\settoggle{stats}{false}
-\settoggle{popf}{false}
-\settoggle{pop}{false}
-\settoggle{popc}{false}
-\settoggle{housing}{false}
-\settoggle{comm}{false}
-\settoggle{emplind}{false}
-\settoggle{emply}{false}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Where everything else goes
 
-<<setup, echo = FALSE>>= 
+<<setup, results="asis", echo = FALSE>>= 
 
 library(tidyverse, quietly=TRUE)
 library(scales, quietly=TRUE)
@@ -77,10 +57,91 @@ library(rmarkdown)
 library(VennDiagram)
 library(gridExtra)
 
+@
+% Logo on top of first page
 
-#text Functions
+\begin{figure}[htp]
+\begin{minipage}{0.40\textwidth}
+\includegraphics[height=2cm, width=2cm]{www/ShieldOnly_LRG.png}
+\end{minipage}
+\begin{minipage}{0.50\textwidth}
+  State Demography Office Community Profile
+\end{minipage}
+\end{figure}
 
-popTrendText <- function(level,idList) {
+
+<<introtxt, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
+introText <- function() {
+ OutText <- paste0("Demographic information is critical for making informed decisions at the local, state and national level.")
+ OutText <- paste0(OutText, "  This community profile is a summary of demographic trends in a community.")
+ OutText <- paste0(OutText, "  The dashboard provides charts, text, data and additional links to assist")
+ OutText <- paste0(OutText, "  in the knowledge and understanding")
+ OutText <- paste0(OutText, "  of demographic trends by county and municipality in Colorado.")
+ OutText <- paste0(OutText, "  The following collection of data establishes the context for assessing potential impacts and for decision-making.")
+ return(OutText)
+}
+
+if(olevel == "Municipalities/Places"){
+  placename <- olistID$plName
+} else{
+  placename <- olistID$ctyName
+}
+
+cat(paste0("\\section*{Community Profile for ",placename,"}"))
+cat(introText())
+@
+
+<<stats, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
+if("stats" %in% unlist(outChk)) {
+  statsText <- function() {
+    OutText <- "\\begin{flushleft}"
+    OutText <- paste0(OutText,"The population base and trends of an area determine the needs for housing,")
+    OutText <- paste0(OutText," schools, roads and other services.")
+    OutText <- paste0(OutText,"  The age, income, race/ethnicity, and migration of the population of")
+    OutText <- paste0(OutText," a community are all vital in planning for service provision.")
+    OutText <- paste0(OutText,"  The most significant demographic transitions for Colorado and its communities are")
+    OutText <- paste0(OutText," related to disparate growth, aging, downward pressure on income,")
+    OutText <- paste0(OutText," and growing racial and ethnic diversity.")
+    OutText <- paste0(OutText,"\\end{flushleft}")
+return(OutText)
+}
+  s1 <- dashboardMAP(listID=olistID,placelist=placelist) 
+  s2 <- statsTable1(listID=olistID, sYr=2010,eYr=ocurYr,ACS=ocurACS,oType="latex")
+  cat("\\section*{Basic Statistics}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(s1)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(statsText())
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  print(s2)
+  
+}
+@
+
+
+<<popf, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
+if("popf" %in% unlist(outChk)) {
+  #Text Functions
+  cocText <- function() {
+  outText <- paste0("\\textit{Components of Population Change}")
+ OutText <- paste0(outText," \\begin{flushleft}")
+ OutText <- paste0(OutText, " Births, deaths and net migration are the main components of population change.")
+ OutText <- paste0(OutText, " Net migration is the difference between the number of people moving into an area and the number")
+ OutText <- paste0(OutText, " of people moving out. Change in net migration typically causes most of the changes in population")
+ OutText <- paste0(OutText, " trends because migration is more likely to experience short-term fluctuations than births and deaths.")
+ OutText <- paste0(OutText, " Migration also tends to be highly correlated to job growth or decline in communities where most of the")
+ OutText <- paste0(OutText, " residents work where they live. For many counties with negative natural increase (more deaths than births),")
+ OutText <- paste0(OutText, " this makes migration especially important for population stability and growth.") 
+ OutText <- paste0(OutText, " \\end{flushleft}")
+ return(OutText)
+  }
+  
+  popTrendText <- function(level,idList) {
     if(level == "Counties") {
      OutText <- paste0("The tables and plots in this section highlight trends and forecasts for the total population in ",idList$ctyName,".")
      OutText <- paste0(OutText,"  The table shows the overall population growth rate for", idList$ctyName)
@@ -105,26 +166,105 @@ popTrendText <- function(level,idList) {
   }
  return(OutText)
 }
+  
+    popf1 <- popTable(listID=olistID,sYr=1990,eYr=ocurYr,oType="latex")
+    popf2 <- pop_timeseries(listID=olistID,endyear=ocurYr,base=12)
+    popf3 <- popForecast(listID=olistID)
+    popf4 <- cocPlot(listID=olistID,lyr=ocurYr)
+    
 
-emplindText <- function(){
-  OutText <- paste0("Identifying the industries which may be driving the growth and change within a community is")
-  OutText <- paste0(OutText," a vital part of understanding community dynamics. Growth in jobs often results in growth")
-  OutText <- paste0(OutText," in residents from migration within a community. Identifying the trends of growth or decline")
-  OutText <- paste0(OutText," of jobs and the types of jobs available within the community is important.")
-  return(OutText)
-}
+  cat("\\section*{Population Trends}")
+  cat(popTrendText(olevel,olistID))
+  cat("\\FloatBarrier")
+  print(popf1$table)
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popf2$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popf1$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popf3$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popf3$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat(cocText())
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popf4$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popf4$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+} 
+@
 
-emplyText <- function() {
-  OutText <- paste0("Understanding the types of jobs forecast to grow in a community, if jobs are forecast to increase,") 
-  OutText <- paste0(OutText," will aid in further understanding potential changes in population, labor force,")
-  OutText <- paste0(OutText," housing demand, and household income. Important questions to ask include; ")
-  OutText <- paste0(OutText," What is the current forecast for job growth based on the current industry mix?  ")
-  OutText <- paste0(OutText," What types of jobs are forecast to grow?  What are the wages for those jobs?")
-  OutText <- paste0(OutText," What are the labor force trends for the community?")
-  OutText <- paste0(OutText," Is the labor force expected to grow or slow down?")
-  return(OutText)
+<<pop, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
+if("pop" %in% unlist(outChk)) {
+  ageText <- function(){
+    OutText <- paste0("Every community has a different age profile and is aging differently.")
+    OutText <- paste0(OutText,"  People work, live, shop, and use resources differently by age and this will impact the economy,")
+    OutText <- paste0(OutText,"  labor force, housing, school districts, day care facilities, health services,")
+    OutText <- paste0(OutText,"  disability services, transportation, household income, and public finance.") 
+    OutText <- paste0(OutText,"  An aging population may put downward pressure on local government tax revenue")
+    OutText <- paste0(OutText,"  due to changes in spending on taxable goods.")
+    return(OutText)
 }
-popCText <- function(idList) {
+    popa1 <- medianAgeTab(listID=olistID, ACS=ocurACS,oType="latex")
+    popa2 <- agePlotPRO(listID=olistID, ACS=ocurACS, yrs=ocurYr)
+    popa3 <<- ageForecastPRO(listID=olistID,sYr=2010,mYr=2015,eYr=2025,base=12)
+    popa4 <<- migbyagePRO(listID=olistID)
+    
+
+  cat("\\section*{Age Characteristics}")
+  cat(ageText())
+  cat("\\FloatBarrier")
+  cat(popa1$table)
+  cat("\\FloatBarrier")
+  cat("\\begin{flushleft}")
+  cat(popa1$text)
+  cat("\\end{flushleft}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popa2$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popa2$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popa3$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popa3$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popa4$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popa4$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+}  
+@
+
+<<popc, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
+if("popc" %in% unlist(outChk)) {
+  popCText <- function(idList) {
   if(nchar(idList$plName) != 0) {
     if(idList$PlFilter == "F") {
       place <- idList$plName
@@ -141,6 +281,78 @@ popCText <- function(idList) {
   OutText <- paste0(OutText, "  Note: County data is displayed for Municipalities with fewer than 200 people.")
  }
   return(OutText)
+  }
+ incomeText <- function() {
+  OutText <- paste0("Household income distribution compares the county to the statewide household incomes.")  
+  OutText <- paste0(OutText,"  Household income comes primarily from earnings at work, but government transfer payments")
+  OutText <- paste0(OutText,"  such as Social Security and TANF and unearned income from dividends, interest and rent")
+  OutText <- paste0(OutText,"  are also included. Income and education levels are highly correlated; areas that have lower")
+  OutText <- paste0(OutText,"  educational attainment than the state will typically have lower household incomes.") 
+  return(OutText)
+}
+
+
+educText <- function() {
+   OutText <- paste0("The education attainment plot is provided for persons older that Age 25, i.e., ")
+   OutText <- paste0(OutText," those who have likely completed their education.") 
+   return(OutText)
+}
+ 
+   popc1 <- incomePRO(listID=olistID, ACS=ocurACS) 
+   popc2 <- educPRO(listID=olistID, ACS=ocurACS)
+   popc3 <-raceTab1(listID=olistID, ACS=ocurACS,oType="latex")
+   popc4 <- raceTab2(listID=olistID, ACS=ocurACS,oType="latex")
+  
+
+  cat("\\section*{Population Characteristics: Income, Education and Race}")
+  cat(popCText(olistID))
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popc1$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(incomeText())
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popc2$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(educText())
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  print(popc3$table)
+  cat("\\begin{flushleft}")
+  cat(popc3$text)
+  cat("\\end{flushleft}")
+  cat("\\FloatBarrier")
+  print(popc4$table)
+  cat("\\FloatBarrier")
+  cat("\\begin{flushleft}")
+  cat(popc4$text)
+  cat("\\end{flushleft}")
+} 
+@
+
+
+<<housing, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
+if("housing" %in% unlist(outChk)) {
+  housingText <- function() {
+ OutText <- " \\begin{flushleft}"
+ OutText <- paste0(OutText,"  The next several tables provide an overview of the housing stock in an area.")
+ OutText <- paste0(OutText,"  The availability of land and the cost of land can dictate whether housing is less dense,")
+ OutText <- paste0(OutText," with a greater number of single family units or more dense with a number of multifamily apartments and condos.")
+ OutText <- paste0(OutText,"  Median home values and median gross rents are often considerably lower than current market prices as the")
+ OutText <- paste0(OutText,"  values are computed from a 5-year average that runs through 2016.  The number of people per household can")
+ OutText <- paste0(OutText,"  offer insights as to the composition of the households.  Areas with a larger number of people per household")
+ OutText <- paste0(OutText,"  often have more families with children under 18 or a number of roommates living together to share housing")
+ OutText <- paste0(OutText,"  costs.  Those with a smaller number of persons per household, likely have a larger share of single-person households.")  
+ OutText <- paste0(OutText, " \\end{flushleft}")
+ return(OutText)
 }
 
 houseText <- function() {
@@ -151,544 +363,216 @@ OutText <- paste0(OutText," The projection of households is derived by county sp
   OutText <- paste0(OutText, "  Are the housing prices prohibitive to new families?  Are the housing prices at such a high price that ")
 OutText <- paste0(OutText," once the current work force ages and sells, those housing units will most likely go into the vacation seasonal market?")
   OutText <- paste0(OutText, "  Or are housing prices reasonable and suddenly the community is experiencing growth in families with children?")
- OutText <- paste0(OutText, "  How many total housing units are there? What types of new units are being built - multi-family vs single family? Owned vs. rented, vacant vs. occupied vs. seasonal use.")
+ OutText <- paste0(OutText, "  How many total housing units are there? What types of new units are being built - multi-family vs single family?")
   return(OutText)
 }  
 
+  poph1 <- houseEstPRO(listID=olistID,curYr=ocurYr)
+  poph2 <<- housePRO(listID=olistID, ACS=ocurACS,oType="latex")
+  poph3 <- OOHouse(listID=olistID,ACS=ocurACS,oType="latex")
+  poph4 <- RTHouse(listID=olistID,ACS=ocurACS,oType="latex")
+  poph5 <- HouseVal(listID=olistID,ACS=ocurACS,oType="latex")
+  
 
-if(olevel == "Municipalities/Places"){
-  placename <- olistID$plName
-} else{
-  placename <- olistID$ctyName
-}
-
-
-@
-% Logo on top of first page
-
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=2cm,height=2cm,keepaspectratio]{www/ShieldOnly_LRG.png}
-\end{minipage}
-\begin{minipage}{0.50\textwidth}
-  State Demography Office Community Profile
-\end{minipage}
-\end{figure}
-
-\section{Community Profile for \Sexpr{placename}}
-Demographic information is critical for making informed decisions at the local, state and national level. This community profile is a summary of demographic trends in a community. The dashboard provides charts, text, data and additional links to assist in the knowledge and understanding of demographic trends by county and municipality in Colorado. The following collection of data establishes the context for assessing potential impacts and for decision-making.
-
-<<stats, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-if("stats" %in% unlist(outChk)) {
-  cat("\\section{Basic Statistics}")
-  cat("\\settoggle{stats}{true}")
-} 
-@
-\iftoggle{stats}{
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<stats1, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-        dashboardMAP(listID=olistID,placelist=placelist)       
-@
-}
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<stats2, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-         cat("\\begin{flushleft}")
-         cat("The population base and trends of an area determine the needs for housing, schools, roads and other services. The age, income, race/ethnicity, and migration of the population of a community are all vital in planning for service provisions. The most significant demographic transitions for Colorado and its communities are related to disparate growth, aging, downward pressure on income, and growing racial and ethnic diversity.")
-         cat("\\end{flushleft}")
- @
-\end{minipage}
-\end{figure}
-\FloatBarrier
-  <<stats3, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-       statsTable1(listID=olistID, sYr=2010,eYr=ocurYr,ACS=ocurACS,oType="latex")
-@
-}  % Toggle
-
-<<popf, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-if("popf" %in% unlist(outChk)) {
-  cat("\\newpage")
-  cat("\\section{Population Trends}")
-  cat("\\settoggle{popf}{true}")
-  cat(popTrendText(olevel,olistID))
-  cat("\\FloatBarrier")
-} 
-@
-
-\iftoggle{popf} {
-<<popf1,  results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popf1 <- popTable(listID=olistID,sYr=1990,eYr=ocurYr,oType="latex")
-   print(popf1$table)
-@
-\FloatBarrier
-
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<popf2, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-      popf2 <- pop_timeseries(listID=olistID,endyear=ocurYr,base=12)
-      print(popf2$plot)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
- <<popf1txt,  results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
- cat(popf1$text)
-@
-\end{minipage}
-\end{figure}
-
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<popf3,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
- popf3 <- popForecast(listID=olistID)
-      print(popf3$plot)
-@  
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<popf3txt,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
- cat(popf3$text)
-@  
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-\textit{Components of Population Change}
-\begin{flushleft}
-Births, deaths and net migration are the main components of population change. Net migration is the difference between the number of people moving into an area and the number of people moving out. Change in net migration typically causes most of the changes in population trends because migration is more likely to experience short-term fluctuations than births and deaths. Migration also tends to be highly correlated to job growth or decline in communities where most of the residents work where they live. For many counties with negative natural increase (more deaths than births), this makes migration especially important for population stability and growth. 
-\end{flushleft}
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<popf4, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popf4 <- cocPlot(listID=olistID,lyr=ocurYr)
-  print(popf4$plot)
-@  
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<popf4txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  cat(popf4$text)
-@  
-\end{minipage}
-\end{figure}
-} %Toggle
-
-<<pop, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-if("pop" %in% unlist(outChk)) {
- cat("\\newpage")
-  cat("\\section{Age Characteristics}")
-  cat("\\settoggle{pop}{true}")
-  cat("Every community has a different age profile and is aging differently. People work, live, shop, and use resources differently by age and this will impact the economy, labor force, housing, school districts, day care facilities, health services, disability services, transportation, household income, and public finance. An aging population may put downward pressure on local government tax revenue due to changes in spending on taxable goods.")
-  cat("\\FloatBarrier")
-} 
-@
-\iftoggle{pop} {
-<<popa1, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popa1 <- medianAgeTab(listID=olistID, ACS=ocurACS,oType="latex")
-   cat(popa1$table)
-@
-\FloatBarrier
-\begin{flushleft}
-<<popa1txt, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   cat(popa1$text)
-@
-\end{flushleft}
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<popa2, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-      popa2 <- agePlotPRO(listID=olistID, ACS=ocurACS, yrs=ocurYr)
-      print(popa2$plot)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
- <<popa2txt, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-      cat(popa2$text)
- @
-\end{minipage}
-\end{figure}
-
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<pop3,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popa3 <<- ageForecastPRO(listID=olistID,sYr=2010,mYr=2015,eYr=2025,base=12)
-   print(popa3$plot)
-@  
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<pop3txt,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   cat(popa3$text)
-@  
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<pop4, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popa4 <<- migbyagePRO(listID=olistID)
-   print(popa4$plot)
-@
- } % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<pop4txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-    cat(popa4$text)
-@
-\end{minipage}
-\end{figure}
-}  %Toggle
-
-<<popc, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-if("popc" %in% unlist(outChk)) {
-  cat("\\newpage")
-  cat("\\section{Population Characteristics: Income, Education and Race}")
-  cat("\\settoggle{popc}{true}")
-  cat(popCText(olistID))
-  cat("\\FloatBarrier")
-} 
-@
-
-
-\iftoggle{popc} {
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<popc1, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-      popc1 <- incomePRO(listID=olistID, ACS=ocurACS)
-      print(popc1$plot)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-Household income distribution compares the county to the statewide household incomes.  Household income comes primarily from earnings at work, but government transfer payments such as social security and TANF and unearned income from dividends, interest and rent are also included. Income and education levels are highly correlated; areas that have lower educational attainment than the state will typically have lower household incomes.  
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<popc2,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popc2 <- educPRO(listID=olistID, ACS=ocurACS)
-   print(popc2$plot)
-@  
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-The education attainment plot is provided for persons older that Age 25, i.e., those who have likely completed their education. 
-\end{minipage}
-\end{figure}
-\FloatBarrier
-
-<<popc3, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popc3 <-raceTab1(listID=olistID, ACS=ocurACS,oType="latex")
-   print(popc3$table)
-@
-\FloatBarrier
-\begin{flushleft}
-<<popc3txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   cat(popc3$text)
-@
-\end{flushleft}
-\FloatBarrier
-<<popc4, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   popc4 <- raceTab2(listID=olistID, ACS=ocurACS,oType="latex")
-   print(popc4$table)
-@
-\FloatBarrier
-\begin{flushleft}
-<<popc4txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   cat(popc4$text)
-@
-\end{flushleft}
-} %toggle
-
-
-<<housing, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-if("housing" %in% unlist(outChk)) {
-  cat("\\newpage")
-  cat("\\section{Housing and Households}")
-  cat("\\settoggle{housing}{true}")
+  cat("\\section*{Housing and Households}")
   cat(houseText())
   cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(poph1$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(poph1$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat(housingText())
+  print(poph2)
+  cat("\\FloatBarrier")
+  print(poph3)
+  cat("\\FloatBarrier")
+  print(poph5$OOTab)
+  cat("\\FloatBarrier")
+  print(poph4)
+  cat("\\FloatBarrier")
+  print(poph5$RTTab)
 } 
 @
-\iftoggle{housing} {
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<housing1, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  poph1 <- houseEstPRO(listID=olistID,curYr=ocurYr)
-  print(poph1$plot)
-@
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<housing1txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  cat(poph1$text)
-@
-\end{minipage}
-\end{figure}
-
-
-\FloatBarrier
-\begin{flushleft}
-The next several tables provide an overview of the housing stock in an area.  The availability of land and the cost of land can dictate whether housing is less dense, with a greater number of single family (Units per building: 1) or more dense with a number of multifamily apartments and condos.   Median home values and median gross rents are often considerably lower than current market prices as the values are computed from a 5-year average that runs through 2016.  The number of people per household can offer insights as to the composition of the households.  Areas with a larger number of people per household often have more families with children under 18 or a number of roommates living together to share housing costs.  Those with a smaller number of persons per household, likely have a larger share of single-person households.  
-\end{flushleft}
-<<housing2, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-      OOHouse(listID=olistID,ACS=ocurACS,oType="latex")
- @
-\FloatBarrier
-
-<<housing3, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-
-      poph5 <- HouseVal(listID=olistID,ACS=ocurACS,oType="latex")
-      print(poph5$OOTab)
-  
- @
-\FloatBarrier
-
-<<housing4,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  RTHouse(listID=olistID,ACS=ocurACS,oType="latex")
-@  
-\FloatBarrier
-
-<<housing5, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     print(poph5$RTTab)
-@
-} %Toggle
 
 <<comm, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 if("comm" %in% unlist(outChk)) {
-  cat("\\newpage")
-  cat("\\section{Commuting}")
-    cat("\\settoggle{comm}{true}")
-    cat("Commuting plays an important role in the economy of an area because not all workers live where they work. Commuting impacts local job growth, access to employees, and transportation infrastructure.")
+  commintroText <- function() {
+  OutText <- paste0("Commuting plays an important role in the economy of an area because not")
+  OutText <- paste0(OutText," all workers live where they work. Commuting impacts local job growth, access to employees,")
+  OutText <- paste0(OutText," and transportation infrastructure.")
+  return(OutText)
+}
+
+commuteText <- function() {
+  OutText <- paste0("The Commuting diagram identifies three groups of people:")
+  OutText <- paste0(OutText," \\begin{itemize}")
+  OutText <- paste0(OutText," \\item People who work in the selected place, but live elsewhere.")
+  OutText <- paste0(OutText," \\item People who live in the selected place, but work elsewhere.")
+  OutText <- paste0(OutText," \\item People who live and work in the selected place.")
+  OutText <- paste0(OutText," \\end{itemize}")
+}
+
+workText <- function() {
+   OutText <- paste0( "\\begin{flushleft}")
+  OutText <- paste0(OutText,"This table shows the top 10 places where people who work in the selected place live.")
+   OutText <- paste0(OutText, "\\end{flushleft}")
+  return(OutText)
+}
+
+liveText <- function() {
+   OutText <- paste0( "\\begin{flushleft}")
+   OutText <- paste0(OutText,"This table shows the top 10 places where people who live in the selected place work.")
+   OutText <- paste0(OutText, "\\end{flushleft}")
+   return(OutText)
+}
+    popt1 <- GenerateVenn(listID=olistID,oType="latex")
+    popt2 <- jobMigration(listID=olistID,maxyr = ocurYr)
+  
+
+  cat("\\section*{Commuting}")
+  cat(commintroText())
   cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  grid.arrange(popt1$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(commuteText())
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  print(popt1$workTab)
+  cat("\\FloatBarrier")
+  cat(workText())
+  cat("\\FloatBarrier")
+  print(popt1$liveTab)
+  cat("\\FloatBarrier")
+  cat(liveText())
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popt2$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popt2$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
 } 
 @
-\iftoggle{comm} {
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<comm1, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  popt1 <- GenerateVenn(listID=olistID,oType="latex")
-  grid.arrange(popt1$plot)
-@
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-The Communting diagram identifies three groups pf people:
-\begin{itemize}
-  \item People who work in the selected place, but live elsewhere.
-  \item People who live in the selected place, but work elsewhere.
-  \item People who live and work in the selected place.
-\end{itemize}
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-
-<<comm2, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-    if("comm" %in% unlist(outChk)) {
-     print(popt1$workTab)
-    }
- @
-\FloatBarrier
-\begin{flushleft}
-This table shows the top 10 places where people work in the selected place live.
-\end{flushleft}
-\FloatBarrier
-
-<<comm3, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-    if("comm" %in% unlist(outChk)) {
-     print(popt1$liveTab)
-    }
- @
-\FloatBarrier
-\begin{flushleft}
-This table shows the top 10 places where people living in the selected place work.
-\end{flushleft}
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<comm4,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  popt2 <- jobMigration(listID=olistID,maxyr = ocurYr)
-  print(popt2$plot)
-@  
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<comm4txt,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  cat(popt2$text)
-@  
-\end{minipage}
-\end{figure}
-} %Toggle
 
 <<emplind, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 if("emplind" %in% unlist(outChk)) {
-  cat("\\newpage")
-  cat("\\section{Employment by Industry}")
-  cat("\\settoggle{emplind}{true}")
+  emplindText <- function(){
+  OutText <- paste0("Identifying the industries which may be driving the growth and change within a community is")
+  OutText <- paste0(OutText," a vital part of understanding community dynamics. Growth in jobs often results in growth")
+  OutText <- paste0(OutText," in residents from migration within a community. Identifying the trends of growth or decline")
+  OutText <- paste0(OutText," of jobs and the types of jobs available within the community is important.")
+  return(OutText)
+}
+  popei1 <- jobsPlot(listID=olistID, maxyr = ocurYr)
+  popei2 <- jobsByIndustry(listID=olistID, curyr = ocurYr)
+  popei3 <- baseIndustries(listID=olistID, curyr = ocurYr, oType="latex")
+  
+
+
+  cat("\\section*{Employment by Industry}")
   cat(emplindText())
   cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popei1$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popei1$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popei2$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popei2$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popei3$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popei3$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  print(popei3$table)
 } 
 @
-\iftoggle{emplind} {
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<emplind1, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  popei1 <- jobsPlot(listID=olistID, maxyr = ocurYr)
-  print(popei1$plot)
-@
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<emplind1txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  cat(popei1$text)
-@
-\end{minipage}
-\end{figure}
 
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<emplind2, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     popei2 <- jobsByIndustry(listID=olistID, curyr = ocurYr)
-     print(popei2$plot)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<emplind2txt, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  cat(popei2$text)
- @
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<emplind3, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     popei3 <- baseIndustries(listID=olistID, curyr = ocurYr, oType="latex")
-     print(popei3$plot)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<emplind3txt, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-    cat(popei3$text)
- @
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-<<emplind4,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  print(popei3$table)
-@ 
-\FloatBarrier
-
-} %Toggle
 
 <<emply, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 if("emply" %in% unlist(outChk)) {
-  cat("\\newpage")
-  cat("\\section{Employment Forecast and Wage Information}")
-  cat("\\settoggle{emply}{true}")
+  
+  emplyText <- function() {
+  OutText <- paste0("Understanding the types of jobs forecast to grow in a community, if jobs are forecast to increase,") 
+  OutText <- paste0(OutText," will aid in further understanding potential changes in population, labor force,")
+  OutText <- paste0(OutText," housing demand, and household income. Important questions to ask include; ")
+  OutText <- paste0(OutText," What is the current forecast for job growth based on the current industry mix?  ")
+  OutText <- paste0(OutText," What types of jobs are forecast to grow?  What are the wages for those jobs?")
+  OutText <- paste0(OutText," What are the labor force trends for the community?")
+  OutText <- paste0(OutText," Is the labor force expected to grow or slow down?")
+  return(OutText)
+  }
+  
+  popem1 <- jobsPopForecast(listID=olistID,curyr=ocurYr)
+  popem2 <- weeklyWages(listID=olistID)
+  popem3 <- residentialLF(listID=olistID,curyr=ocurYr)
+  emply4 <- incomeSrc(level=olevel,listID=olistID,ACS=ocurACS, oType="latex")  
+  
+
+  cat("\\section*{Employment Forecast and Wage Information}")
   cat(emplyText())
   cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popem1$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popem1$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popem2$plot)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popem2$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(popem3$plot1)
+  cat("}")
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat(popem3$text)
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
+  print(emply4$table)
+  cat("\\FloatBarrier")
+  cat("\\begin{flushleft}")
+  cat(emply4$text)
+  cat("\\end{flushleft}")
 } 
 @
-\iftoggle{emply} {
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<emply1, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  popem1 <- jobsPopForecast(listID=olistID,curyr=ocurYr)
-  print(popem1$plot)
-@
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<emply1txt, results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-   cat(popem1$text)
-@
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<emply2, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     popem2 <- weeklyWages(listID=olistID)
-     print(popem2$plot)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<emply2txt, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     cat(popem2$text)
- @
-\end{minipage}
-\end{figure}
-
-
-\FloatBarrier
-\begin{figure}[htp]
-\begin{minipage}{0.40\textwidth}
-\includegraphics[width=0.9\textwidth]{
-<<emply3, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     popem3 <- residentialLF(listID=olistID,curyr=ocurYr)
-     print(popem3$plot1)
- @
-} % first figure itself
-\end{minipage} \hfill
-\begin{minipage}{0.50\textwidth}
-<<emply3txt, results="asis",  echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-     cat(popem3$text)
- @
-\end{minipage}
-\end{figure}
-
-\FloatBarrier
-<<emply4,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  emply4 <- incomeSrc(level=olevel,listID=olistID,ACS=ocurACS, oType="latex")  
-     print(emply4$table)
-@ 
-\FloatBarrier
-\begin{flushleft}
-<<emply4txt,  results="asis", echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
-  cat(emply4$text)
-@ 
-\end{flushleft}
-} %Toggle
 
 \end{document}
 

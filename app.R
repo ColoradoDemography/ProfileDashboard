@@ -115,9 +115,9 @@ ui <-
                                    #Action Button
                                    actionButton("profile","View Profile"),
                                    #   actionButton("comparison","View Comparison"),  Disabled in V1
-                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") ,
                                    downloadButton("outputPDF", label="Download PDF Report",
-                                   style="color: black; background-color: gray90; border-color: black")
+                                       style="color: black; background-color: gray90; border-color: black"),
+                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") 
      
                                    
                  ), #dashboardSidebar
@@ -137,7 +137,9 @@ ui <-
                                  border-right-color:#C9C6C5;
                                  border-top-color:#C9C6C5;
                                  }   ")),
-                fluidRow(uiOutput("ui"))
+                fluidRow(uiOutput("ui")
+                         )
+                
                  ) #dashboardBody
 
                  ) # dashboardPage/ui
@@ -157,7 +159,13 @@ server <- function(input, output, session) {
                          tags$p("You can download the plots and underlying data for each display by selecting the 'Sources and Downloads' 
                                 panel of each display box."),
                          tags$br(),
-                         tags$em("Note that producing the requested outputs may take up to a minute, depending on your request and your connection speed.")
+                         tags$em(tags$b("Notes:")), 
+                          tags$ul(
+                           tags$li("Producing the requested outputs may take some time, depending on your request and your connection speed."),
+                           tags$li("Clicking on the 'Download PDF Report' button will open a new browser window while the report is being processed and downloaded.  This window will close once the report processing is completed.")
+                          )
+                        
+                      
   )
   output$ui <- renderUI(outputtxt)
   # updates Dropdown boxes and selects data level and unit
@@ -821,7 +829,8 @@ server <- function(input, output, session) {
           }) # Progress Bar 
         } #Content
     ) #Download Handler
-  
+
+        
   
     #Event to outload plots and data files
     
