@@ -247,7 +247,7 @@ server <- function(input, output, session) {
           stats.text <- tags$h2("Basic Statistics")
           if(input$level == "Counties") {
             stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(listID=idList,placelist=PlaceList)
+            stats.map <- dashboardMAP(listID=idList,placelist="")
           }
           if(input$level == "Municipalities/Places") {
             stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
