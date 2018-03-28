@@ -76,8 +76,9 @@ introText <- function() {
  OutText <- paste0(OutText, "  This community profile is a summary of demographic trends in a community.")
  OutText <- paste0(OutText, "  The dashboard provides charts, text, data and additional links to assist")
  OutText <- paste0(OutText, "  in the knowledge and understanding")
- OutText <- paste0(OutText, "  of demographic trends by county and municipality in Colorado.")
- OutText <- paste0(OutText, "  The following collection of data establishes the context for assessing potential impacts and for decision-making.")
+ OutText <- paste0(OutText, "  of demographic trends for counties and municipalities in Colorado.")
+ OutText <- paste0(OutText, "  The following collection of tables and charts establishes the context")
+ OutText <- paste0(OutText, " for assessing potential impacts and for decision-making.")
  return(OutText)
 }
 
