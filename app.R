@@ -88,7 +88,7 @@ ui <-
                  dashboardSidebar( width = 300,  useShinyjs(),
                                    # data level Drop down
                                    selectInput("level", "Select Data Level" ,
-                                               choices=c("Select a Data Level","Counties","Municipalities/Places")  #Enabled in V1
+                                               choices=c("Select a Data Level","Counties","Municipalities")  #Enabled in V1
                                    ),
 
                                    # profile Unit dropdown
@@ -115,9 +115,9 @@ ui <-
                                    #Action Button
                                    actionButton("profile","View Profile"),
                                    #   actionButton("comparison","View Comparison"),  Disabled in V1
+                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')"),
                                    downloadButton("outputPDF", label="Download PDF Report",
-                                       style="color: black; background-color: gray90; border-color: black"),
-                                   actionButton("contact","Contact SDO",onclick ="window.open('https://goo.gl/forms/xvyxzq6DGD46rMo42', '_blank')") 
+                                                  style="color: black; background-color: gray90; border-color: black")
      
                                    
                  ), #dashboardSidebar
@@ -147,9 +147,11 @@ ui <-
 
 # Server Management Function
 server <- function(input, output, session) {
-  outputtxt <- tags$div(tags$b("Welcome to the State Demography Office Community Profile Dashboard"),
+  shinyjs::hide("outputPDF")
+  outputtxt <- tags$div(tags$b("Welcome to the State Demography Office (SDO) Community Profile Dashboard"),
                          tags$br(),
                          tags$p("This tool provides summary plots and data describing counties and municipalities in Colorado."),
+                         tags$p("Note on Municipal Profiles: Profiles are produced for Municipalites with more than 200 persons.  Please contact us for further information."),
                          tags$p("To create a profile:"),
                          tags$ul(
                            tags$li("Select a location using the dropdown boxes."),
@@ -162,7 +164,7 @@ server <- function(input, output, session) {
                          tags$em(tags$b("Notes:")), 
                           tags$ul(
                            tags$li("Producing the requested outputs may take some time, depending on your request and your connection speed."),
-                           tags$li("Clicking on the 'Download PDF Report' button will open a new browser window while the report is being processed and downloaded.  This window will close once the report processing is completed.")
+                           tags$li("Downloading any report, plot or data object will open a new browser window while the object is being processed and downloaded.  This window will close once the object processing is completed.")
                           )
                         
                       
@@ -170,7 +172,7 @@ server <- function(input, output, session) {
   output$ui <- renderUI(outputtxt)
   # updates Dropdown boxes and selects data level and unit
   CountyList <- popPlace("Counties")
-  PlaceList <- popPlace("Municipalities/Places")
+  PlaceList <- popPlace("Municipalities")
 
   CustomList <- list()
   observeEvent(input$level, ({
@@ -189,9 +191,9 @@ server <- function(input, output, session) {
       outUnit <- unique(as.list(CountyList[,3]))
       outComp <- c("Selected County Only", "Counties in Planning Region", "Custom List of Counties (Select Below)","State")
     }
-    if(input$level == "Municipalities/Places") {  
+    if(input$level == "Municipalities") {  
               outUnit <- unique(as.list(PlaceList[,3]))
-              outComp <- c("Selected Municipality/Place Only", "Similar Municipalities/Places", "County", "Custom List of Municipalities/Places (Select Below)", "State")
+              outComp <- c("Selected Municipality Only", "Similar Municipalities", "County", "Custom List of Municipalities (Select Below)", "State")
                                                   }
 
     updateSelectInput(session, "unit", choices = outUnit)
@@ -206,7 +208,7 @@ server <- function(input, output, session) {
       updateSelectInput(session, "comp2", choices = custList)
     }
     # Disabled in V1
-    #                if((input$level == "Municipalities/Places") && (input$comp == "Custom List of Municipalities/Places (Select Below)")){
+    #                if((input$level == "Municipalities") && (input$comp == "Custom List of Municipalities (Select Below)")){
     #                  # Creating custom list
     #                  custList <- as.list(unique(PlaceList[which(PlaceList$municipalityname != input$unit),3]))
     #                  updateSelectInput(session, "comp2", choices = custList)
@@ -247,11 +249,11 @@ server <- function(input, output, session) {
           stats.text <- tags$h2("Basic Statistics")
           if(input$level == "Counties") {
             stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(listID=idList,placelist="")
+            #stats.map <- dashboardMAP(listID=idList,placelist="")
           }
-          if(input$level == "Municipalities/Places") {
+          if(input$level == "Municipalities") {
             stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-            stats.map <- dashboardMAP(listID=idList,placelist=PlaceList)
+           # stats.map <- dashboardMAP(listID=idList,placelist=PlaceList)
           }
           
 
@@ -264,14 +266,18 @@ server <- function(input, output, session) {
                                    )))
 
           stats.box0 <- box(width=12,ln1)
-          stats.box1 <- tabBox(width=8, height=350,
+          stats.box1 <- tabBox(width=12, height=350,
                                tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
                                tabPanel("Information",Stats.info))
-          stats.box2 <- box(width=4, height=350,renderPlot({stats.map},height=270))
+    #      stats.box1 <- tabBox(width=8, height=350,
+    #                           tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
+    #                           tabPanel("Information",Stats.info))
+    #      stats.box2 <- box(width=4, height=350,renderPlot({stats.map},height=270))
 
 
           #building List
-          stats.list <<- list(stats.box0, stats.box1, stats.box2)
+         # stats.list <<- list(stats.box0, stats.box1, stats.box2)
+          stats.list <<- list(stats.box0, stats.box1)
           incProgress()
         }
         # Population Forecasts
@@ -312,7 +318,7 @@ server <- function(input, output, session) {
                                  tags$br(), downloadObjUI("popf4plot"), downloadObjUI("popf4data"))
           }
           
-          if(input$level == "Municipalities/Places") {
+          if(input$level == "Municipalities") {
             popf1.info <- tags$div(boxContent(title= "Population Growth Estimates",
                                               description = "The Population Growth Table compares population growth for a place to the State.",
                                               MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
@@ -399,7 +405,7 @@ server <- function(input, output, session) {
                                  downloadObjUI("popa4plot"), downloadObjUI("popa4data"))
           }
 
-          if(input$level == "Municipalities/Places") {          
+          if(input$level == "Municipalities") {          
             popa1.info <- tags$div(boxContent(title= "Population by Age",
                                               description = "The Population by Age chart displays age categories a single year.",
                                               MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "F",
@@ -778,6 +784,29 @@ server <- function(input, output, session) {
           popem.list <<- list(popem1.box,popem2.box,popem3.box,popem4.box)
           incProgress()
         }  #Employment and Demographic Forecast
+        
+        #Generate Report
+        tempPDF <-  "SDO_Report.pdf"
+        tempTex <- "SDO_Report.tex"
+        tempReport <- "SDO_Report.Rnw"
+        
+        incProgress()
+        
+        # Set up parameters to pass to Rnw document
+        outChk <- input$outChk
+        olistID <- idList
+        olevel <- input$level
+        ocurACS <- curACS
+        ocurYr <- curYr
+        placelist <- PlaceList
+        incProgress()
+        
+        #knitting file and copy to final document
+        knit(tempReport)
+        incProgress() 
+        tools::texi2pdf(tempTex)
+        incProgress()       
+       shinyjs::show("outputPDF") 
       }) #Progress Bar
     }#if input$unit == ""
 
@@ -802,31 +831,7 @@ server <- function(input, output, session) {
              paste0(input$unit," Community Profile Report ",as.character(Sys.Date()),".pdf")
           },
         content <- function(file) {
-          withProgress(message = 'Generating Report', value = 0, {  # Initialize Progress bar
-  
-          tempPDF <-  "SDO_Report.pdf"
-          tempTex <- "SDO_Report.tex"
-          tempReport <- "SDO_Report.Rnw"
-          
-
-          incProgress()
-          
-          # Set up parameters to pass to Rnw document
-          outChk <- input$outChk
-          olistID <- idList
-          olevel <- input$level
-          ocurACS <- curACS
-          ocurYr <- curYr
-          placelist <- PlaceList
-          incProgress()
-      
-          #knitting file and copy to final document
-         knit(tempReport)
-         tools::texi2pdf(tempTex)
-          
           file.rename(tempPDF, file) # move pdf to file for downloading
-          incProgress()
-          }) # Progress Bar 
         } #Content
     ) #Download Handler
 

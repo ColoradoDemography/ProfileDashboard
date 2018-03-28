@@ -81,7 +81,7 @@ introText <- function() {
  return(OutText)
 }
 
-if(olevel == "Municipalities/Places"){
+if(olevel == "Municipalities"){
   placename <- olistID$plName
 } else{
   placename <- olistID$ctyName
@@ -105,19 +105,19 @@ if("stats" %in% unlist(outChk)) {
     OutText <- paste0(OutText,"\\end{flushleft}")
 return(OutText)
 }
-  s1 <- dashboardMAP(listID=olistID,placelist=placelist) 
+  #s1 <- dashboardMAP(listID=olistID,placelist=placelist) 
   s2 <- statsTable1(listID=olistID, sYr=2010,eYr=ocurYr,ACS=ocurACS,oType="latex")
   cat("\\section*{Basic Statistics}")
   cat("\\FloatBarrier")
-  cat("\\begin{figure}[htp]")
-  cat("\\begin{minipage}{0.40\\textwidth}")
-  print(s1)
-  cat("\\end{minipage} \\hfill")
-  cat("\\begin{minipage}{0.50\\textwidth}")
+#  cat("\\begin{figure}[htp]")
+#  cat("\\begin{minipage}{0.40\\textwidth}")
+#  print(s1)
+#  cat("\\end{minipage} \\hfill")
+#  cat("\\begin{minipage}{0.50\\textwidth}")
   cat(statsText())
-  cat("\\end{minipage}")
-  cat("\\end{figure}")
-  cat("\\FloatBarrier")
+#  cat("\\end{minipage}")
+#  cat("\\end{figure}")
+#  cat("\\FloatBarrier")
   print(s2)
   
 }
