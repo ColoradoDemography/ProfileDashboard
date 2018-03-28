@@ -786,9 +786,9 @@ server <- function(input, output, session) {
         }  #Employment and Demographic Forecast
         
         #Generate Report
-        tempPDF <-  "./SDO_Report.pdf"
-        tempTex <- "./SDO_Report.tex"
-        tempReport <- "./www/SDO_Report.Rnw"
+        tempPDF <-  "/srv/shiny-server/ProfileDashboard/SDO_Report.pdf"
+        tempTex <- "/srv/shiny-server/ProfileDashboard/SDO_Report.tex"
+        tempReport <- "/srv/shiny-server/ProfileDashboard/www/SDO_Report.Rnw"
         
         incProgress()
         
