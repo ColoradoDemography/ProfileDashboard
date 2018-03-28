@@ -573,7 +573,6 @@ if("emply" %in% unlist(outChk)) {
   cat("\\begin{figure}[htp]")
   cat("\\begin{minipage}{0.40\\textwidth}")
   print(popem3$plot1)
-  cat("}")
   cat("\\end{minipage} \\hfill")
   cat("\\begin{minipage}{0.50\\textwidth}")
   cat(popem3$text)
