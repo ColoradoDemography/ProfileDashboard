@@ -787,7 +787,7 @@ server <- function(input, output, session) {
         
         #Generate Report
         tempPDF <-  "./SDO_Report.pdf"
-        tempTex <- "./www/SDO_Report.tex"
+        tempTex <- "./SDO_Report.tex"
         tempReport <- "./www/SDO_Report.Rnw"
         
         incProgress()
@@ -802,7 +802,7 @@ server <- function(input, output, session) {
         incProgress()
         
         #knitting file and copy to final document
-        knit(input=tempReport, output=tempTex)
+        knit(tempReport)
         incProgress() 
         tools::texi2pdf(tempTex)
         incProgress()       
