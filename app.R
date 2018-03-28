@@ -800,7 +800,7 @@ server <- function(input, output, session) {
         incProgress()
         
         #knitting file and copy to final document
-        knit(tempReport)
+        knit(input=tempReport,output=tempTex)
         incProgress() 
         tools::texi2pdf(tempTex)
         incProgress()       
