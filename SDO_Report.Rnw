@@ -213,7 +213,8 @@ if("popf" %in% unlist(outChk)) {
   cat("\\begin{minipage}{0.50\\textwidth}")
   cat(popf4$text)
   cat("\\end{minipage}")
-  cat("\\end{figure}")
+  cat("\\end{figure}") 
+  cat("\\FloatBarrier")
 } 
 @
 
@@ -221,7 +222,8 @@ if("popf" %in% unlist(outChk)) {
 if("pop" %in% unlist(outChk)) {
   ageText <- function(){
     OutText <- paste0("Every community has a different age profile and is aging differently.")
-    OutText <- paste0(OutText,"  People work, live, shop, and use resources differently by age and this will impact the economy,")
+    OutText <- paste0(OutText,"  People in different age groups work, live, shop, and use resources differently")
+    OutText <- paste0(OutText,"  and these differences will impact the economy,")
     OutText <- paste0(OutText,"  labor force, housing, school districts, day care facilities, health services,")
     OutText <- paste0(OutText,"  disability services, transportation, household income, and public finance.") 
     OutText <- paste0(OutText,"  An aging population may put downward pressure on local government tax revenue")
@@ -310,7 +312,7 @@ educText <- function() {
  
    popc1 <- incomePRO(listID=olistID, ACS=ocurACS) 
    popc2 <- educPRO(listID=olistID, ACS=ocurACS)
-   popc3 <-raceTab1(listID=olistID, ACS=ocurACS,oType="latex")
+   popc3 <- raceTab1(listID=olistID, ACS=ocurACS,oType="latex")
    popc4 <- raceTab2(listID=olistID, ACS=ocurACS,oType="latex")
   
 
@@ -336,6 +338,7 @@ educText <- function() {
   cat("\\end{figure}")
   cat("\\FloatBarrier")
   print(popc3$table)
+  cat("\\FloatBarrier")
   cat("\\begin{flushleft}")
   cat(popc3$text)
   cat("\\end{flushleft}")
@@ -345,6 +348,7 @@ educText <- function() {
   cat("\\begin{flushleft}")
   cat(popc4$text)
   cat("\\end{flushleft}")
+  cat("\\FloatBarrier")
 } 
 @
 
