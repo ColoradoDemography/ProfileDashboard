@@ -176,7 +176,7 @@ server <- function(input, output, session) {
 
   CustomList <- list()
   observeEvent(input$level, ({
-
+    shinyjs::hide("outputPDF")
     #clears the comp2 dropdown on change
     updateSelectInput(session, "comp2", choices = "")
     if(input$level == "Select a Data Level") { #the initial state of the dropdowns
