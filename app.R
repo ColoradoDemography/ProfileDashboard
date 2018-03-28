@@ -217,7 +217,7 @@ server <- function(input, output, session) {
 
   # Event for click on profile button
   observeEvent(input$profile,  {
-
+    shinyjs::hide("outputPDF")
     outputList <<- list()
     output$ui <- renderUI(outputList)
     
