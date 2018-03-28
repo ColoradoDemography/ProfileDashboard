@@ -164,8 +164,9 @@ server <- function(input, output, session) {
                          tags$em(tags$b("Notes:")), 
                           tags$ul(
                            tags$li("Producing the requested outputs may take some time, depending on your request and your connection speed."),
-                           tags$li("Downloading any report, plot or data object will open a new browser window while the object is being processed and downloaded.  This window will close once the object processing is completed.")
-                          )
+                           tags$li("Downloading any report, plot or data object will open a new browser window while the object is being processed and downloaded.  This window will close once the object processing is completed."),
+                           tags$li("Downloaded objects will be saved in the 'Download' location supported by your browser.")
+                           )
                         
                       
   )
@@ -202,6 +203,7 @@ server <- function(input, output, session) {
 
   # Event for Comparison selection
   observeEvent(input$comp, {
+    shinyjs::hide("outputPDF")
     if((input$level == "Counties") && (input$comp == "Custom List of Counties (Select Below)")){
       # Creating custom list
       custList <- as.list(CountyList[which(CountyList$municipalityname != input$unit),3])
