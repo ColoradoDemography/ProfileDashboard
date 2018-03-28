@@ -787,7 +787,7 @@ server <- function(input, output, session) {
         
         #Generate Report
         tempReport <- "SDO_Report.Rnw"
-        
+        tempTex <- "SDO_Report.tex"
         incProgress()
         
         # Set up parameters to pass to Rnw document
@@ -800,9 +800,9 @@ server <- function(input, output, session) {
         incProgress()
         
         #knitting file and copy to final document
-        tempTex <- knit(tempReport)
+        knit(tempReport)
         incProgress() 
-        tempPDf <- tools::texi2pdf(tempTex)
+        tools::texi2pdf(tempTex)
         incProgress()       
        shinyjs::show("outputPDF") 
       }) #Progress Bar
