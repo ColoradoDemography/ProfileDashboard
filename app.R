@@ -786,9 +786,7 @@ server <- function(input, output, session) {
         }  #Employment and Demographic Forecast
         
         #Generate Report
-        tempPDF <-  "/srv/shiny-server/ProfileDashboard/SDO_Report.pdf"
-        tempTex <- "/srv/shiny-server/ProfileDashboard/SDO_Report.tex"
-        tempReport <- "/srv/shiny-server/ProfileDashboard/www/SDO_Report.Rnw"
+        tempReport <- "SDO_Report.Rnw"
         
         incProgress()
         
@@ -802,9 +800,9 @@ server <- function(input, output, session) {
         incProgress()
         
         #knitting file and copy to final document
-        knit(tempReport)
+        tempTex <- knit(tempReport)
         incProgress() 
-        tools::texi2pdf(tempTex)
+        tempPDf <- tools::texi2pdf(tempTex)
         incProgress()       
        shinyjs::show("outputPDF") 
       }) #Progress Bar
@@ -831,6 +829,7 @@ server <- function(input, output, session) {
              paste0(input$unit," Community Profile Report ",as.character(Sys.Date()),".pdf")
           },
         content <- function(file) {
+          tempPDF <- "SDO_Report.pdf"
           file.rename(tempPDF, file) # move pdf to file for downloading
         } #Content
     ) #Download Handler
