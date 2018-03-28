@@ -786,9 +786,9 @@ server <- function(input, output, session) {
         }  #Employment and Demographic Forecast
         
         #Generate Report
-        tempPDF <-  "SDO_Report.pdf"
-        tempTex <- "SDO_Report.tex"
-        tempReport <- "SDO_Report.Rnw"
+        tempPDF <-  "./www/SDO_Report.pdf"
+        tempTex <- "./www/SDO_Report.tex"
+        tempReport <- "./www/SDO_Report.Rnw"
         
         incProgress()
         
