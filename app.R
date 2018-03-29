@@ -278,7 +278,8 @@ server <- function(input, output, session) {
 
 
           #building List
-          stats.list <<- list(stats.box0, stats.box1, stats.box2)
+     #     stats.list <<- list(stats.box0, stats.box1, stats.box2)
+          stats.list <<- list(stats.box0, stats.box1)
           incProgress()
         }
         # Population Forecasts
