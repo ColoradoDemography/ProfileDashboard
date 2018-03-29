@@ -148,6 +148,7 @@ ui <-
 # Server Management Function
 server <- function(input, output, session) {
   shinyjs::hide("outputPDF")
+  
   outputtxt <- tags$div(tags$b("Welcome to the State Demography Office (SDO) Community Profile Dashboard"),
                          tags$br(),
                          tags$p("This tool provides summary plots and data describing counties and municipalities in Colorado."),

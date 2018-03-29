@@ -43,6 +43,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Where everything else goes
 
+
 <<setup, results="asis", echo = FALSE>>= 
 
 library(tidyverse, quietly=TRUE)
