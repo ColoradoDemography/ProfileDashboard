@@ -151,7 +151,6 @@ server <- function(input, output, session) {
   outputtxt <- tags$div(tags$b("Welcome to the State Demography Office (SDO) Community Profile Dashboard"),
                          tags$br(),
                          tags$p("This tool provides summary plots and data describing counties and municipalities in Colorado."),
-                         tags$p("Note on Municipal Profiles: Profiles are produced for Municipalites with more than 200 persons.  Please contact us for further information."),
                          tags$p("To create a profile:"),
                          tags$ul(
                            tags$li("Select a location using the dropdown boxes."),
@@ -163,7 +162,8 @@ server <- function(input, output, session) {
                          tags$br(),
                          tags$em(tags$b("Notes:")), 
                           tags$ul(
-                           tags$li("Producing the requested outputs may take some time, depending on your request and your connection speed."),
+                            tags$li("Profiles are produced for Municipalites with more than 200 persons.  Please contact SDO for further information."),
+                            tags$li("Producing the requested outputs may take some time, depending on your request and your connection speed."),
                            tags$li("Downloading any report, plot or data object will open a new browser window while the object is being processed and downloaded.  This window will close once the object processing is completed."),
                            tags$li("Downloaded objects will be saved in the 'Download' location supported by your browser.")
                            )
