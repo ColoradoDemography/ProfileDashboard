@@ -108,8 +108,8 @@ cat(introText())
 <<stats, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 if("stats" %in% unlist(outChk)) {
   statsText <- function() {
-    OutText <- "\\begin{flushleft}"
-    OutText <- paste0(OutText,"The population base and trends of an area determine the needs for housing,")
+    OutText <- paste0("\\begin{flushleft}")
+    OutText <- paste0(OutText," The population base and trends of an area determine the needs for housing,")
     OutText <- paste0(OutText," schools, roads and other services.")
     OutText <- paste0(OutText,"  The age, income, race/ethnicity, and migration of the population of")
     OutText <- paste0(OutText," a community are all vital in planning for service provision.")
@@ -474,7 +474,7 @@ liveText <- function() {
   cat("\\end{minipage}")
   cat("\\end{figure}")
   cat("\\FloatBarrier")
-  print(popt1$workTab)
+  print(popt1r$workTab)
   cat("\\FloatBarrier")
   cat(workText())
   cat("\\FloatBarrier")
