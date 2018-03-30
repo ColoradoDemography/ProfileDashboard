@@ -429,10 +429,10 @@ OutText <- paste0(OutText," once the current work force ages and sells, those ho
 <<comm, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 if("comm" %in% unlist(outChk)) {
   commintroText <- function() {
-  OutText <- paste0("Commuting plays an important role in the economy of an area because not")
-  OutText <- paste0(OutText," all workers live where they work. Commuting impacts local job growth, access to employees,")
-  OutText <- paste0(OutText," and transportation infrastructure.")
-  return(OutText)
+      OutText <- paste0("Commuting plays an important role in the economy of an area because not")
+      OutText <- paste0(OutText," all workers live where they work. Commuting impacts local job growth, access to employees,")
+      OutText <- paste0(OutText," and transportation infrastructure.")
+      return(OutText)
 }
 
 commuteText <- function() {
@@ -446,14 +446,14 @@ commuteText <- function() {
 }
 
 workText <- function() {
-   OutText <- paste0( "\\begin{flushleft}")
+   OutText <- paste0("\\begin{flushleft}")
    OutText <- paste0(OutText,"This table shows the top 10 places where people who work in the selected place live.")
    OutText <- paste0(OutText,"\\end{flushleft}")
    return(OutText)
 }
 
 liveText <- function() {
-   OutText <- paste0( "\\begin{flushleft}")
+   OutText <- paste0("\\begin{flushleft}")
    OutText <- paste0(OutText,"This table shows the top 10 places where people who live in the selected place work.")
    OutText <- paste0(OutText,"\\end{flushleft}")
    return(OutText)
