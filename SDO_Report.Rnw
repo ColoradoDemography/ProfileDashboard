@@ -139,7 +139,7 @@ return(OutText)
 
 <<popf, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 if("popf" %in% unlist(outChk)) {
-  #Text Functions
+
   cocText <- function() {
   OutText <- paste0("\\textit{Components of Population Change}")
   OutText <- paste0(OutText," \\begin{flushleft}")
@@ -177,7 +177,8 @@ if("popf" %in% unlist(outChk)) {
        OutText <- paste0(OutText," Additional plots show the overall population trends, forecasts for along with")
        OutText <- paste0(OutText,"the overall components of change for ",idList$plName, "." )
       } else {
-       OutText <- paste0("The tables and plots in this section highlight trends and forecasts for the total population in",idList$ctyName,".")
+       OutText <- paste0("The tables and plots in this section highlight trends and forecasts")
+       OutText <- paste0(OutText," for the total population in",idList$ctyName,".")
        OutText <- paste0(OutText,"  The table shows the overall population growth rate for")
        OutText <- paste0(OutText,idList$ctyName, " and the State of ")
        OutText <- paste0(OutText," Colorado as a whole.")
