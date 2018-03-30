@@ -442,13 +442,14 @@ commuteText <- function() {
   OutText <- paste0(OutText," \\item People who live in the selected place, but work elsewhere.")
   OutText <- paste0(OutText," \\item People who live and work in the selected place.")
   OutText <- paste0(OutText," \\end{itemize}")
+  return(OutText)
 }
 
 workText <- function() {
    OutText <- paste0( "\\begin{flushleft}")
-  OutText <- paste0(OutText,"This table shows the top 10 places where people who work in the selected place live.")
+   OutText <- paste0(OutText,"This table shows the top 10 places where people who work in the selected place live.")
    OutText <- paste0(OutText,"\\end{flushleft}")
-  return(OutText)
+   return(OutText)
 }
 
 liveText <- function() {
