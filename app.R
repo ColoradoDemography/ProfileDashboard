@@ -18,8 +18,13 @@ library(shinydashboard, quietly=TRUE)
 library(shinyjs, quietly=TRUE)
 library(VennDiagram)
 library(rgdal)
+if (!require(geojsonio)) {
+  install.packages("geojsonio")
+  library(geojsonio)
+}
 library(gridExtra)
-
+library(ggthemes)
+library(maptools)
 
 
 
@@ -28,6 +33,7 @@ library(gridExtra)
 curACS <- "acs1216"
 curYr <- 2016
 fipslist <<- ""
+tDir <- tempdir()  #Setting Temporary Directory location for Reporting
 
 #Basic Statistics
 stats.list <<- list()
@@ -252,11 +258,11 @@ server <- function(input, output, session) {
           stats.text <- tags$h2("Basic Statistics")
           if(input$level == "Counties") {
             stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-         #   stats.map <- dashboardMAP(listID=idList,placelist="")
+            stats.map <- dashboardMAP(listID=idList)
           }
           if(input$level == "Municipalities") {
             stats.tab1 <- statsTable1(listID=idList,sYr=2010,eYr=2016,ACS=curACS,oType="html")
-         #   stats.map <- dashboardMAP(listID=idList,placelist=PlaceList)
+            stats.map <- dashboardMAP(listID=idList)
           }
           
 
@@ -269,18 +275,18 @@ server <- function(input, output, session) {
                                    )))
 
           stats.box0 <- box(width=12,ln1)
-          stats.box1 <- tabBox(width=12, height=350,
-                               tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
-                               tabPanel("Information",Stats.info))
-     #     stats.box1 <- tabBox(width=8, height=350,
+     #     stats.box1 <- tabBox(width=12, height=350,
      #                          tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
      #                          tabPanel("Information",Stats.info))
-     #     stats.box2 <- box(width=4, height=350,renderPlot({stats.map},height=270))
+          stats.box1 <- tabBox(width=8, height=350,
+                               tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
+                               tabPanel("Information",Stats.info))
+          stats.box2 <- box(width=4, height=350,renderPlot({stats.map},height=270))
 
 
           #building List
-     #     stats.list <<- list(stats.box0, stats.box1, stats.box2)
-          stats.list <<- list(stats.box0, stats.box1)
+          stats.list <<- list(stats.box0, stats.box1, stats.box2)
+    #      stats.list <<- list(stats.box0, stats.box1)
           incProgress()
         }
         # Population Forecasts
@@ -787,9 +793,11 @@ server <- function(input, output, session) {
           incProgress()
         }  #Employment and Demographic Forecast
         
+
+        
         #Generate Report
-        tempReport <- "SDO_Report.Rnw"
-        tempTex <- "SDO_Report.tex"
+       tempReport   <- "SDO_Report.Rnw" 
+       tempTex   <- "SDO_Report.tex"     
         incProgress()
         
         # Set up parameters to pass to Rnw document
@@ -802,8 +810,10 @@ server <- function(input, output, session) {
         incProgress()
         
         #knitting file and copy to final document
+      
         knit(input=tempReport,output=tempTex)
         incProgress() 
+   
         tools::texi2pdf(tempTex)
         incProgress()       
        shinyjs::show("outputPDF") 
@@ -833,6 +843,7 @@ server <- function(input, output, session) {
         content <- function(file) {
           tempPDF <- "SDO_Report.pdf"
           file.rename(tempPDF, file) # move pdf to file for downloading
+          # unlink(tDir)
         } #Content
     ) #Download Handler
 

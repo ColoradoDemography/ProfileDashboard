@@ -47,6 +47,7 @@
 <<setup, results="asis", echo = FALSE>>= 
 
 library(tidyverse, quietly=TRUE)
+library(readxl, quietly=TRUE)
 library(scales, quietly=TRUE)
 library(codemogAPI, quietly=TRUE)
 library(codemogProfile, quietly=TRUE)
@@ -55,8 +56,19 @@ library(knitr, quietly=TRUE)
 library(kableExtra, quietly=TRUE)
 library(RPostgreSQL, quietly=TRUE)
 library(rmarkdown)
+library(shiny, quietly=TRUE)
+library(shinydashboard, quietly=TRUE)
+library(shinyjs, quietly=TRUE)
 library(VennDiagram)
+library(rgdal)
+if (!require(geojsonio)) {
+  install.packages("geojsonio")
+  library(geojsonio)
+}
 library(gridExtra)
+library(ggthemes)
+library(maptools)
+
 
 @
 % Logo on top of first page
@@ -66,7 +78,7 @@ library(gridExtra)
 \includegraphics[height=2cm, width=2cm]{www/ShieldOnly_LRG.png}
 \end{minipage}
 \begin{minipage}{0.50\textwidth}
-  State Demography Office Community Profile
+  State Demography Office Community Profile Print Date \Sexpr{as.character(format(Sys.Date(),"%m/%d/%Y"))}
 \end{minipage}
 \end{figure}
 
@@ -107,21 +119,20 @@ if("stats" %in% unlist(outChk)) {
     OutText <- paste0(OutText,"\\end{flushleft}")
 return(OutText)
 }
-#  s1r <- dashboardMAP(listID=olistID,placelist=placelist) 
+  s1r <- dashboardMAP(listID=olistID) 
   s2r <- statsTable1(listID=olistID, sYr=2010,eYr=ocurYr,ACS=ocurACS,oType="latex")
   cat("\\section*{Basic Statistics}")
   cat("\\FloatBarrier")
-#  cat("\\begin{figure}[htp]")
-#  cat("\\begin{minipage}{0.40\\textwidth}")
-#  print(s1r)
-#  cat("\\end{minipage} \\hfill")
-#  cat("\\begin{minipage}{0.50\\textwidth}")
+  cat("\\begin{figure}[htp]")
+  cat("\\begin{minipage}{0.40\\textwidth}")
+  print(s1r)
+  cat("\\end{minipage} \\hfill")
+  cat("\\begin{minipage}{0.50\\textwidth}")
   cat(statsText())
-#  cat("\\end{minipage}")
-#  cat("\\end{figure}")
-#  cat("\\FloatBarrier")
+  cat("\\end{minipage}")
+  cat("\\end{figure}")
+  cat("\\FloatBarrier")
   print(s2r)
-  cat("\\FloatBarrier")  
 }
 @
 
