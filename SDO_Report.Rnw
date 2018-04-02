@@ -78,7 +78,7 @@ library(maptools)
 \includegraphics[height=2cm, width=2cm]{www/ShieldOnly_LRG.png}
 \end{minipage}
 \begin{minipage}{0.50\textwidth}
-  State Demography Office Community Profile Print Date \Sexpr{as.character(format(Sys.Date(),"%m/%d/%Y"))}
+  State Demography Office Community Profile \newline Print Date \Sexpr{as.character(format(Sys.Date(),"%m/%d/%Y"))}
 \end{minipage}
 \end{figure}
 
