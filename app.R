@@ -127,7 +127,7 @@ ui <-
      
                                    
                  ), #dashboardSidebar
-                 dashboardBody(  tags$head( HTML("google.analytics.js"),
+                 dashboardBody(  tags$head( 
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),  #Link to CSS...
                    tags$title("State demography Office Community Profile Dashboard")
                  ),
