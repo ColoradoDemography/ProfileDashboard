@@ -8,16 +8,5 @@
   ga('create', 'UA-116669751-1', 'auto');
   ga('send', 'pageview');
   
-  $(document).on('shiny:inputchanged', function(event) {
-		if(event.name == "level" || event.name == "unit") {
-			  ga('send','event', 'input', 
-					'updates', event.name, event.value);
-				}
-		if(event.name == "profile") {
-			  ga('send', 'event', 'click', event.name, outChk.value);
-			 }
-		if(event.name == "outputPDF") {
-			  ga('send', 'event', 'click', event.name, 'Report Downloaded);
-			 }
-	 );
+  
   
