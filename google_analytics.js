@@ -7,3 +7,8 @@
 
   ga('create', 'UA-116669751-1', 'auto');
   ga('send', 'pageview');
+  
+  $(document).on('shiny:inputchanged', function(event) {
+      ga('send','event', 'input', 
+            'updates', event.name, event.value);
+     });
