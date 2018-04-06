@@ -169,7 +169,7 @@ server <- function(input, output, session) {
                          tags$br(),
                          tags$em(tags$b("Notes:")), 
                           tags$ul(
-                            tags$li("Profiles are produced for Municipalites with more than 200 persons.  Please contact SDO for further information."),
+                            tags$li("Profiles are produced for Incorporated Municipalites with more than 200 persons.  Please contact SDO for further information."),
                             tags$li("Producing the requested outputs may take up to 3 minutes, depending on your request and your connection speed."),
                            tags$li("Downloading any report, plot or data object will open a new browser window while the object is being processed and downloaded.  This window will close once the object processing is completed."),
                            tags$li("Downloaded objects will be saved in the 'Download' location supported by your browser.")
