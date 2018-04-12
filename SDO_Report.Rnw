@@ -78,7 +78,7 @@ library(maptools)
 \includegraphics[height=2cm, width=2cm]{www/ShieldOnly_LRG.png}
 \end{minipage}
 \begin{minipage}{0.50\textwidth}
-  State Demography Office Community Profile \newline \textit{Print Date \Sexpr{as.character(format(Sys.Date(),"%m/%d/%Y"))}}
+  State Demography Office Colorado Demographic Profile \newline \textit{Print Date \Sexpr{as.character(format(Sys.Date(),"%m/%d/%Y"))}}
 \end{minipage}
 \end{figure}
 
@@ -86,7 +86,7 @@ library(maptools)
 <<introtxt, results="asis",echo = FALSE, warning=FALSE, message=FALSE, include=TRUE>>=
 introText <- function() {
  OutText <- paste0("Demographic information is critical for making informed decisions at the local, state and national level.")
- OutText <- paste0(OutText,"  This community profile is a summary of demographic trends in a community.")
+ OutText <- paste0(OutText,"  This demographic profile is a summary of trends in a community.")
  OutText <- paste0(OutText,"  The dashboard provides charts, text, data and additional links to assist")
  OutText <- paste0(OutText,"  in the knowledge and understanding")
  OutText <- paste0(OutText,"  of demographic trends for counties and municipalities in Colorado.")
