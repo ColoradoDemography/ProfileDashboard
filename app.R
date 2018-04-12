@@ -91,7 +91,7 @@ popem.list <<- list()
 ui <-
   dashboardPage( skin="green", 
                  title= "Colorado Demographic Profiles",
-                 dashboardHeader(title = span(img(src="ShieldOnly_LRG.png", height = 70, align = "top"),"Colorado Community profiles"), titleWidth=550), #dashboardHeader
+                 dashboardHeader(title = span(img(src="ShieldOnly_LRG.png", height = 70, align = "top"),"Colorado Community Profiles"), titleWidth=550), #dashboardHeader
                  dashboardSidebar( width = 300,  useShinyjs(),
                                    # data level Drop down
                                    selectInput("level", "Select Data Level" ,
