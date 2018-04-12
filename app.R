@@ -210,7 +210,7 @@ server <- function(input, output, session) {
                                                     tags$li("Downloaded objects will be saved in the 'Download' location supported by your browser.")
                                                   )))
   frontPgBox2 <-  box(width=11,height=350, tags$div(
-        tags$b("Links to other SDO data Sources:"),
+        tags$b("Links to other SDO Data Sources:"),
         HTML(linkTab)))
 
   frontPg <- list(frontPgBox1,frontPgBox2)
