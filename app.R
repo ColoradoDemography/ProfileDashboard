@@ -675,7 +675,7 @@ server <- function(input, output, session) {
                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("U.s. Census Bureau On the Map Data","https://onthemap.ces.census.gov/")) ),
                                  tags$br(),
-                                 downloadObjUI("popt2data"))
+                                 downloadObjUI("popt3data"))
 
 
           popt3.info <- tags$div(boxContent(title= "Live Outside Table",
@@ -683,7 +683,7 @@ server <- function(input, output, session) {
                                             MSA= "F", stats = "F", muni = "F", multiCty = idList$multiCty, PlFilter = idList$PlFilter, table = "T",
                                             urlList = list(c("U.s. Census Bureau On the Map Data","https://onthemap.ces.census.gov/")) ),
                                  tags$br(),
-                                 downloadObjUI("popt3data"))
+                                 downloadObjUI("popt2data"))
 
           popt4.info <- tags$div(boxContent(title= "Jobs and Net Migration Plot",
                                             description= "The jobs and net migration plot shows the trend between jobs and net migration for a selected place.",
