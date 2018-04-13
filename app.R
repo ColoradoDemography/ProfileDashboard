@@ -700,10 +700,10 @@ server <- function(input, output, session) {
                               tabPanel("Sources and Downloads",popt1.info))
           popt2.box <- tabBox(width=6, height=400,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(popt1$tab1))),
-                              tabPanel("Sources and Downloads",popt2.info))
+                              tabPanel("Sources and Downloads",popt3.info))
           popt3.box <- tabBox(width=6, height=400,
                               tabPanel("Table",tags$div(class="cleanTab",HTML(popt1$tab2))),
-                              tabPanel("Sources and Downloads",popt3.info))
+                              tabPanel("Sources and Downloads",popt2.info))
           popt4.box <- tabBox(width=6, height=400,
                               tabPanel("Plot",renderPlot({popt2$plot},height=340)),
                               tabPanel("Sources and Downloads",popt4.info))
