@@ -1,6 +1,6 @@
 #' Colorado Demographic Profiles
 #' @author  Adam Bickford, Colorado State Demography Office, November 2017-March 2018
-#' V 1.0 County-level version sent  for testing
+#' Release Version 1.0 4/13/2018
 
 rm(list = ls())
 library(tidyverse, quietly=TRUE)
