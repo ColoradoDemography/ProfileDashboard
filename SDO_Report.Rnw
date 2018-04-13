@@ -88,7 +88,7 @@ introText <- function() {
  OutText <- paste0("Demographic information is critical for making informed decisions at the local, state and national level.")
  OutText <- paste0(OutText,"  This demographic profile is a summary of trends in a community.")
  OutText <- paste0(OutText,"  The dashboard provides charts, text, data and additional links to assist")
- OutText <- paste0(OutText,"  in the knowledge and understanding")
+ OutText <- paste0(OutText,"  in the exploration and understanding")
  OutText <- paste0(OutText,"  of demographic trends for counties and municipalities in Colorado.")
  OutText <- paste0(OutText,"  The following collection of tables and charts establishes the context")
  OutText <- paste0(OutText," for assessing potential impacts and for decision-making.")
