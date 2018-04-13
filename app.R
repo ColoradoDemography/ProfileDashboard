@@ -192,7 +192,7 @@ server <- function(input, output, session) {
   
   frontPgBox1 <- box(width=11,height=350,tags$div(tags$b("Welcome to the State Demography Office (SDO) Colorado Demographic Profiles Website"),
                                                   tags$br(),
-                                                  tags$p("This tool provides summary plots and data describing counties and municipalities in Colorado."),
+                                                  tags$p("This tool provides summary plots and data describing Counties and Incorporated Municipalities in Colorado."),
                                                   tags$p("To create a profile:"),
                                                   tags$ul(
                                                     tags$li("Select a location using the dropdown boxes."),
