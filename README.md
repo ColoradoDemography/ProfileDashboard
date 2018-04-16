@@ -9,3 +9,5 @@ History:
           
 2/5/2018  Full demo verion (1.0) with working interface and draft PDF output.  Currently outputs county level plots and data. 
           This version uses Pandoc and tinytex.  removed references to RobR.  Building docker interface.  V1.0 testing period: 2/5-19/2018
+4/13/2018 Full production version released.  Replies on Sweave and internal Latex processor.  Google analytics implemented, along with 
+          keywords.
