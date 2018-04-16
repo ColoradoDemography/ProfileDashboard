@@ -8,5 +8,17 @@
   ga('create', 'UA-116669751-1', 'auto');
   ga('send', 'pageview');
   
+   $(document).on('change', 'level', function(e) {
+    ga('send', 'event', 'widget', 'select level', $(e.currentTarget).val());
+    });
   
+   $(document).on('change', 'unit', function(e) {
+    ga('send', 'event', 'widget', 'select location', $(e.currentTarget).val());
+    });
+  
+   $(document).on('click', 'outputPDF', function() {
+    ga('send', 'event', 'widget', 'download Report');
+   });
+  
+ 
   
