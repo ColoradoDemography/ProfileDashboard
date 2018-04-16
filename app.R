@@ -130,7 +130,7 @@ ui <-
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( 
                    tags$meta(name="keywords", content="Colorado, demographic, county, community, municiplaity, city, population, housing, household, age, median income, jobs, wages"),
-                   includeScript("tag_manager.js"),
+                   includeScript("google_analytics.js"),
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),  #Link to CSS...
                    tags$title("Colorado Demographic Profiles")
                  ),
