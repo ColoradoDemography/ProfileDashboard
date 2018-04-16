@@ -99,13 +99,13 @@ ui <-
                                    ),
 
                                    # profile Unit dropdown
-                                   selectInput("unit", "Select Profile" ,choices=""),
+                                   selectInput("unit", "Select Location" ,choices=""),
                                    # Comparison dropdown 1  Disabled in V1
                                    #   selectizeInput("comp", "Select Comparison" ,choices=""),
                                    #   # Comparison dropdown 2
                                    #    selectizeInput("comp2","Select Custom Comparisons",choices ="", multiple=TRUE),  Disabled in V1
                                    #Output Content Checkboxes
-                                   checkboxGroupInput("outChk", "Select the data elements to display:",
+                                   checkboxGroupInput("outChk", "Select the Data Elements to display:",
                                                       choices = c("Basic Statistics" = "stats",
                                                                   "Population Trends" = "popf",
                                                                   "Population Characteristics: Age" = "pop",
@@ -195,8 +195,8 @@ server <- function(input, output, session) {
                                                   tags$p("This tool provides summary plots and data describing Counties and Incorporated Municipalities in Colorado."),
                                                   tags$p("To create a profile:"),
                                                   tags$ul(
-                                                    tags$li("Select a location using the dropdown boxes."),
-                                                    tags$li("Select specific information to display using the checkboxes."),
+                                                    tags$li("Select a Data Level and Location using the dropdown boxes."),
+                                                    tags$li("Select specific Data Elements to display using the checkboxes."),
                                                     tags$li("Click on the 'View Profile' button to display the selected profile.")
                                                   ),
                                                   tags$p("You can download the plots and underlying data for each display by selecting the 'Sources and Downloads' 
