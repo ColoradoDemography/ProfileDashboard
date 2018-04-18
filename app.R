@@ -130,7 +130,7 @@ ui <-
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( 
                    tags$meta(name="keywords", content="Colorado, demographic, county, community, municiplaity, city, population, housing, household, age, median income, jobs, wages"),
-                   includeScript("tag_manager.js"),
+                   includeScript("google_analytics.js"),
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),  #Link to CSS...
                    tags$title("Colorado Demographic Profiles")
                  ),
@@ -179,9 +179,14 @@ server <- function(input, output, session) {
   linkSrc[3,2]  <- "<a href='https://demography.dola.colorado.gov/births-deaths-migration/' target='_blank'>Births Deaths and Migration</a>"
   linkSrc[4,2]  <- "<a href='https://demography.dola.colorado.gov/economy-labor-force/' target='_blank'>Economy and Labor Force</a>"
   linkSrc[5,2]  <- "<a href='https://demography.dola.colorado.gov/housing-and-households/' target='_blank','>Housing and Households</a>"
-  linkSrc[7,2] <- "<b>Census and ACS Data</b>"
-  linkSrc[8,2] <- "<a href='https://demography.dola.colorado.gov/data/#census-data-tools' target='_blank'>Census Data Tools</a>"
-  linkSrc[9,2] <- "<a href='https://demography.dola.colorado.gov/census-acs/' target='_blank'>Census Data Page</a>"
+  
+  linkSrc[7,2] <- "<b>Data Lookup Pages</b>"
+  linkSrc[8,2] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-county/' target='_blank'>County Data Lookup</a>"
+  linkSrc[9,2] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-regions/' target='_blank'>Regional Data Lookup</a>"
+  
+  linkSrc[11,2] <- "<b>Census and ACS Data</b>"
+  linkSrc[12,2] <- "<a href='https://demography.dola.colorado.gov/data/#census-data-tools' target='_blank'>Census Data Tools</a>"
+  linkSrc[13,2] <- "<a href='https://demography.dola.colorado.gov/census-acs/' target='_blank'>Census Data Page</a>"
   
   
   linkTab <-  kable(linkSrc, format='html', table.attr='class="cleanTab"',align='l',linesep = "") 
@@ -965,8 +970,8 @@ server <- function(input, output, session) {
     
   }) #observeEvent input$profile
 
-
-
+  onclick("profile",submitPush(input$level,input$unit,input$outChk))
+  onclick("outputPDF",submitReport())
 
 }  #server
 
