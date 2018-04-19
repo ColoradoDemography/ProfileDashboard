@@ -146,7 +146,6 @@ ui <-
                                  border-right-color:#C9C6C5;
                                  border-top-color:#C9C6C5;
                                  }   ")),
-                 tags$body(includeScript("tag_body.js")),
                 fluidRow(uiOutput("ui")
                          )
                 
