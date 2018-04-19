@@ -185,7 +185,7 @@ server <- function(input, output, session) {
   linkSrc[9,2] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-regions/' target='_blank'>Regional Data Lookup</a>"
   
   linkSrc[11,2] <- "<b>Census and ACS Data</b>"
-  linkSrc[12,2] <- "<a href='../data/#census-data-tools' target='_blank'>Census Data Tools</a>"
+  linkSrc[12,2] <- "<a href='https://demography.dola.colorado.gov/data/#census-data-tools' target='_blank'>Census Data Tools</a>"
   linkSrc[13,2] <- "<a href='https://demography.dola.colorado.gov/census-acs/' target='_blank'>Census Data Page</a>"
   
   
