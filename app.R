@@ -130,10 +130,11 @@ ui <-
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( 
                    tags$meta(name="keywords", content="Colorado, demographic, county, community, municiplaity, city, population, housing, household, age, median income, jobs, wages"),
-                   includeScript("google_analytics.js"),
+                   includeScript("tag_manager.js"),
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),  #Link to CSS...
                    tags$title("Colorado Demographic Profiles")
                  ),
+                 tags$body(includeHTML("tag_body.js")),
                  tags$style(HTML("
                                  .box.box-solid.box-primary>.box-header {
                                  color:#fffff;
@@ -156,65 +157,96 @@ ui <-
 
 # Server Management Function
 server <- function(input, output, session) {
+  infoSrc <- matrix(" ",nrow=8,ncol=2)
+  infoSrc[1,1] <- "<b>Basic Statistics</b>"
+  infoSrc[1,2] <- "Summary Table and Map"
+  infoSrc[2,1] <- "<b>Population Trends</b>"
+  infoSrc[2,2] <- "Population estimates and Forecasts"
+  infoSrc[3,1] <- "<b>Population Characteristics: Age</b>"
+  infoSrc[3,2] <- "Population Estimates and Migration by Age"
+  infoSrc[4,1] <- "<b>Population Characteristics: Income, Education and Race</b>"
+  infoSrc[4,2] <- "Population Estimates by Income, Educational Attainment and Race"
+  infoSrc[5,1] <- "<b>Housing and Households</b>"
+  infoSrc[5,2] <- "Housing Units, Costs and Unit Characteristics"
+  infoSrc[6,1] <- "<b>Commuting and Job Growth</b>"
+  infoSrc[6,2] <- "Commuting Patterns and Job Growth and Migration"
+  infoSrc[7,1] <- "<b>Employment by Industry</b>"
+  infoSrc[7,2] <- "Employment Data by Industry"
+  infoSrc[8,1] <- "<b>Employment Forecast and Wage Information</b>"
+  infoSrc[8,2] <- "Employment Forecasts, Wage and Income Sources"
+  
+  infoTab <-  kable(infoSrc, format='html', table.attr='class="cleanTab"',align='l',linesep = "") %>%
+  kable_styling(bootstrap_options ="condensed", full_width = F) %>%
+    column_spec(1, width = "4in") 
+  infoTab <- gsub("&lt;","<",infoTab)
+  infoTab <- gsub("&gt;",">",infoTab)
   
   #Creating data Source Links Table
-  linkSrc <- matrix(" ", nrow=15, ncol=2)
+  linkSrc <- matrix(" ", nrow=6, ncol=5)
   linkSrc[1,1]  <- "<b>Data Dashboard</b>"
   linkSrc[2,1]  <- "<a href='https://gis.dola.colorado.gov/apps/demographic_dashboard/' target='_blank'>Demographic Dashboard</a>"
   linkSrc[3,1]  <- "<a href='https://gis.dola.colorado.gov/apps/netmigration_dashboard/' target='_blank'>Net Migration Dashboard</a>"
-  linkSrc[5,1]  <- "<b>Publications</b>"
-  linkSrc[6,1]  <- "<a href='https://demography.dola.colorado.gov/demography/publications-and-presentations/#publications-and-presentations' target='_blank'>Publications and Reports</a>"
-  linkSrc[7,1]  <- "<a href='https://demography.dola.colorado.gov/crosstabs/' target='_blank'>Crosstabs</a>"
-  linkSrc[8,1]  <- "<a href='https://demography.dola.colorado.gov/demography/publications-and-presentations/#annual-demography-summit-2017' target='_blank'>Annual Summit</a>"
-  linkSrc[10,1]  <- "<b>Maps and GIS data</b>" 
-  linkSrc[11,1]  <- "<a href='https://demography.dola.colorado.gov/gis/map-gallery/' target='_blank'>Interactive Map Gallery</a>"
-  linkSrc[12,1]  <- "<a href='https://demography.dola.colorado.gov/gis/thematic-maps/#thematic-maps' target='_blank'>Thematic Maps</a>"
-  linkSrc[13,1]  <- "<a href='https://demography.dola.colorado.gov/demography/region-reports-2014/#colorado-planning-region-reports' target='_blank'>Region Reports</a>"
-  linkSrc[14,1] <- "<a href='https://demography.dola.colorado.gov/gis/gis-data/#gis-data' target='_blank'>GIS Data Downloads</a>"
-  linkSrc[15,1] <- "<a href='https://demography.dola.colorado.gov/gis/gis-data/#gis-data' target='_blank'>Links to GIS Data and DOLA Grants</a>"
+  
+  linkSrc[4,1] <- "<b>Data Lookup Pages</b>"
+  linkSrc[5,1] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-county/' target='_blank'>County Data Lookup</a>"
+  linkSrc[6,1] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-regions/' target='_blank'>Regional Data Lookup</a>"
+  
+  linkSrc[1,2]  <- "<b>Maps and GIS data</b>" 
+  linkSrc[2,2]  <- "<a href='https://demography.dola.colorado.gov/gis/map-gallery/' target='_blank'>Interactive Map Gallery</a>"
+  linkSrc[3,2]  <- "<a href='https://demography.dola.colorado.gov/gis/thematic-maps/#thematic-maps' target='_blank'>Thematic Maps</a>"
+  linkSrc[4,2]  <- "<a href='https://demography.dola.colorado.gov/demography/region-reports-2014/#colorado-planning-region-reports' target='_blank'>Region Reports</a>"
+  linkSrc[5,2] <- "<a href='https://demography.dola.colorado.gov/gis/gis-data/#gis-data' target='_blank'>GIS Data Downloads</a>"
+  linkSrc[6,2] <- "<a href='https://demography.dola.colorado.gov/gis/gis-data/#gis-data' target='_blank'>Links to GIS Data and DOLA Grants</a>"
+  
+   
+  linkSrc[1,3]  <- "<b>Population Data</b>"
+  linkSrc[2,3]  <- "<a href='https://demography.dola.colorado.gov/population/' target='_blank'>Population Estimates and Forecasts</a>"
+  linkSrc[3,3]  <- "<a href='https://demography.dola.colorado.gov/births-deaths-migration/' target='_blank'>Births Deaths and Migration</a>"
+  linkSrc[4,3]  <- "<a href='https://demography.dola.colorado.gov/economy-labor-force/' target='_blank'>Economy and Labor Force</a>"
+  linkSrc[5,3]  <- "<a href='https://demography.dola.colorado.gov/housing-and-households/' target='_blank','>Housing and Households</a>"
+  
+  linkSrc[1,4] <- "<b>Census and ACS Data</b>"
+  linkSrc[2,4] <- "<a href='https://demography.dola.colorado.gov/data/#census-data-tools' target='_blank'>Census Data Tools</a>"
+  linkSrc[3,4] <- "<a href='https://demography.dola.colorado.gov/census-acs/' target='_blank'>Census Data Page</a>"
+  linkSrc[1,5]  <- "<b>Publications</b>"
+  linkSrc[2,5]  <- "<a href='https://demography.dola.colorado.gov/demography/publications-and-presentations/#publications-and-presentations' target='_blank'>Publications and Reports</a>"
+  linkSrc[3,5]  <- "<a href='https://demography.dola.colorado.gov/crosstabs/' target='_blank'>Crosstabs</a>"
+  linkSrc[4,5]  <- "<a href='https://demography.dola.colorado.gov/demography/publications-and-presentations/#annual-demography-summit-2017' target='_blank'>Annual Summit</a>"
   
   
-  linkSrc[1,2]  <- "<b>Population Data</b>"
-  linkSrc[2,2]  <- "<a href='https://demography.dola.colorado.gov/population/' target='_blank'>Population Estimates and Forecasts</a>"
-  linkSrc[3,2]  <- "<a href='https://demography.dola.colorado.gov/births-deaths-migration/' target='_blank'>Births Deaths and Migration</a>"
-  linkSrc[4,2]  <- "<a href='https://demography.dola.colorado.gov/economy-labor-force/' target='_blank'>Economy and Labor Force</a>"
-  linkSrc[5,2]  <- "<a href='https://demography.dola.colorado.gov/housing-and-households/' target='_blank','>Housing and Households</a>"
-  
-  linkSrc[7,2] <- "<b>Data Lookup Pages</b>"
-  linkSrc[8,2] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-county/' target='_blank'>County Data Lookup</a>"
-  linkSrc[9,2] <- "<a href='https://demography.dola.colorado.gov/population/data/profile-regions/' target='_blank'>Regional Data Lookup</a>"
-  
-  linkSrc[11,2] <- "<b>Census and ACS Data</b>"
-  linkSrc[12,2] <- "<a href='https://demography.dola.colorado.gov/data/#census-data-tools' target='_blank'>Census Data Tools</a>"
-  linkSrc[13,2] <- "<a href='https://demography.dola.colorado.gov/census-acs/' target='_blank'>Census Data Page</a>"
-  
-  
-  linkTab <-  kable(linkSrc, format='html', table.attr='class="cleanTab"',align='l',linesep = "") 
-    
+  linkTab <-  kable(linkSrc, format='html', table.attr='class="cleanTab"',align='l',linesep = "") %>%
+    kable_styling(bootstrap_options ="condensed") %>%
+    column_spec(1, width = "2.25in") %>%
+    column_spec(2, width = "2.25in") %>%
+    column_spec(3, width = "2.25in") %>%
+    column_spec(4, width = "2.25in") %>%
+    column_spec(5, width = "2.25in")
   
   linkTab <- gsub("&lt;","<",linkTab)
   linkTab <- gsub("&gt;",">",linkTab)
   
-  frontPgBox1 <- box(width=11,height=350,tags$div(tags$b("Welcome to the State Demography Office (SDO) Colorado Demographic Profiles Website"),
-                                                  tags$br(),
-                                                  tags$p("This tool provides summary plots and data describing Counties and Incorporated Municipalities in Colorado."),
-                                                  tags$p("To create a profile:"),
+  frontPgBox1 <- box(width=11,tags$div(tags$b("Welcome to the State Demography Office (SDO) Colorado Demographic Profiles Website"), tags$br(),
+                                                  "This tool provides summary plots and data describing Counties and Incorporated Municipalities in Colorado.", tags$br(),
+                                                  tags$em("Profile Contents:"),
+                                                  HTML(infoTab),
+                                                  "To create a profile:",tags$br(),
                                                   tags$ul(
                                                     tags$li("Select a Data Level and Location using the dropdown boxes."),
                                                     tags$li("Select specific Data Elements to display using the checkboxes."),
                                                     tags$li("Click on the 'View Profile' button to display the selected profile.")
-                                                  ),
-                                                  tags$p("You can download the plots and underlying data for each display by selecting the 'Sources and Downloads' 
-                                                         panel of each display box."),
-                                                  tags$br(),
-                                                  tags$em(tags$b("Notes:")), 
+                                                  ), 
+                                                  "You can download the plots and underlying data for each display by selecting the 'Sources and Downloads' 
+                                                         panel of each display box.", tags$br(),
+                                                  tags$em(tags$b("Notes:")), tags$br(), 
                                                   tags$ul(
-                                                    tags$li("Profiles are produced for Counties and Incorporated Municipalites with more than 200 persons.  Please contact SDO for further information."),
+                                                    tags$li("Profiles are produced for Counties and Incorporated Municipalites with more than 200 persons.  
+                                                            Please contact SDO for further information."),
                                                     tags$li("Producing the requested outputs may take up to 3 minutes, depending on your request and your connection speed."),
-                                                    tags$li("Downloading any report, plot or data object will open a new browser window while the object is being processed and downloaded.  This window will close once the object processing is completed."),
+                                                    tags$li("Downloading any report, plot or data object will open a new browser window while the 
+                                                            object is being processed and downloaded.  This window will close once the object processing is completed."),
                                                     tags$li("Downloaded objects will be saved in the 'Download' location supported by your browser.")
                                                   )))
-  frontPgBox2 <-  box(width=11,height=350, tags$div(
+  frontPgBox2 <-  box(width=11, tags$div(
         tags$b("Links to other SDO Data Sources:"),
         HTML(linkTab)))
 
@@ -970,8 +1002,8 @@ server <- function(input, output, session) {
     
   }) #observeEvent input$profile
 
-  onclick("profile",submitPush(input$level,input$unit,input$outChk))
-  onclick("outputPDF",submitReport())
+  #onclick("profile",submitPush(input$level,input$unit,input$outChk))
+  
 
 }  #server
 
