@@ -305,7 +305,7 @@ server <- function(input, output, session) {
   # Event for click on profile button
   observeEvent(input$profile,  {
     shinyjs::hide("outputPDF")
-
+    submitPush(input$level,input$unit,input$outChk)  # Function call to generate GA message
     outputList <<- list()
     output$ui <- renderUI(outputList)
     
@@ -322,7 +322,6 @@ server <- function(input, output, session) {
           fipslist <<- listTofips(PlaceList,input$level,input$unit)
          
          }
-
 
         #Generate profile UI objects
         
@@ -354,9 +353,6 @@ server <- function(input, output, session) {
                                    )))
 
           stats.box0 <- box(width=12,ln1)
-     #     stats.box1 <- tabBox(width=12, height=350,
-     #                          tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
-     #                          tabPanel("Information",Stats.info))
           stats.box1 <- tabBox(width=8, height=350,
                                tabPanel("Table",tags$div(class="Row1Tab",HTML(stats.tab1))),
                                tabPanel("Information",Stats.info))
@@ -1002,7 +998,7 @@ server <- function(input, output, session) {
     
   }) #observeEvent input$profile
 
-  #onclick("profile",submitPush(input$level,input$unit,input$outChk))
+
   
 
 }  #server
