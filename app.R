@@ -162,7 +162,7 @@ server <- function(input, output, session) {
   infoSrc[1,1] <- "<b>Basic Statistics</b>"
   infoSrc[1,2] <- "Summary Table and Map"
   infoSrc[2,1] <- "<b>Population Trends</b>"
-  infoSrc[2,2] <- "Population estimates and Forecasts"
+  infoSrc[2,2] <- "Population Estimates and Forecasts"
   infoSrc[3,1] <- "<b>Population Characteristics: Age</b>"
   infoSrc[3,2] <- "Population Estimates and Migration by Age"
   infoSrc[4,1] <- "<b>Population Characteristics: Income, Education and Race</b>"
