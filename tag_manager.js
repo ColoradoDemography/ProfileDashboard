@@ -1,4 +1,16 @@
 window.dataLayer = window.dataLayer || [];
+window.dataLayer[{'DataLevel': ' ', 
+                  'Location':' ',
+				  'BasicStatistics' : 'no',
+				  'PopulationForecast' : 'no',
+				  'AgeCharacteristics' : 'no',
+				  'PopulationCharacteristics' : 'no',
+				  'Housing' : 'no',
+				  'Commuting' : 'no',
+				  'EmploymentIndustry' : 'no',
+				  'EmploymentCharacteristics' : 'no'
+}]
+  
 
 <!-- Google Tag Manager -->
 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
