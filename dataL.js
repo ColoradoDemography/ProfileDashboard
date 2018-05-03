@@ -6,5 +6,8 @@ Shiny.addCustomMessageHandler("handler1", outputDataLayer);
 
 // this function is called by the handler, which passes the message
 function outputDataLayer(message){
-  message;
+  var s = document.createElement("script");
+  s.innerHTML = message;
+  document.head.appendChild(s);
+  alert(message);
 }
