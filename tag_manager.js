@@ -1,4 +1,4 @@
-window.dataLayer = window.dataLayer || [];
+var dataLayer =  window.dataLayer = window.dataLayer || [];
  
 
 <!-- Google Tag Manager -->
