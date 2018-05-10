@@ -49,6 +49,7 @@ $(document).on('shiny:inputchanged', function(event) {
 	  }		 
 
     //Writing dataLayer.push
+	return fuction(e) {
 	window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({ event: 'ProfileSubmit',
 	      'DataLevel' : levelValue,
@@ -61,5 +62,6 @@ $(document).on('shiny:inputchanged', function(event) {
           'Commuting' : comm,
           'EmploymentIndustry' : empli,
 	      'EmploymentCharacteristics' : emplc });
+	}
 		  
   }
