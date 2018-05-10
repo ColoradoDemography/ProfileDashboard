@@ -9,5 +9,4 @@ function outputDataLayer(message){
   var s = document.createElement("script");
   s.innerHTML = message;
   document.head.appendChild(s);
-  alert(message);
 }
