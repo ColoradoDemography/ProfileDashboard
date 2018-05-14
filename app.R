@@ -131,10 +131,11 @@ ui <-
                  ), #dashboardSidebar
                  dashboardBody(  tags$head( 
                    tags$meta(name="keywords", content="Colorado, demographic, county, community, municiplaity, city, population, housing, household, age, median income, jobs, wages"),
+                   includeScript("www/dL_init.js"),
                    includeScript("www/tag_manager.js"), #writes GTM connection
                    tags$link(rel = "stylesheet", type = "text/css", href = "dashboard.css"),  #Link to CSS...
-                   tags$title("Colorado Demographic Profiles"),
-                   includeScript("www/dataL.js") # This is the linkage to the dataLayer Output code
+                   tags$title("Colorado Demographic Profiles") #,
+                   # includeScript("www/dataL.js") # This is the linkage to the dataLayer Output code
                  ),
                  tags$body(includeHTML("www/tag_body.js")),  # for non-JS instances
                  tags$style(HTML("
@@ -309,8 +310,8 @@ server <- function(input, output, session) {
 
     shinyjs::hide("outputPDF")
  
- #   dLout <- submitPush(input$level,input$unit,input$outChk)  # Generate dataLayer Command
- #   session$sendCustomMessage("handler1",dLout)  #Sends dataLayer command to dataL.js script
+    dLout <- submitPush(input$level,input$unit,input$outChk)  # Generate dataLayer Command
+    session$sendCustomMessage("handler1",dLout)  #Sends dataLayer command to dataL.js script
     
     outputList <<- list()
     output$ui <- renderUI(outputList)
