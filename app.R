@@ -242,7 +242,7 @@ server <- function(input, output, session) {
                                        panel of each display box.", tags$br(),
                                        tags$em(tags$b("Notes:")), tags$br(), 
                                        tags$ul(
-                                         tags$li("Profiles are produced for Counties and Incorporated Municipalites.  
+                                         tags$li("Profiles are available for Counties and Incorporated Municipalites.  
                                                  Please contact SDO for information on other geographies and places."),
                                          tags$li("Producing the requested outputs may take up to 3 minutes, depending on your request and your connection speed."),
                                          tags$li("Downloading any report, plot or data object will open a new browser window while the 
