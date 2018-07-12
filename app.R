@@ -24,15 +24,17 @@ library(geojsonio)
 library(gridExtra)
 library(ggthemes)
 library(maptools)
-if (!require(officer))
+
+if (!require("officer"))
 {
-  install.packages(officer,dep=TRUE)
+  install.packages("officer",dep=TRUE)
 }
 library(officer)
 
-if (!require(flextable))
+
+if (!require("flextable"))
 {
-  install.packages(flextable,dep=TRUE)
+  install.packages("flextable",dep=TRUE)
 }
 library(flextable)
 
