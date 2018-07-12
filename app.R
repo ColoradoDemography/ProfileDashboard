@@ -3,8 +3,7 @@
 #' Release Version 1.0 4/13/2018
 
 rm(list = ls())
-#Loading async libraries...
-library(qdapTools)
+
 library(tidyverse, quietly=TRUE)
 library(readr)
 library(readxl, quietly=TRUE)
