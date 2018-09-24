@@ -22,4 +22,4 @@ RUN R -e "install.packages(c('devtools', 'shiny', 'rmarkdown', 'scales', 'readxl
 
 EXPOSE 3838
 
-RUN R -e "shiny::runApp('/root')"
+RUN R -e "shiny::runApp('/')"
