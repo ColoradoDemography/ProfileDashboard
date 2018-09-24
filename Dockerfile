@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y \
 # packages needed for basic shiny functionality
 RUN R -e "install.packages(c('devtools', 'shiny', 'rmarkdown', 'scales', 'readxl', 'readr', 'shinydashboard', 'rgdal', 'raster', 'stringr', 'tidyverse', 'knitr', 'kableExtra', 'RPostgeSQL', 'shinyjs', 'VennDiagram', 'geojsonio', 'gridExtra', 'ggthemes', 'maptools'))" && \
     R -e "devtools::install_github('ColoradoDemography/ProfileDashboard')" && \
+    R -e "devtools::install_github('ColoradoDemography/codemog')" && \
     R -e "devtools::install_github('ColoradoDemography/codemogAPI')" && \
-	R -e "devtools::install_github('ColoradoDemography/codemogLib')" && \
+    R -e "devtools::install_github('ColoradoDemography/codemogLib')" && \
     R -e "devtools::install_github('ColoradoDemography/codemogProfile')"
 
 EXPOSE 3838
