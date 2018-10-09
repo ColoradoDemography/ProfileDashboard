@@ -892,6 +892,8 @@ server <- function(input, output, session) {
         
         
         #Generate Report
+        if(file.exists("SDO_Report.tex")) file.remove("SDO_Report.tex")
+        if(file.exists("SDO_Report.pdf")) file.remove("SDO_Report.pdf")
         tempReport   <- "SDO_Report.Rnw" 
         tempTex   <- "SDO_Report.tex"     
         incProgress()
